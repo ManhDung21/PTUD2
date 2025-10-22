@@ -18,8 +18,15 @@ def _require_smtp_settings() -> tuple[str, int, str, str, str]:
     return host, int(port), username, password, sender
 
 
-def send_password_reset_code(recipient: str, code: str) -> None:
-    host, port, username, password, sender = _require_smtp_settings()
+def send_password_reset_code(recipient: str, code: str) -> bool:
+    try:
+        host, port, username, password, sender = _require_smtp_settings()
+    except RuntimeError:
+        settings = get_settings()
+        if settings.debug:
+            print(f"[DEBUG] Không gửi email do thiếu cấu hình SMTP. Mã đặt lại: {code}")
+            return False
+        raise
     message = EmailMessage()
     message["Subject"] = "Mã xác thực đặt lại mật khẩu"
     message["From"] = sender
@@ -42,3 +49,4 @@ Trân trọng.
             smtp.send_message(message)
     except smtplib.SMTPException as exc:
         raise RuntimeError("Không thể gửi email xác thực") from exc
+    return True

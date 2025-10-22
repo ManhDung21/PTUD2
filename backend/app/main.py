@@ -240,12 +240,15 @@ def forgot_password(
     reset_entry["_id"] = result.inserted_id
 
     try:
-        email_service.send_password_reset_code(email, code)
+        mail_sent = email_service.send_password_reset_code(email, code)
     except RuntimeError as exc:
         tokens.delete_one({"_id": reset_entry["_id"]})
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
-    return MessageResponse(message="Đã gửi mã xác thực tới email của bạn.")
+    message = "Đã gửi mã xác thực tới email của bạn."
+    if not mail_sent:
+        message += " (Chế độ debug: kiểm tra log máy chủ để lấy mã.)"
+    return MessageResponse(message=message)
 
 
 @app.post("/auth/reset-password", response_model=MessageResponse)
