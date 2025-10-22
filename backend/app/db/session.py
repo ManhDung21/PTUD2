@@ -1,25 +1,39 @@
-"""SQLModel session utilities."""
+"""MongoDB connection utilities and helpers."""
 
-from sqlalchemy import text
-from sqlmodel import Session, SQLModel, create_engine
+from typing import Optional
+
+from pymongo import ASCENDING, DESCENDING, MongoClient
+from pymongo.database import Database
 
 from ..config import get_settings
-from . import models  # noqa: F401 ensure models are registered
 
 settings = get_settings()
 
-engine = create_engine("sqlite:///data.db", echo=False, connect_args={"check_same_thread": False})
+_client: Optional[MongoClient] = None
+
+
+def get_client() -> MongoClient:
+    global _client
+    if _client is None:
+        _client = MongoClient(settings.mongodb_uri)
+    return _client
+
+
+def get_database() -> Database:
+    return get_client()[settings.mongodb_db]
 
 
 def init_db() -> None:
-    SQLModel.metadata.create_all(engine)
-    with engine.begin() as connection:
-        columns = connection.execute(text("PRAGMA table_info(description)"))
-        column_names = {row[1] for row in columns}
-        if "image_path" not in column_names:
-            connection.execute(text("ALTER TABLE description ADD COLUMN image_path TEXT"))
+    """Ensure collections and indexes exist."""
+    db = get_database()
 
+    users = db.get_collection("users")
+    users.create_index("email", unique=True, sparse=True)
+    users.create_index("phone_number", unique=True, sparse=True)
 
-def get_session() -> Session:
-    with Session(engine) as session:
-        yield session
+    descriptions = db.get_collection("descriptions")
+    descriptions.create_index([("user_id", ASCENDING), ("timestamp", DESCENDING)])
+
+    tokens = db.get_collection("password_reset_tokens")
+    tokens.create_index("user_id")
+    tokens.create_index("created_at")

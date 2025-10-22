@@ -1,4 +1,4 @@
-"""FastAPI application entrypoint."""
+"""FastAPI application entrypoint backed by MongoDB."""
 
 import re
 from datetime import datetime, timedelta
@@ -7,16 +7,17 @@ from pathlib import Path
 from typing import Optional
 from uuid import uuid4
 
-from fastapi.staticfiles import StaticFiles
-
 from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from PIL import Image, UnidentifiedImageError
+from pymongo.collection import Collection
+from pymongo.database import Database
 
 from .config import get_settings
-from .db.models import Description, PasswordResetToken, User
-from .db.session import engine, get_session, init_db
+from .db.models import DescriptionDocument, PasswordResetTokenDocument, UserDocument
+from .db.session import get_database, init_db
 from .schemas import (
     ChangePasswordRequest,
     DescriptionResponse,
@@ -30,18 +31,17 @@ from .schemas import (
     UserOut,
 )
 from .services import auth, content, email as email_service, history as history_service, seo
-from sqlmodel import Session, select
 
 
 def is_email(identifier: str) -> bool:
     """Kiểm tra xem identifier có phải là email không."""
-    email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
     return bool(re.match(email_pattern, identifier))
 
 
 def is_phone_number(identifier: str) -> bool:
     """Kiểm tra xem identifier có phải là số điện thoại không."""
-    phone_pattern = r'^[0-9]{10,11}$'
+    phone_pattern = r"^[0-9]{10,11}$"
     return bool(re.match(phone_pattern, identifier))
 
 
@@ -54,10 +54,46 @@ IMAGES_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory=BASE_STATIC_DIR), name="static")
 
 
+def _users_collection(db: Database) -> Collection:
+    return db.get_collection("users")
+
+
+def _descriptions_collection(db: Database) -> Collection:
+    return db.get_collection("descriptions")
+
+
+def _reset_tokens_collection(db: Database) -> Collection:
+    return db.get_collection("password_reset_tokens")
+
+
+def _find_user_by_identifier(db: Database, identifier: str) -> Optional[UserDocument]:
+    users = _users_collection(db)
+    if is_email(identifier):
+        return users.find_one({"email": identifier.lower()})
+    if is_phone_number(identifier):
+        return users.find_one({"phone_number": identifier})
+    return None
+
+
+def _token_subject(user: UserDocument) -> str:
+    return user.get("email") or user.get("phone_number") or str(user["_id"])
+
+
+def _user_out(user: UserDocument) -> UserOut:
+    created_at = user.get("created_at", datetime.utcnow())
+    return UserOut(
+        id=str(user["_id"]),
+        email=user.get("email"),
+        phone_number=user.get("phone_number"),
+        created_at=created_at.isoformat(),
+    )
+
+
 @app.on_event("startup")
 def on_startup() -> None:
     init_db()
     seed_admin_user()
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -75,166 +111,160 @@ def health_check() -> JSONResponse:
 
 
 def seed_admin_user() -> None:
-    with Session(engine) as session:
-        email = "admin@example.com"
-        existing = session.exec(select(User).where(User.email == email)).first()
-        if not existing:
-            admin = User(email=email, phone_number=None, hashed_password=auth.hash_password("123456"))
-            session.add(admin)
-            session.commit()
+    db = get_database()
+    users = _users_collection(db)
+    email = "admin@example.com"
+    if users.find_one({"email": email}):
+        return
+    admin: UserDocument = {
+        "email": email,
+        "phone_number": None,
+        "hashed_password": auth.hash_password("123456"),
+        "created_at": datetime.utcnow(),
+    }
+    users.insert_one(admin)
 
 
 def get_current_user(
-    token: str = Depends(auth.optional_oauth2_scheme),
-    session: Session = Depends(get_session),
-) -> User:
+    token: Optional[str] = Depends(auth.optional_oauth2_scheme),
+    db: Database = Depends(get_database),
+) -> UserDocument:
     if not token:
         raise HTTPException(status_code=401, detail="Yêu cầu đăng nhập")
     identifier = auth.decode_access_token(token)
     if not identifier:
         raise HTTPException(status_code=401, detail="Token không hợp lệ")
-    
-    # Tìm user bằng email hoặc số điện thoại
-    user = None
-    if is_email(identifier):
-        user = session.exec(select(User).where(User.email == identifier)).first()
-    elif is_phone_number(identifier):
-        user = session.exec(select(User).where(User.phone_number == identifier)).first()
-    
+
+    user = _find_user_by_identifier(db, identifier)
     if not user:
         raise HTTPException(status_code=401, detail="Không tìm thấy người dùng")
     return user
 
 
-def get_admin_user(current_user: User = Depends(get_current_user)) -> User:
+def get_admin_user(current_user: UserDocument = Depends(get_current_user)) -> UserDocument:
     """Verify that current user is an admin."""
-    if current_user.email != "admin@example.com":
+    if current_user.get("email") != "admin@example.com":
         raise HTTPException(status_code=403, detail="Chỉ admin mới có quyền truy cập")
     return current_user
 
 
 @app.post("/auth/register", response_model=TokenResponse)
-def register(payload: UserCreate, session: Session = Depends(get_session)) -> TokenResponse:
+def register(payload: UserCreate, db: Database = Depends(get_database)) -> TokenResponse:
+    users = _users_collection(db)
     identifier = payload.identifier.strip()
-    
-    # Xác định loại identifier
+
     if is_email(identifier):
         email = identifier.lower()
         phone_number = None
-        existing = session.exec(select(User).where(User.email == email)).first()
-        if existing:
+        if users.find_one({"email": email}):
             raise HTTPException(status_code=400, detail="Email đã tồn tại")
     elif is_phone_number(identifier):
         email = None
         phone_number = identifier
-        existing = session.exec(select(User).where(User.phone_number == phone_number)).first()
-        if existing:
+        if users.find_one({"phone_number": phone_number}):
             raise HTTPException(status_code=400, detail="Số điện thoại đã tồn tại")
     else:
         raise HTTPException(status_code=400, detail="Vui lòng nhập email hoặc số điện thoại hợp lệ")
-    
-    user = User(email=email, phone_number=phone_number, hashed_password=auth.hash_password(payload.password))
-    session.add(user)
-    session.commit()
-    session.refresh(user)
-    
-    token_subject = email if email else phone_number
-    token = auth.create_access_token(token_subject)
+
+    user: UserDocument = {
+        "email": email,
+        "phone_number": phone_number,
+        "hashed_password": auth.hash_password(payload.password),
+        "created_at": datetime.utcnow(),
+    }
+    result = users.insert_one(user)
+
+    token = auth.create_access_token(email if email else phone_number or str(result.inserted_id))
     return TokenResponse(access_token=token)
 
 
 @app.post("/auth/login", response_model=TokenResponse)
-def login(payload: UserCreate, session: Session = Depends(get_session)) -> TokenResponse:
+def login(payload: UserCreate, db: Database = Depends(get_database)) -> TokenResponse:
+    users = _users_collection(db)
     identifier = payload.identifier.strip()
-    
-    # Tìm user bằng email hoặc số điện thoại
-    user = None
-    if is_email(identifier):
-        user = session.exec(select(User).where(User.email == identifier.lower())).first()
-    elif is_phone_number(identifier):
-        user = session.exec(select(User).where(User.phone_number == identifier)).first()
-    
-    if not user or not auth.verify_password(payload.password, user.hashed_password):
+
+    user = _find_user_by_identifier(db, identifier)
+
+    if not user or not auth.verify_password(payload.password, user["hashed_password"]):
         raise HTTPException(status_code=401, detail="Thông tin đăng nhập không chính xác")
-    
-    token_subject = user.email if user.email else user.phone_number
-    token = auth.create_access_token(token_subject)
+
+    token = auth.create_access_token(_token_subject(user))
     return TokenResponse(access_token=token)
 
 
 @app.post("/auth/forgot-password", response_model=MessageResponse)
 def forgot_password(
     payload: ForgotPasswordRequest,
-    session: Session = Depends(get_session),
+    db: Database = Depends(get_database),
 ) -> MessageResponse:
     identifier = payload.identifier.strip()
     if not is_email(identifier):
         raise HTTPException(status_code=400, detail="Vui lòng nhập email hợp lệ")
 
+    users = _users_collection(db)
+    tokens = _reset_tokens_collection(db)
+
     email = identifier.lower()
-    user = session.exec(select(User).where(User.email == email)).first()
+    user = users.find_one({"email": email})
     if not user:
         raise HTTPException(status_code=400, detail="Email chưa được đăng ký")
 
-    existing_tokens = session.exec(
-        select(PasswordResetToken).where(
-            PasswordResetToken.user_id == user.id,
-            PasswordResetToken.used == False,
-        )
-    ).all()
-    for token in existing_tokens:
-        token.used = True
+    tokens.update_many({"user_id": user["_id"], "used": False}, {"$set": {"used": True}})
 
     code, token_hash = auth.generate_reset_token()
-    reset_entry = PasswordResetToken(user_id=user.id, token_hash=token_hash)
-    session.add(reset_entry)
+    reset_entry: PasswordResetTokenDocument = {
+        "user_id": user["_id"],
+        "token_hash": token_hash,
+        "created_at": datetime.utcnow(),
+        "expires_at": datetime.utcnow() + timedelta(minutes=30),
+        "used": False,
+    }
+    result = tokens.insert_one(reset_entry)
+    reset_entry["_id"] = result.inserted_id
 
     try:
         email_service.send_password_reset_code(email, code)
     except RuntimeError as exc:
-        session.rollback()
+        tokens.delete_one({"_id": reset_entry["_id"]})
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
-    session.commit()
     return MessageResponse(message="Đã gửi mã xác thực tới email của bạn.")
 
 
 @app.post("/auth/reset-password", response_model=MessageResponse)
 def reset_password(
     payload: ResetPasswordRequest,
-    session: Session = Depends(get_session),
+    db: Database = Depends(get_database),
 ) -> MessageResponse:
     identifier = payload.identifier.strip()
     if not is_email(identifier):
         raise HTTPException(status_code=400, detail="Vui lòng nhập email hợp lệ")
 
+    users = _users_collection(db)
+    tokens = _reset_tokens_collection(db)
+
     email = identifier.lower()
-    user = session.exec(select(User).where(User.email == email)).first()
+    user = users.find_one({"email": email})
     if not user:
         raise HTTPException(status_code=400, detail="Email chưa được đăng ký")
 
-    token_entry = session.exec(
-        select(PasswordResetToken)
-        .where(
-            PasswordResetToken.user_id == user.id,
-            PasswordResetToken.used == False,
-        )
-        .order_by(PasswordResetToken.created_at.desc())
-    ).first()
+    token_entry = tokens.find_one(
+        {"user_id": user["_id"], "used": False},
+        sort=[("created_at", -1)],
+    )
 
-    if not token_entry or not auth.match_reset_token(payload.token, token_entry.token_hash):
+    if not token_entry or not auth.match_reset_token(payload.token, token_entry["token_hash"]):
         raise HTTPException(status_code=400, detail="Mã xác thực không hợp lệ")
 
-    if token_entry.expires_at < datetime.utcnow():
-        token_entry.used = True
-        session.commit()
+    if token_entry.get("expires_at", datetime.utcnow()) < datetime.utcnow():
+        tokens.update_one({"_id": token_entry["_id"]}, {"$set": {"used": True}})
         raise HTTPException(status_code=400, detail="Mã xác thực đã hết hạn")
 
-    user.hashed_password = auth.hash_password(payload.new_password)
-    token_entry.used = True
-    session.add(user)
-    session.add(token_entry)
-    session.commit()
+    users.update_one(
+        {"_id": user["_id"]},
+        {"$set": {"hashed_password": auth.hash_password(payload.new_password)}},
+    )
+    tokens.update_one({"_id": token_entry["_id"]}, {"$set": {"used": True}})
 
     return MessageResponse(message="Mật khẩu đã được đặt lại thành công.")
 
@@ -242,62 +272,60 @@ def reset_password(
 @app.post("/auth/change-password", response_model=MessageResponse)
 def change_password(
     payload: ChangePasswordRequest,
-    current_user: User = Depends(get_current_user),
-    session: Session = Depends(get_session),
+    current_user: UserDocument = Depends(get_current_user),
+    db: Database = Depends(get_database),
 ) -> MessageResponse:
-    db_user = session.get(User, current_user.id)
-    if not db_user:
+    users = _users_collection(db)
+    user = users.find_one({"_id": current_user["_id"]})
+    if not user:
         raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
 
-    if not auth.verify_password(payload.current_password, db_user.hashed_password):
+    if not auth.verify_password(payload.current_password, user["hashed_password"]):
         raise HTTPException(status_code=400, detail="Mật khẩu hiện tại không chính xác")
 
     if payload.current_password == payload.new_password:
         raise HTTPException(status_code=400, detail="Mật khẩu mới phải khác mật khẩu hiện tại")
 
-    db_user.hashed_password = auth.hash_password(payload.new_password)
-    session.add(db_user)
-    session.commit()
+    users.update_one(
+        {"_id": user["_id"]},
+        {"$set": {"hashed_password": auth.hash_password(payload.new_password)}},
+    )
 
     return MessageResponse(message="Đã đổi mật khẩu thành công.")
 
 
 @app.get("/auth/me", response_model=UserOut)
-def me(current_user: User = Depends(get_current_user)) -> UserOut:
-    return UserOut(
-        id=current_user.id,
-        email=current_user.email,
-        phone_number=current_user.phone_number,
-        created_at=current_user.created_at.isoformat()
-    )
+def me(current_user: UserDocument = Depends(get_current_user)) -> UserOut:
+    return _user_out(current_user)
 
 
 def get_current_user_optional(
     token: Optional[str] = Depends(auth.optional_oauth2_scheme),
-    session: Session = Depends(get_session),
-) -> Optional[User]:
+    db: Database = Depends(get_database),
+) -> Optional[UserDocument]:
     if not token:
         return None
     identifier = auth.decode_access_token(token)
     if not identifier:
         return None
-    
-    # Tìm user bằng email hoặc số điện thoại
-    user = None
-    if is_email(identifier):
-        user = session.exec(select(User).where(User.email == identifier)).first()
-    elif is_phone_number(identifier):
-        user = session.exec(select(User).where(User.phone_number == identifier)).first()
-    
-    return user
+    return _find_user_by_identifier(db, identifier)
+
+
+def _store_description(
+    descriptions: Collection,
+    description: DescriptionDocument,
+) -> DescriptionDocument:
+    result = descriptions.insert_one(description)
+    description["_id"] = result.inserted_id
+    return description
 
 
 @app.post("/api/descriptions/image", response_model=DescriptionResponse)
 async def generate_description_from_image(
     file: UploadFile = File(...),
     style: str = Form("Tiếp thị"),
-    current_user: Optional[User] = Depends(get_current_user_optional),
-    session: Session = Depends(get_session),
+    current_user: Optional[UserDocument] = Depends(get_current_user_optional),
+    db: Database = Depends(get_database),
 ) -> DescriptionResponse:
     settings = get_settings()
 
@@ -324,27 +352,27 @@ async def generate_description_from_image(
     except Exception:  # noqa: BLE001
         image_path = None
 
-    description = content.generate_from_image(settings.gemini_api_key, image, style)
-    if not description:
+    description_text = content.generate_from_image(settings.gemini_api_key, image, style)
+    if not description_text:
         raise HTTPException(status_code=502, detail="Không tạo được mô tả từ hình ảnh")
 
-    score, factors = seo.calculate_seo_score(description)
-    db_entry = Description(
-        user_id=current_user.id if current_user else None,
-        source="image",
-        style=style,
-        content=description,
-        image_path=relative_image_path.as_posix() if image_path else None,
-    )
+    score, factors = seo.calculate_seo_score(description_text)
+
     history_payload = None
     if current_user:
-        session.add(db_entry)
-        session.commit()
-        session.refresh(db_entry)
-        history_payload = history_service.history_item_from_db(db_entry)
+        description_doc: DescriptionDocument = {
+            "user_id": current_user["_id"],
+            "timestamp": datetime.utcnow(),
+            "source": "image",
+            "style": style,
+            "content": description_text,
+            "image_path": relative_image_path.as_posix() if image_path else None,
+        }
+        stored = _store_description(_descriptions_collection(db), description_doc)
+        history_payload = history_service.history_item_from_doc(stored)
 
     return DescriptionResponse(
-        description=description,
+        description=description_text,
         seo_score=score,
         seo_factors=factors,
         history_id=history_payload["id"] if history_payload else "",
@@ -358,27 +386,32 @@ async def generate_description_from_image(
 @app.post("/api/descriptions/text", response_model=DescriptionResponse)
 async def generate_description_from_text(
     payload: GenerateTextRequest,
-    current_user: Optional[User] = Depends(get_current_user_optional),
-    session: Session = Depends(get_session),
+    current_user: Optional[UserDocument] = Depends(get_current_user_optional),
+    db: Database = Depends(get_database),
 ) -> DescriptionResponse:
     settings = get_settings()
 
-    description = content.generate_from_text(settings.gemini_api_key, payload.product_info, payload.style)
-    if not description:
+    description_text = content.generate_from_text(settings.gemini_api_key, payload.product_info, payload.style)
+    if not description_text:
         raise HTTPException(status_code=502, detail="Không tạo được mô tả từ văn bản")
 
-    score, factors = seo.calculate_seo_score(description)
-    db_entry = Description(user_id=current_user.id if current_user else None, source="text", style=payload.style, content=description)
+    score, factors = seo.calculate_seo_score(description_text)
 
     history_payload = None
     if current_user:
-        session.add(db_entry)
-        session.commit()
-        session.refresh(db_entry)
-        history_payload = history_service.history_item_from_db(db_entry)
+        description_doc: DescriptionDocument = {
+            "user_id": current_user["_id"],
+            "timestamp": datetime.utcnow(),
+            "source": "text",
+            "style": payload.style,
+            "content": description_text,
+            "image_path": None,
+        }
+        stored = _store_description(_descriptions_collection(db), description_doc)
+        history_payload = history_service.history_item_from_doc(stored)
 
     return DescriptionResponse(
-        description=description,
+        description=description_text,
         seo_score=score,
         seo_factors=factors,
         history_id=history_payload["id"] if history_payload else "",
@@ -392,11 +425,15 @@ async def generate_description_from_text(
 @app.get("/api/history", response_model=list[HistoryItem])
 def get_history(
     limit: int = 20,
-    current_user: User = Depends(get_current_user),
-    session: Session = Depends(get_session),
+    current_user: UserDocument = Depends(get_current_user),
+    db: Database = Depends(get_database),
 ) -> list[HistoryItem]:
     """Return recent description history."""
-    entries = history_service.get_history_for_user(session, current_user.id, limit)
+    entries = history_service.get_history_for_user(
+        _descriptions_collection(db),
+        current_user["_id"],
+        limit,
+    )
     return [HistoryItem(**entry) for entry in entries]
 
 
@@ -408,19 +445,8 @@ def get_styles() -> JSONResponse:
 
 @app.get("/users", response_model=list[UserOut])
 def get_all_users(
-    session: Session = Depends(get_session),
+    db: Database = Depends(get_database),
 ) -> list[UserOut]:
     """Get all users (no authentication required)."""
-    users = session.exec(select(User)).all()
-    return [
-        UserOut(
-            id=user.id,
-            email=user.email,
-            phone_number=user.phone_number,
-            created_at=user.created_at.isoformat()
-        )
-        for user in users
-    ]
-
-
-
+    users = _users_collection(db).find()
+    return [_user_out(user) for user in users]

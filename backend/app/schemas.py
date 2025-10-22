@@ -42,7 +42,7 @@ class TokenResponse(BaseModel):
 
 
 class UserOut(BaseModel):
-    id: int
+    id: str
     email: Optional[str] = None
     phone_number: Optional[str] = None
     created_at: str

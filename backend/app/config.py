@@ -1,4 +1,5 @@
 from functools import lru_cache
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -6,6 +7,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     gemini_api_key: str = Field(..., alias="GEMINI_API_KEY")
     jwt_secret: str = Field(..., alias="JWT_SECRET")
+    mongodb_uri: str = Field(default="mongodb://localhost:27017", alias="MONGODB_URI")
+    mongodb_db: str = Field(default="ptud2", alias="MONGODB_DB")
     debug: bool = Field(default=True)
     app_name: str = Field(default="AI Product Description Generator")
     smtp_host: str | None = Field(default=None, alias="SMTP_HOST")
@@ -14,12 +17,8 @@ class Settings(BaseSettings):
     smtp_password: str | None = Field(default=None, alias="SMTP_PASSWORD")
     smtp_sender: str | None = Field(default=None, alias="SMTP_SENDER")
 
-    # Cấu hình để đọc file .env
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore"
-    )
+    # Cấu hình đọc file .env
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 
 @lru_cache()

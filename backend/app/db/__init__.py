@@ -1,1 +1,1 @@
-"""Database package for SQLite models and session management."""
+"""Database package for MongoDB connection and helpers."""
