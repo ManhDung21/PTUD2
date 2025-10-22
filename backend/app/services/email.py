@@ -43,10 +43,14 @@ Trân trọng.
     )
 
     try:
-        with smtplib.SMTP(host, port) as smtp:
+        with smtplib.SMTP(host, port, timeout=30) as smtp:
             smtp.starttls()
             smtp.login(username, password)
             smtp.send_message(message)
-    except smtplib.SMTPException as exc:
+    except (smtplib.SMTPException, OSError) as exc:
+        settings = get_settings()
+        if settings.debug:
+            print(f"[DEBUG] Gửi email thất bại: {exc}. Mã đặt lại: {code}")
+            return False
         raise RuntimeError("Không thể gửi email xác thực") from exc
     return True
