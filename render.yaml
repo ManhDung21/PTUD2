@@ -28,5 +28,9 @@ services:
         sync: false
       - key: SMTP_SENDER
         sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_SENDER
+        sync: false
       - key: PYTHON_VERSION
         value: 3.11.9

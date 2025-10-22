@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     cloudinary_cloud_name: str | None = Field(default=None, alias="CLOUDINARY_CLOUD_NAME")
     cloudinary_api_key: str | None = Field(default=None, alias="CLOUDINARY_API_KEY")
     cloudinary_api_secret: str | None = Field(default=None, alias="CLOUDINARY_API_SECRET")
+    resend_api_key: str | None = Field(default=None, alias="RESEND_API_KEY")
+    resend_sender: str | None = Field(default=None, alias="RESEND_SENDER")
 
     # Cấu hình đọc file .env
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
