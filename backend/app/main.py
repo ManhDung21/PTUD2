@@ -181,11 +181,14 @@ def register(payload: UserCreate, db: Database = Depends(get_database)) -> Token
         raise HTTPException(status_code=400, detail="Vui lòng nhập email hoặc số điện thoại hợp lệ")
 
     user: UserDocument = {
-        "email": email,
-        "phone_number": phone_number,
         "hashed_password": auth.hash_password(payload.password),
         "created_at": datetime.utcnow(),
     }
+
+    if email is not None:
+        user["email"] = email
+    if phone_number is not None:
+        user["phone_number"] = phone_number
     result = users.insert_one(user)
 
     token = auth.create_access_token(email if email else phone_number or str(result.inserted_id))
