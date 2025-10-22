@@ -9,3 +9,4 @@ python-multipart==0.0.9
 sqlmodel==0.0.16
 python-jose[cryptography]==3.3.0
 passlib==1.7.4
+mangum==0.17.0
