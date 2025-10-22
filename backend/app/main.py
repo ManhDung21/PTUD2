@@ -32,9 +32,6 @@ from .schemas import (
 )
 from .services import auth, content, email as email_service, history as history_service, seo
 from .services import cloudinary_service
-from sqlmodel import Session, select
-
-
 
 def is_email(identifier: str) -> bool:
     """Kiểm tra xem identifier có phải là email không."""
@@ -365,8 +362,10 @@ async def generate_description_from_image(
     
     # Fallback to local storage if Cloudinary is not configured or upload fails
     image_url: Optional[str] = None
+    stored_image_path: Optional[str] = None
     if cloudinary_url:
         image_url = cloudinary_url
+        stored_image_path = cloudinary_url
     else:
         # Save locally as fallback
         relative_image_path = Path("images") / filename
@@ -381,6 +380,7 @@ async def generate_description_from_image(
             image.save(image_path, **save_kwargs)
             if image_path:
                 image_url = f"/static/{relative_image_path.as_posix()}"
+                stored_image_path = relative_image_path.as_posix()
         except Exception:  # noqa: BLE001
             pass
 
@@ -388,15 +388,7 @@ async def generate_description_from_image(
     if not description_text:
         raise HTTPException(status_code=502, detail="Không tạo được mô tả từ hình ảnh")
 
-
-    score, factors = seo.calculate_seo_score(description)
-    db_entry = Description(
-        user_id=current_user.id if current_user else None,
-        source="image",
-        style=style,
-        content=description,
-        image_path=image_url,  # Store full URL (Cloudinary or local)
-    )
+    score, factors = seo.calculate_seo_score(description_text)
     history_payload = None
     if current_user:
         description_doc: DescriptionDocument = {
@@ -405,7 +397,7 @@ async def generate_description_from_image(
             "source": "image",
             "style": style,
             "content": description_text,
-            "image_path": relative_image_path.as_posix() if image_path else None,
+            "image_path": stored_image_path,
         }
         stored = _store_description(_descriptions_collection(db), description_doc)
         history_payload = history_service.history_item_from_doc(stored)
@@ -418,7 +410,7 @@ async def generate_description_from_image(
         timestamp=history_payload["timestamp"] if history_payload else datetime.utcnow().isoformat(),
         style=style,
         source="image",
-        image_url=history_payload.get("image_url") if history_payload else None,
+        image_url=history_payload.get("image_url") if history_payload else image_url,
     )
 
 
