@@ -10,10 +10,25 @@ from pymongo.collection import Collection
 from ..db.models import DescriptionDocument
 
 
-def _image_url(relative_path: Optional[str]) -> Optional[str]:
-    if not relative_path:
+def _image_url(image_path: Optional[str]) -> Optional[str]:
+    """
+    Convert image_path to accessible URL.
+    If image_path is already a full URL (Cloudinary), return as-is.
+    If it's a local path, convert to static URL.
+    """
+    if not image_path:
         return None
-    return f"/static/{Path(relative_path).as_posix()}"
+    
+    # If already a full URL (starts with http/https), return as-is
+    if image_path.startswith("http://") or image_path.startswith("https://"):
+        return image_path
+    
+    # If it's a local path starting with /static/, return as-is
+    if image_path.startswith("/static/"):
+        return image_path
+    
+    # Otherwise, assume it's a relative path and prepend /static/
+    return f"/static/{Path(image_path).as_posix()}"
 
 
 def history_item_from_doc(description: DescriptionDocument) -> Dict[str, str | None]:
