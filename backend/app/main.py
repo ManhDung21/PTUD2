@@ -30,6 +30,7 @@ from .schemas import (
     UserOut,
 )
 from .services import auth, content, email as email_service, history as history_service, seo
+from .services import cloudinary_service
 from sqlmodel import Session, select
 
 
@@ -58,6 +59,15 @@ app.mount("/static", StaticFiles(directory=BASE_STATIC_DIR), name="static")
 def on_startup() -> None:
     init_db()
     seed_admin_user()
+    
+    # Configure Cloudinary
+    settings = get_settings()
+    if settings.cloudinary_cloud_name and settings.cloudinary_api_key and settings.cloudinary_api_secret:
+        cloudinary_service.configure_cloudinary(
+            settings.cloudinary_cloud_name,
+            settings.cloudinary_api_key,
+            settings.cloudinary_api_secret
+        )
 
 app.add_middleware(
     CORSMiddleware,
@@ -307,22 +317,37 @@ async def generate_description_from_image(
     except UnidentifiedImageError as exc:
         raise HTTPException(status_code=400, detail="Tệp hình ảnh không hợp lệ") from exc
 
+    # Upload image to Cloudinary
     suffix = Path(file.filename or "").suffix.lower()
     if suffix not in {".jpg", ".jpeg", ".png"}:
         suffix = ".jpg"
     filename = f"{uuid4().hex}{suffix}"
-    relative_image_path = Path("images") / filename
-    image_path: Optional[Path] = None
-    try:
-        image_path = IMAGES_DIR / filename
-        save_kwargs = {}
-        if suffix in {".jpg", ".jpeg"}:
-            save_kwargs["format"] = "JPEG"
-        elif suffix == ".png":
-            save_kwargs["format"] = "PNG"
-        image.save(image_path, **save_kwargs)
-    except Exception:  # noqa: BLE001
-        image_path = None
+    
+    # Try to upload to Cloudinary, fallback to local storage if fails
+    cloudinary_url: Optional[str] = None
+    if settings.cloudinary_cloud_name and settings.cloudinary_api_key and settings.cloudinary_api_secret:
+        cloudinary_url = cloudinary_service.upload_image(image, filename)
+    
+    # Fallback to local storage if Cloudinary is not configured or upload fails
+    image_url: Optional[str] = None
+    if cloudinary_url:
+        image_url = cloudinary_url
+    else:
+        # Save locally as fallback
+        relative_image_path = Path("images") / filename
+        image_path: Optional[Path] = None
+        try:
+            image_path = IMAGES_DIR / filename
+            save_kwargs = {}
+            if suffix in {".jpg", ".jpeg"}:
+                save_kwargs["format"] = "JPEG"
+            elif suffix == ".png":
+                save_kwargs["format"] = "PNG"
+            image.save(image_path, **save_kwargs)
+            if image_path:
+                image_url = f"/static/{relative_image_path.as_posix()}"
+        except Exception:  # noqa: BLE001
+            pass
 
     description = content.generate_from_image(settings.gemini_api_key, image, style)
     if not description:
@@ -334,7 +359,7 @@ async def generate_description_from_image(
         source="image",
         style=style,
         content=description,
-        image_path=relative_image_path.as_posix() if image_path else None,
+        image_path=image_url,  # Store full URL (Cloudinary or local)
     )
     history_payload = None
     if current_user:
