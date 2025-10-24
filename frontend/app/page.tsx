@@ -62,6 +62,12 @@ interface ToastState {
 
 const DEFAULT_STYLES = ["Tiếp thị", "Chuyên nghiệp", "Thân thiện", "Kể chuyện"];
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const resolveImageUrl = (url?: string | null): string | null => {
+  if (!url) {
+    return null;
+  }
+  return url.startsWith("http://") || url.startsWith("https://") ? url : `${API_BASE_URL}${url}`;
+};
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<TabKey>("image");
@@ -226,6 +232,7 @@ export default function HomePage() {
   );
 
   const isAuthenticated = Boolean(token && user);
+  const detailImageSrc = historyDetail ? resolveImageUrl(historyDetail.image_url) : null;
 
 
 
@@ -964,8 +971,10 @@ export default function HomePage() {
             <p style={{ color: "var(--text-secondary)" }}>Chưa có lịch sử.</p>
           ) : (
             <div className="history-grid">
-              {history.map((item) => (
-                <div key={item.id} className="history-item">
+              {history.map((item) => {
+                const imageSrc = resolveImageUrl(item.image_url);
+                return (
+                  <div key={item.id} className="history-item">
                   <strong>{new Date(item.timestamp).toLocaleString()}</strong>
                   <span style={{ color: "var(--text-secondary)" }}>
                     Nguồn: {item.source === "image" ? "Hình ảnh" : "Văn bản"}
@@ -973,7 +982,7 @@ export default function HomePage() {
                   <span style={{ color: "var(--accent-orange)", fontWeight: 600 }}>
                     Phong cách: {item.style}
                   </span>
-                  {item.image_url && (
+                  {imageSrc && (
                     <div
                       style={{
                         marginTop: 12,
@@ -986,7 +995,7 @@ export default function HomePage() {
                       }}
                     >
                       <Image
-                        src={`${API_BASE_URL}${item.image_url}`}
+                        src={imageSrc}
                         alt="Ảnh mô tả"
                         fill
                         sizes="(max-width: 768px) 100vw, 320px"
@@ -1012,8 +1021,9 @@ export default function HomePage() {
                   >
                     Xem chi tiết
                   </button>
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
@@ -1089,7 +1099,7 @@ export default function HomePage() {
                 Đóng
               </button>
             </div>
-            {historyDetail.image_url && (
+            {detailImageSrc && (
               <div
                 style={{
                   borderRadius: 24,
@@ -1101,7 +1111,7 @@ export default function HomePage() {
                 }}
               >
                 <Image
-                  src={`${API_BASE_URL}${historyDetail.image_url}`}
+                  src={detailImageSrc}
                   alt="Ảnh mô tả"
                   fill
                   sizes="(max-width: 768px) 100vw, 640px"
