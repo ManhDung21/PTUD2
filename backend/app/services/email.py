@@ -103,3 +103,5 @@ def send_password_reset_code(recipient: str, code: str) -> bool:
             raise RuntimeError("Không thể gửi email xác thực")
         _log_debug(f"Email không gửi được. Mã đặt lại cho {recipient}: {code}")
     return sent_via_smtp
+
+#hehehe
