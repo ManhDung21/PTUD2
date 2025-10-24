@@ -8,15 +8,21 @@ import httpx
 
 from ..config import get_settings
 
-RESET_SUBJECT = "Mã xác thực đặt lại mật khẩu"
+RESET_SUBJECT = "Yêu cầu đặt lại mật khẩu - Mã xác thực của bạn"
+
 RESET_BODY_TEMPLATE = """Xin chào,
 
-Bạn đã yêu cầu đặt lại mật khẩu. Mã xác thực của bạn là: {code}
-Mã có hiệu lực trong 30 phút. Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email.
+Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn.
+
+🔐 Mã xác thực đặt lại mật khẩu: {code}
+
+Mã này có hiệu lực trong 30 phút. Vui lòng không chia sẻ mã cho bất kỳ ai để đảm bảo an toàn tài khoản.
+
+Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email - tài khoản của bạn vẫn an toàn và không có thay đổi nào được thực hiện.
 
 Trân trọng.
+Đội ngũ Hỗ trợ Khách hàng
 """
-
 
 def _log_debug(message: str) -> None:
     settings = get_settings()
