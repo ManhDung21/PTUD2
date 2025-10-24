@@ -1,6 +1,6 @@
 """Pydantic models for request and response payloads."""
 
-from typing import List, Optional
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -12,8 +12,6 @@ class GenerateTextRequest(BaseModel):
 
 class DescriptionResponse(BaseModel):
     description: str
-    seo_score: int
-    seo_factors: List[str]
     history_id: str
     timestamp: str
     style: str

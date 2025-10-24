@@ -30,7 +30,7 @@ from .schemas import (
     UserCreate,
     UserOut,
 )
-from .services import auth, content, email as email_service, history as history_service, seo
+from .services import auth, content, email as email_service, history as history_service
 from .services import cloudinary_service
 
 def is_email(identifier: str) -> bool:
@@ -394,7 +394,6 @@ async def generate_description_from_image(
     if not description_text:
         raise HTTPException(status_code=502, detail="Không tạo được mô tả từ hình ảnh")
 
-    score, factors = seo.calculate_seo_score(description_text)
     history_payload = None
     if current_user:
         description_doc: DescriptionDocument = {
@@ -410,8 +409,6 @@ async def generate_description_from_image(
 
     return DescriptionResponse(
         description=description_text,
-        seo_score=score,
-        seo_factors=factors,
         history_id=history_payload["id"] if history_payload else "",
         timestamp=history_payload["timestamp"] if history_payload else datetime.utcnow().isoformat(),
         style=style,
@@ -432,8 +429,6 @@ async def generate_description_from_text(
     if not description_text:
         raise HTTPException(status_code=502, detail="Không tạo được mô tả từ văn bản")
 
-    score, factors = seo.calculate_seo_score(description_text)
-
     history_payload = None
     if current_user:
         description_doc: DescriptionDocument = {
@@ -449,8 +444,6 @@ async def generate_description_from_text(
 
     return DescriptionResponse(
         description=description_text,
-        seo_score=score,
-        seo_factors=factors,
         history_id=history_payload["id"] if history_payload else "",
         timestamp=history_payload["timestamp"] if history_payload else datetime.utcnow().isoformat(),
         style=payload.style,

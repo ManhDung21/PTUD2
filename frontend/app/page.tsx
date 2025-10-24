@@ -11,8 +11,6 @@ type AuthMode = "login" | "register" | "forgot" | "reset";
 
 interface DescriptionResponse {
   description: string;
-  seo_score: number;
-  seo_factors: string[];
   history_id: string;
   timestamp: string;
   style: string;
@@ -671,7 +669,7 @@ export default function HomePage() {
           <div>
             <h1> AI Mô Tả Sản Phẩm Trái Cây </h1>
             <p style={{ color: "var(--text-secondary)", marginBottom: 32 }}>
-               Từ hình ảnh đến mô tả hoàn hảo |  Nhiều phong cách viết |  Tối ưu SEO tự động
+              Từ hình ảnh đến mô tả hoàn hảo |  Nhiều phong cách viết |  Chia sẻ dễ dàng
             </p>
           </div>
           <div>
@@ -1002,15 +1000,13 @@ export default function HomePage() {
                     onClick={() => {
                       setActiveTab("text");
                       setHistoryDetail(item);
-                      setResult({
-                        description: item.full_description,
-                        seo_score: 0,
-                        seo_factors: [],
-                        history_id: item.id,
-                        timestamp: item.timestamp,
-                        style: item.style,
-                        source: item.source,
-                        image_url: item.image_url ?? null,
+                        setResult({
+                          description: item.full_description,
+                          history_id: item.id,
+                          timestamp: item.timestamp,
+                          style: item.style,
+                          source: item.source,
+                          image_url: item.image_url ?? null,
                       });
                     }}
                   >

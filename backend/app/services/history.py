@@ -23,6 +23,10 @@ def _image_url(image_path: Optional[str]) -> Optional[str]:
     if image_path.startswith("http://") or image_path.startswith("https://"):
         return image_path
     
+    # If stored as an absolute path (e.g., /media/filename), return directly
+    if image_path.startswith("/"):
+        return image_path
+    
     # If it's a local path starting with /static/, return as-is
     if image_path.startswith("/static/"):
         return image_path
