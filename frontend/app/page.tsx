@@ -983,17 +983,7 @@ export default function HomePage() {
                     Phong cách: {item.style}
                   </span>
                   {imageSrc && (
-                    <div
-                      style={{
-                        marginTop: 12,
-                        borderRadius: 16,
-                        overflow: "hidden",
-                        border: "1px solid rgba(0,0,0,0.05)",
-                        position: "relative",
-                        width: "100%",
-                        height: 160,
-                      }}
-                    >
+                    <div className="history-thumb">
                       <Image
                         src={imageSrc}
                         alt="Ảnh mô tả"
@@ -1100,16 +1090,7 @@ export default function HomePage() {
               </button>
             </div>
             {detailImageSrc && (
-              <div
-                style={{
-                  borderRadius: 24,
-                  overflow: "hidden",
-                  border: "1px solid rgba(0,0,0,0.08)",
-                  position: "relative",
-                  width: "100%",
-                  height: "min(360px, 60vh)",
-                }}
-              >
+              <div className="detail-image-wrapper">
                 <Image
                   src={detailImageSrc}
                   alt="Ảnh mô tả"

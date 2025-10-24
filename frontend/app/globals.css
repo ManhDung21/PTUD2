@@ -183,6 +183,27 @@ select:focus {
   gap: 8px;
 }
 
+.history-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  margin-top: 12px;
+}
+
+.detail-image-wrapper {
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  width: 100%;
+  max-height: min(60vh, 420px);
+  aspect-ratio: 4 / 3;
+  margin: 16px 0;
+}
+
 .template-card {
   background: rgba(255, 255, 255, 0.8);
   border-radius: 24px;
