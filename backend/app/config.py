@@ -1,11 +1,11 @@
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    gemini_api_key: str = Field(..., alias="GEMINI_API_KEY")
+    gemini_api_key: str = Field(..., validation_alias=AliasChoices("GEMINI_API_KEY", "GOOGLE_API_KEY"))
     jwt_secret: str = Field(..., alias="JWT_SECRET")
     mongodb_uri: str = Field(default="mongodb://localhost:27017", alias="MONGODB_URI")
     mongodb_db: str = Field(default="ptud2", alias="MONGODB_DB")

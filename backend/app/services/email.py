@@ -1,6 +1,7 @@
 """Email utilities for transactional messages using Resend or SMTP fallback."""
 
 import smtplib
+import sys
 from email.message import EmailMessage
 from typing import Any
 
@@ -27,7 +28,9 @@ Trân trọng.
 def _log_debug(message: str) -> None:
     settings = get_settings()
     if settings.debug:
-        print(f"[DEBUG] {message}")
+        encoding = getattr(sys.stdout, "encoding", None) or "utf-8"
+        safe_message = message.encode(encoding, errors="replace").decode(encoding, errors="replace")
+        print(f"[DEBUG] {safe_message}")
 
 
 def _require_smtp_settings() -> tuple[str, int, str, str, str]:
