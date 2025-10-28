@@ -4,12 +4,14 @@ from typing import Optional
 
 from pymongo import ASCENDING, DESCENDING, MongoClient
 from pymongo.database import Database
+from pymongo.errors import PyMongoError
 
 from ..config import get_settings
 
 settings = get_settings()
 
 _client: Optional[MongoClient] = None
+_resolved_db_name: Optional[str] = None
 
 
 def get_client() -> MongoClient:
@@ -20,7 +22,32 @@ def get_client() -> MongoClient:
 
 
 def get_database() -> Database:
-    return get_client()[settings.mongodb_db]
+    client = get_client()
+    return client[_resolve_db_name(client, settings.mongodb_db)]
+
+
+def _resolve_db_name(client: MongoClient, desired_name: str) -> str:
+    global _resolved_db_name
+
+    if _resolved_db_name is not None:
+        return _resolved_db_name
+
+    lowercase_target = desired_name.lower()
+
+    try:
+        existing_names = client.list_database_names()
+    except PyMongoError:
+        _resolved_db_name = desired_name
+        return _resolved_db_name
+
+    for name in existing_names:
+        if name.lower() == lowercase_target:
+            _resolved_db_name = name
+            break
+    else:
+        _resolved_db_name = desired_name
+
+    return _resolved_db_name
 
 
 def init_db() -> None:
