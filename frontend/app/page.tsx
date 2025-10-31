@@ -6,6 +6,96 @@ import axios from "axios";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
+const cleanDescription = (value?: string | null): string => {
+  return value?.replace(/\s+/g, " ").trim() ?? "";
+};
+
+const shareOnFacebook = (description?: string, imageUrl?: string | null) => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const shareTarget = window.location?.href ?? window.location.origin;
+  const params = new URLSearchParams({ u: shareTarget });
+
+  const cleaned = cleanDescription(description);
+  if (cleaned) {
+    params.set("quote", cleaned.slice(0, 460));
+  }
+
+  if (imageUrl && (imageUrl.startsWith("http://") || imageUrl.startsWith("https://"))) {
+    params.set("picture", imageUrl);
+  }
+
+  const shareUrl = `https://www.facebook.com/sharer/sharer.php?${params.toString()}`;
+  const popup = window.open(shareUrl, "_blank", "width=600,height=600,menubar=no,toolbar=no,status=no");
+  if (!popup) {
+    window.location.href = shareUrl;
+  }
+};
+
+const shareOnTikTok = async (
+  description?: string | null,
+  imageUrl?: string | null,
+  notify?: (kind: ToastKind, message: string) => void,
+) => {
+  if (typeof navigator === "undefined" || typeof window === "undefined") {
+    notify?.("error", "Thiết bị không hỗ trợ chia sẻ trực tiếp.");
+    return;
+  }
+
+  const text = cleanDescription(description) || "Mô tả sản phẩm của tôi từ ứng dụng AI.";
+  const shareOrigin = window.location?.href ?? window.location.origin;
+
+  const shareData: ShareData = {
+    title: "Mô tả sản phẩm",
+    text,
+    url: shareOrigin,
+  };
+
+  const attachImage = async (): Promise<void> => {
+    if (!imageUrl || !navigator.canShare || !/^https?:\/\//i.test(imageUrl)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(imageUrl, { mode: "cors" });
+      if (!response.ok) throw new Error("HTTP error");
+      const blob = await response.blob();
+      const extension = blob.type.includes("png") ? "png" : "jpg";
+      const file = new File([blob], `tiktok-share-${Date.now()}.${extension}`, { type: blob.type || "image/jpeg" });
+      const candidate: ShareData = { ...shareData, files: [file] };
+      if (!navigator.canShare(candidate)) {
+        return;
+      }
+      shareData.files = [file];
+    } catch {
+      notify?.("error", "Không thể tải ảnh cho TikTok, chỉ chia sẻ mô tả.");
+    }
+  };
+
+  await attachImage();
+
+  if (navigator.share) {
+    try {
+      await navigator.share(shareData);
+      notify?.("success", "Đã mở hộp thoại chia sẻ. Hãy hoàn tất trong TikTok.");
+      return;
+    } catch (error) {
+      if ((error as DOMException).name === "AbortError") {
+        return;
+      }
+    }
+  }
+
+  try {
+    await navigator.clipboard.writeText(text);
+    notify?.("success", "Đã sao chép mô tả. Mở TikTok và dán nội dung.");
+  } catch {
+    notify?.("error", "Thiết bị không hỗ trợ chia sẻ TikTok. Vui lòng sao chép thủ công.");
+  }
+};
+
 type TabKey = "image" | "text";
 type AuthMode = "login" | "register" | "forgot" | "reset";
 
@@ -898,6 +988,20 @@ export default function HomePage() {
                     >
                        Sao chép
                     </button>
+                    <button
+                      className="primary-button"
+                      onClick={() => shareOnFacebook(result.description, resolveImageUrl(result.image_url))}
+                    >
+                      Chia se Facebook
+                    </button>
+                    <button
+                      className="secondary-button"
+                      onClick={() => {
+                        void shareOnTikTok(result.description, resolveImageUrl(result.image_url), showToast);
+                      }}
+                    >
+                      Chia se TikTok
+                    </button>
                   </div>
                 </div>
               )}
@@ -941,6 +1045,20 @@ export default function HomePage() {
                     onClick={() => navigator.clipboard.writeText(result.description)}
                   >
                      Sao chép
+                  </button>
+                  <button
+                    className="primary-button"
+                    onClick={() => shareOnFacebook(result.description, resolveImageUrl(result.image_url))}
+                  >
+                    Chia se Facebook
+                  </button>
+                  <button
+                    className="secondary-button"
+                    onClick={() => {
+                      void shareOnTikTok(result.description, resolveImageUrl(result.image_url), showToast);
+                    }}
+                  >
+                    Chia se TikTok
                   </button>
                 </div>
               </div>
@@ -1010,6 +1128,20 @@ export default function HomePage() {
                     }}
                   >
                     Xem chi tiết
+                  </button>
+                  <button
+                    className="secondary-button"
+                    onClick={() => shareOnFacebook(item.full_description, resolveImageUrl(item.image_url))}
+                  >
+                    Chia se Facebook
+                  </button>
+                  <button
+                    className="secondary-button"
+                    onClick={() => {
+                      void shareOnTikTok(item.full_description, resolveImageUrl(item.image_url), showToast);
+                    }}
+                  >
+                    Chia se TikTok
                   </button>
                   </div>
                 );
@@ -1118,6 +1250,20 @@ export default function HomePage() {
                 onClick={() => navigator.clipboard.writeText(historyDetail.full_description)}
               >
                 📋 Sao chép
+              </button>
+              <button
+                className="primary-button"
+                onClick={() => shareOnFacebook(historyDetail.full_description, detailImageSrc)}
+              >
+                Chia se Facebook
+              </button>
+              <button
+                className="secondary-button"
+                onClick={() => {
+                  void shareOnTikTok(historyDetail.full_description, detailImageSrc, showToast);
+                }}
+              >
+                Chia se TikTok
               </button>
             </div>
           </div>
