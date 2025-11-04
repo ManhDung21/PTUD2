@@ -50,6 +50,11 @@ def is_phone_number(identifier: str) -> bool:
 
 app = FastAPI(title="AI Product Description Service")
 
+
+@app.get("/")
+def root() -> JSONResponse:
+    return JSONResponse({"message": "AI Product Description Service đang chạy", "endpoints": ["/health", "/auth", "/api"]})
+
 BASE_STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 IMAGES_DIR = BASE_STATIC_DIR / "images"
 IMAGES_DIR.mkdir(parents=True, exist_ok=True)
