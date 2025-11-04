@@ -10,7 +10,7 @@ import json
 import httpx
 from fastapi import HTTPException, status
 
-from app.config import get_settings
+from ..config import get_settings
 
 settings = get_settings()
 GRAPH_API_BASE = f"https://graph.facebook.com/{settings.facebook_graph_version}"

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import axios from "axios";
+import { UsageGuideContent } from "../components/UsageGuideContent";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
@@ -207,6 +208,7 @@ export default function HomePage() {
   const [changePasswordForm, setChangePasswordForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
   const [toast, setToast] = useState<ToastState | null>(null);
   const [authMessage, setAuthMessage] = useState<{ type: ToastKind; message: string } | null>(null);
+  const [guideVisible, setGuideVisible] = useState(false);
 
   const showToast = useCallback((type: ToastKind, message: string) => {
     const id = Date.now();
@@ -809,6 +811,16 @@ export default function HomePage() {
             <p style={{ color: "var(--text-secondary)", marginBottom: 32 }}>
               Từ hình ảnh đến mô tả hoàn hảo |  Nhiều phong cách viết |  Chia sẻ dễ dàng
             </p>
+
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => setGuideVisible(true)}
+              >
+                Hướng Dẫn Sử Dụng
+              </button>
+            </div>
           </div>
           <div>
             {isAuthenticated ? (
@@ -1041,6 +1053,7 @@ export default function HomePage() {
                         void shareViaGraph("page", result.description, result.image_url);
                       }}
                     >
+                      Dang len fanpage
                     </button>
                     <button
                       className="secondary-button"
@@ -1048,7 +1061,7 @@ export default function HomePage() {
                         void shareViaGraph("group", result.description, result.image_url);
                       }}
                     >
-
+                      Dang len nhom
                     </button>
                     <button
                       className="secondary-button"
@@ -1213,6 +1226,7 @@ export default function HomePage() {
                       void shareViaGraph("page", item.full_description, item.image_url);
                     }}
                   >
+                    Dang len fanpage
                   </button>
                   <button
                     className="secondary-button"
@@ -1220,6 +1234,7 @@ export default function HomePage() {
                       void shareViaGraph("group", item.full_description, item.image_url);
                     }}
                   >
+                    Dang len nhom
                   </button>
                   <button
                     className="secondary-button"
@@ -1260,6 +1275,48 @@ export default function HomePage() {
           }}
         >
           {toast.message}
+        </div>
+      )}
+
+      {guideVisible && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.55)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 16,
+            zIndex: 1200,
+          }}
+          onClick={() => setGuideVisible(false)}
+        >
+          <div
+            style={{
+              width: "min(960px, 100%)",
+              maxHeight: "90vh",
+              overflowY: "auto",
+              background: "transparent",
+              borderRadius: 28,
+            }}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="app-container" style={{ padding: 0 }}>
+              <UsageGuideContent
+                actionSlot={
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => setGuideVisible(false)}
+                  >
+                    Dong huong dan
+                  </button>
+                }
+                description="Xem nhanh quy trinh su dung tren web va mobile ma khong can roi trang hien tai."
+              />
+            </div>
+          </div>
         </div>
       )}
 
@@ -1342,6 +1399,22 @@ export default function HomePage() {
                 onClick={() => shareOnFacebook(historyDetail.full_description, detailImageSrc)}
               >
                 Chia se Facebook
+              </button>
+              <button
+                className="secondary-button"
+                onClick={() => {
+                  void shareViaGraph("page", historyDetail.full_description, historyDetail.image_url ?? null);
+                }}
+              >
+                Dang len fanpage
+              </button>
+              <button
+                className="secondary-button"
+                onClick={() => {
+                  void shareViaGraph("group", historyDetail.full_description, historyDetail.image_url ?? null);
+                }}
+              >
+                Dang len nhom
               </button>
               <button
                 className="secondary-button"
