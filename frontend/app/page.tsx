@@ -1310,7 +1310,7 @@ export default function HomePage() {
                     className="secondary-button"
                     onClick={() => setGuideVisible(false)}
                   >
-                    Dong huong dan
+                    Đóng
                   </button>
                 }
                 description="Xem nhanh quy trinh su dung tren web va mobile ma khong can roi trang hien tai."

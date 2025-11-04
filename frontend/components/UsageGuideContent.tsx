@@ -205,7 +205,7 @@ export function UsageGuideContent({ actionSlot, description }: UsageGuideContent
         className="card"
         style={{
           marginTop: 32,
-          background: "linear-gradient(135deg, rgba(255, 107, 107, 1), rgba(255, 138, 66, 0.85))",
+          background: "linear-gradient(135deg, rgba(245, 245, 245, 1), rgba(255, 138, 66, 1))",
           border: "1px solid rgba(255, 255, 255, 1)",
           display: "flex",
           flexDirection: "column",
