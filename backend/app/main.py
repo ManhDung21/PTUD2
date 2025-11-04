@@ -15,12 +15,15 @@ from PIL import Image, UnidentifiedImageError
 from pymongo.collection import Collection
 from pymongo.database import Database
 
-from .config import get_settings
+from .config import Settings, get_settings
 from .db.models import DescriptionDocument, PasswordResetTokenDocument, UserDocument
 from .db.session import get_database, init_db
 from .schemas import (
     ChangePasswordRequest,
     DescriptionResponse,
+    FacebookShareRequest,
+    FacebookShareResponse,
+    FacebookDeletionResponse,
     ForgotPasswordRequest,
     GenerateTextRequest,
     HistoryItem,
@@ -31,7 +34,7 @@ from .schemas import (
     UserOut,
 )
 from .services import auth, content, email as email_service, history as history_service
-from .services import cloudinary_service
+from .services import cloudinary_service, facebook as facebook_service
 
 def is_email(identifier: str) -> bool:
     """Kiểm tra xem identifier có phải là email không."""
@@ -450,6 +453,49 @@ async def generate_description_from_text(
         source="text",
         image_url=history_payload.get("image_url") if history_payload else None,
     )
+
+
+@app.post("/facebook/delete", response_model=FacebookDeletionResponse)
+async def facebook_data_deletion(signed_request: str = Form(...)) -> FacebookDeletionResponse:
+    """Endpoint để Facebook gọi khi người dùng yêu cầu xóa dữ liệu."""
+    settings = get_settings()
+    if not settings.facebook_app_secret:
+        raise HTTPException(status_code=500, detail="FACEBOOK_APP_SECRET chưa được cấu hình.")
+
+    payload = facebook_service.decode_signed_request(signed_request, settings.facebook_app_secret)
+    user_identifier = payload.get("user_id") or payload.get("id") or payload.get("page", {}).get("id")
+    confirmation = payload.get("code") or payload.get("issued_at")
+
+    message = "Yêu cầu xóa dữ liệu đã được ghi nhận. Không lưu dữ liệu người dùng Facebook."
+
+    return FacebookDeletionResponse(
+        status="success",
+        message=message,
+        user_id=str(user_identifier) if user_identifier else None,
+        confirmation_code=str(confirmation) if confirmation else None,
+    )
+
+
+@app.post("/api/share/facebook", response_model=FacebookShareResponse)
+async def share_to_facebook(payload: FacebookShareRequest) -> FacebookShareResponse:
+    """Forward description and image to Facebook via Graph API."""
+    if payload.target == "page":
+        result = await facebook_service.share_to_page(
+            caption=payload.caption,
+            image_url=payload.image_url,
+            page_id=payload.override_page_id,
+            token=payload.override_page_token,
+        )
+    else:
+        result = await facebook_service.share_to_group(
+            caption=payload.caption,
+            image_url=payload.image_url,
+            group_id=payload.override_group_id,
+            token=payload.override_user_token,
+        )
+
+    post_id = result.get("post_id") or result.get("id")
+    return FacebookShareResponse(message="�?A� �`�ng l�n Facebook thA�nh cA'ng.", post_id=post_id)
 
 
 @app.get("/api/history", response_model=list[HistoryItem])

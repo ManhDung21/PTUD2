@@ -10,6 +10,20 @@ const cleanDescription = (value?: string | null): string => {
   return value?.replace(/\s+/g, " ").trim() ?? "";
 };
 
+const formatVietnamTime = (timestamp?: string | null): string => {
+  if (!timestamp) {
+    return "";
+  }
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) {
+    return timestamp;
+  }
+  return date.toLocaleString("vi-VN", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    hour12: false,
+  });
+};
+
 const shareOnFacebook = (description?: string, imageUrl?: string | null) => {
   if (typeof window === "undefined") {
     return;
@@ -201,6 +215,33 @@ export default function HomePage() {
       setToast((current) => (current && current.id === id ? null : current));
     }, 4000);
   }, []);
+
+  const shareViaGraph = useCallback(
+    async (target: "page" | "group", caption: string, imageUrl?: string | null) => {
+      const resolvedImageUrl = resolveImageUrl(imageUrl);
+      if (!resolvedImageUrl) {
+        showToast("error", "KhA'ng tA�m thA'y hA�nh �`��? hA�p l��� �`A�ng lA�n Facebook.");
+        return;
+      }
+
+      try {
+        await axios.post(`${API_BASE_URL}/api/share/facebook`, {
+          target,
+          caption,
+          image_url: resolvedImageUrl,
+        });
+        showToast("success", target === "page" ? "�?A� �`�ng lA�n fanpage." : "�?A� �`�ng lA�n nhA�m Facebook.");
+      } catch (error) {
+        console.error("Facebook share error", error);
+        const detail =
+          axios.isAxiosError(error) && (error.response?.data as { detail?: string } | undefined)?.detail
+            ? (error.response?.data as { detail?: string }).detail
+            : null;
+        showToast("error", detail ?? "�?A�ng lA�n Facebook thA�t bA�i. Vui lA�ng kiA�m tra lA�i quyA�n truy cA�p.");
+      }
+    },
+    [showToast],
+  );
 
   const clearToast = useCallback(() => setToast(null), []);
 
@@ -997,6 +1038,21 @@ export default function HomePage() {
                     <button
                       className="secondary-button"
                       onClick={() => {
+                        void shareViaGraph("page", result.description, result.image_url);
+                      }}
+                    >
+                    </button>
+                    <button
+                      className="secondary-button"
+                      onClick={() => {
+                        void shareViaGraph("group", result.description, result.image_url);
+                      }}
+                    >
+
+                    </button>
+                    <button
+                      className="secondary-button"
+                      onClick={() => {
                         void shareOnTikTok(result.description, resolveImageUrl(result.image_url), showToast);
                       }}
                     >
@@ -1055,6 +1111,22 @@ export default function HomePage() {
                   <button
                     className="secondary-button"
                     onClick={() => {
+                      void shareViaGraph("page", result.description, result.image_url);
+                    }}
+                  >
+                     �`�ng lA�n fanpage
+                  </button>
+                  <button
+                    className="secondary-button"
+                    onClick={() => {
+                      void shareViaGraph("group", result.description, result.image_url);
+                    }}
+                  >
+                     �`�ng lA�n nhA�m
+                  </button>
+                  <button
+                    className="secondary-button"
+                    onClick={() => {
                       void shareOnTikTok(result.description, resolveImageUrl(result.image_url), showToast);
                     }}
                   >
@@ -1093,7 +1165,7 @@ export default function HomePage() {
                 const imageSrc = resolveImageUrl(item.image_url);
                 return (
                   <div key={item.id} className="history-item">
-                  <strong>{new Date(item.timestamp).toLocaleString()}</strong>
+                  <strong>{formatVietnamTime(item.timestamp)}</strong>
                   <span style={{ color: "var(--text-secondary)" }}>
                     Nguồn: {item.source === "image" ? "Hình ảnh" : "Văn bản"}
                   </span>
@@ -1134,6 +1206,20 @@ export default function HomePage() {
                     onClick={() => shareOnFacebook(item.full_description, resolveImageUrl(item.image_url))}
                   >
                     Chia se Facebook
+                  </button>
+                  <button
+                    className="secondary-button"
+                    onClick={() => {
+                      void shareViaGraph("page", item.full_description, item.image_url);
+                    }}
+                  >
+                  </button>
+                  <button
+                    className="secondary-button"
+                    onClick={() => {
+                      void shareViaGraph("group", item.full_description, item.image_url);
+                    }}
+                  >
                   </button>
                   <button
                     className="secondary-button"
@@ -1211,7 +1297,7 @@ export default function HomePage() {
               <div>
                 <h2 style={{ margin: "0 0 8px" }}>Chi tiết mô tả</h2>
                 <p style={{ margin: 0, color: "var(--text-secondary)" }}>
-                  {new Date(historyDetail.timestamp).toLocaleString()} • Nguồn: {historyDetail.source === "image" ? "Hình ảnh" : "Văn bản"}
+                  {formatVietnamTime(historyDetail.timestamp)} • Nguồn: {historyDetail.source === "image" ? "Hình ảnh" : "Văn bản"}
                 </p>
                 <p style={{ margin: "4px 0 0", color: "var(--accent-orange)", fontWeight: 600 }}>
                   Phong cách: {historyDetail.style}
