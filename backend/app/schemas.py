@@ -1,6 +1,6 @@
 """Pydantic models for request and response payloads."""
 
-from typing import Literal, Optional
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -63,25 +63,3 @@ class ChangePasswordRequest(BaseModel):
 
 class MessageResponse(BaseModel):
     message: str
-
-
-class FacebookShareRequest(BaseModel):
-    target: Literal["page", "group"]
-    caption: str = Field(..., min_length=3)
-    image_url: str = Field(..., min_length=3)
-    override_page_id: str | None = None
-    override_group_id: str | None = None
-    override_page_token: str | None = None
-    override_user_token: str | None = None
-
-
-class FacebookShareResponse(BaseModel):
-    message: str
-    post_id: Optional[str] = None
-
-
-class FacebookDeletionResponse(BaseModel):
-    status: Literal["success"]
-    message: str
-    user_id: Optional[str] = None
-    confirmation_code: Optional[str] = None

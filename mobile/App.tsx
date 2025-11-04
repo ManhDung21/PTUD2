@@ -1,20 +1,1858 @@
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  GestureResponderEvent,
+  Image,
+  Modal,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StyleProp,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  ViewStyle,
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import Constants from 'expo-constants';
+import * as ImagePicker from 'expo-image-picker';
+import * as Clipboard from 'expo-clipboard';
+import { Picker } from '@react-native-picker/picker';
 
-export default function App() {
+declare const process: { env?: Record<string, string | undefined> } | undefined;
+
+const expoExtra = (Constants.expoConfig?.extra ?? {}) as { apiBaseUrl?: string };
+const envApiBaseUrl =
+  (typeof process !== 'undefined' && process?.env?.EXPO_PUBLIC_API_BASE_URL) || undefined;
+const API_BASE_URL = expoExtra.apiBaseUrl ?? envApiBaseUrl ?? 'http://localhost:8000';
+
+const STORAGE_KEYS = { token: 'fruitmate-token' };
+
+const DEFAULT_STYLES = ['Tiep thi', 'Chuyen nghiep', 'Than thien', 'Ke chuyen'];
+const QUICK_STEPS = [
+  {
+    title: '1. Tai anh hoac nhap mo ta',
+    description:
+      'Chon hinh san pham ro net (PNG/JPG < 5MB) hoac nhap noi dung chi tiet ve trai cay.',
+  },
+  {
+    title: '2. Chon phong cach phu hop',
+    description:
+      'Dieu chinh phong cach viet de phu hop voi thuong hieu: than thien, chuyen nghiep hoac ke chuyen.',
+  },
+  {
+    title: '3. Tao noi dung bang AI',
+    description: 'He thong su dung mo hinh Gemini de sinh mo ta toi uu chi trong vai giay.',
+  },
+  {
+    title: '4. Sao chep va quan ly',
+    description:
+      'Sao chep hoac tai xuong mo ta de chen vao cac cong cu marketing khac.',
+  },
+];
+
+const MOBILE_TIPS = [
+  'Dang nhap de dong bo lich su giua web va mobile.',
+  'Ket noi camera de chup san pham truc tiep va tao mo ta ngay lap tuc.',
+  'Su dung nut Sao chep de chen noi dung vao cac ung dung ban hang quen thuoc.',
+];
+
+const FAQS = [
+  {
+    question: 'Toi co the su dung noi dung da tao nhu the nao?',
+    answer:
+      'Ban co the sao chep mo ta de su dung tren cac kenh ban hang hoac cong cu marketing khac.',
+  },
+  {
+    question: 'Lich su mo ta duoc luu o dau?',
+    answer:
+      'Toan bo mo ta duoc luu trong tai khoan cua ban. Vao muc Lich su de xem lai va tai su dung.',
+  },
+  {
+    question: 'Ung dung co hoat dong offline khong?',
+    answer:
+      'Ung dung can ket noi Internet de gui hinh anh va nhan noi dung tu dich vu AI cung nhu dong bo lich su.',
+  },
+];
+
+type TabKey = 'image' | 'text';
+type AuthMode = 'login' | 'register' | 'forgot' | 'reset';
+type ToastKind = 'success' | 'error';
+
+interface ToastState {
+  id: number;
+  type: ToastKind;
+  message: string;
+}
+
+interface ImageItem {
+  id: string;
+  uri: string;
+  name: string;
+  mimeType: string;
+}
+
+interface DescriptionResponse {
+  description: string;
+  history_id: string;
+  timestamp: string;
+  style: string;
+  source: string;
+  image_url?: string | null;
+}
+
+interface HistoryItem {
+  id: string;
+  timestamp: string;
+  source: string;
+  style: string;
+  summary: string;
+  full_description: string;
+  image_url?: string | null;
+}
+
+interface User {
+  id: string | number;
+  email: string | null;
+  phone_number: string | null;
+  created_at: string;
+}
+
+interface TokenResponse {
+  access_token: string;
+  token_type: string;
+}
+
+interface MessageResponse {
+  message: string;
+}
+
+const api = axios.create({ baseURL: API_BASE_URL });
+
+function formatVietnamTime(timestamp?: string | null): string {
+  if (!timestamp) {
+    return '';
+  }
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) {
+    return timestamp;
+  }
+  try {
+    return date.toLocaleString('vi-VN', {
+      timeZone: 'Asia/Ho_Chi_Minh',
+      hour12: false,
+    });
+  } catch {
+    return date.toISOString();
+  }
+}
+
+function resolveImageUrl(url?: string | null): string | null {
+  if (!url) {
+    return null;
+  }
+  if (/^https?:\/\//i.test(url)) {
+    return url;
+  }
+  return `${API_BASE_URL}${url}`;
+}
+
+function cleanDescription(value?: string | null): string {
+  return value?.replace(/\s+/g, ' ').trim() ?? '';
+}
+
+const PANEL_BACKGROUND = 'rgba(255,255,255,0.86)';
+const BORDER_COLOR = 'rgba(226,232,240,0.9)';
+
+const styles = StyleSheet.create({
+  gradient: { flex: 1 },
+  safeArea: { flex: 1 },
+  scrollContent: {
+    padding: 24,
+    paddingBottom: 96,
+  },
+  panel: {
+    backgroundColor: PANEL_BACKGROUND,
+    borderRadius: 28,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: BORDER_COLOR,
+    shadowColor: '#ff8c42',
+    shadowOffset: { width: 0, height: 18 },
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+    elevation: 12,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+  },
+  headerTitle: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: '#2d3748',
+  },
+  headerSubtitle: {
+    marginTop: 8,
+    color: '#718096',
+    lineHeight: 20,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    marginTop: 16,
+  },
+  authBox: {
+    marginLeft: 16,
+    alignItems: 'flex-end',
+    maxWidth: 220,
+  },
+  authInfo: {
+    alignItems: 'flex-end',
+  },
+  welcomeLabel: {
+    color: '#718096',
+    marginBottom: 12,
+  },
+  authActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end',
+  },
+  section: {
+    marginTop: 28,
+  },
+  sectionLabel: {
+    fontWeight: '600',
+    color: '#2d3748',
+    marginBottom: 12,
+  },
+  pickerWrapper: {
+    borderWidth: 1,
+    borderColor: BORDER_COLOR,
+    borderRadius: 18,
+    overflow: 'hidden',
+    backgroundColor: '#ffffff',
+  },
+  picker: {
+    height: 52,
+    color: '#2d3748',
+  },
+  segmented: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    padding: 6,
+    borderRadius: 999,
+  },
+  segmentedButton: {
+    flex: 1,
+    borderRadius: 999,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+  },
+  segmentedButtonActive: {
+    backgroundColor: '#ffffff',
+    shadowColor: '#ff8c42',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  segmentedText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#718096',
+    textAlign: 'center',
+  },
+  segmentedTextActive: {
+    color: '#ff8c42',
+  },
+  card: {
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.6)',
+    shadowColor: '#2d3748',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 6,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#2d3748',
+  },
+  sectionDescription: {
+    marginTop: 8,
+    color: '#718096',
+    lineHeight: 20,
+  },
+  rowInline: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 16,
+  },
+  actionButton: {
+    marginTop: 20,
+  },
+  placeholderText: {
+    marginTop: 16,
+    color: '#a0aec0',
+    fontStyle: 'italic',
+  },
+  imageList: {
+    marginTop: 16,
+    paddingBottom: 4,
+  },
+  imageThumb: {
+    width: 110,
+    height: 90,
+    borderRadius: 18,
+    marginRight: 12,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  imageThumbActive: {
+    borderColor: '#ff8c42',
+  },
+  imageThumbImage: {
+    width: '100%',
+    height: '100%',
+  },
+  imageRemove: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: '#ff6b6b',
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  imageRemoveText: {
+    color: '#ffffff',
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  textArea: {
+    marginTop: 16,
+    minHeight: 140,
+    borderWidth: 1,
+    borderColor: BORDER_COLOR,
+    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    color: '#2d3748',
+    textAlignVertical: 'top',
+    backgroundColor: '#ffffff',
+  },
+  resultMeta: {
+    marginTop: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  resultStyle: {
+    fontWeight: '600',
+    color: '#ff8c42',
+  },
+  resultTimestamp: {
+    color: '#a0aec0',
+    fontSize: 12,
+  },
+  resultDescription: {
+    marginTop: 12,
+    color: '#2d3748',
+    lineHeight: 22,
+  },
+  resultImage: {
+    marginTop: 16,
+    width: '100%',
+    height: 180,
+    borderRadius: 18,
+  },
+  resultActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 16,
+  },
+  historyList: {
+    marginTop: 16,
+    paddingBottom: 6,
+  },
+  historyCard: {
+    width: 220,
+    marginRight: 12,
+    borderRadius: 18,
+    borderLeftWidth: 4,
+    borderLeftColor: '#ff8c42',
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    padding: 16,
+    shadowColor: '#2d3748',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  historyStyle: {
+    color: '#ff8c42',
+    fontWeight: '600',
+  },
+  historySummary: {
+    marginTop: 8,
+    color: '#2d3748',
+  },
+  historyTimestamp: {
+    marginTop: 12,
+    color: '#a0aec0',
+    fontSize: 12,
+  },
+  toastContainer: {
+    position: 'absolute',
+    top: 24,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 20,
+  },
+  toastContent: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 999,
+    shadowColor: '#2d3748',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  toastSuccess: {
+    backgroundColor: '#38a169',
+  },
+  toastError: {
+    backgroundColor: '#e53e3e',
+  },
+  toastText: {
+    color: '#ffffff',
+    fontWeight: '600',
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255,255,255,0.6)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 15,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  modalWrapper: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
+  modalContent: {
+    padding: 24,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 420,
+    backgroundColor: '#ffffff',
+    borderRadius: 28,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: BORDER_COLOR,
+    shadowColor: '#1a202c',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.2,
+    shadowRadius: 18,
+    elevation: 10,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#2d3748',
+  },
+  modalClose: {
+    padding: 6,
+  },
+  modalCloseText: {
+    fontSize: 20,
+    color: '#718096',
+  },
+  modalInput: {
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: BORDER_COLOR,
+    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    color: '#2d3748',
+    backgroundColor: '#ffffff',
+  },
+  modalLinkRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 18,
+  },
+  modalLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 16,
+    marginTop: 12,
+  },
+  modalLinkText: {
+    color: '#718096',
+    marginRight: 6,
+  },
+  modalLinkAction: {
+    color: '#ff8c42',
+    fontWeight: '600',
+  },
+  guideSection: {
+    marginTop: 18,
+  },
+  guideTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#2d3748',
+  },
+  guideBullet: {
+    marginTop: 12,
+  },
+  guideBulletLabel: {
+    fontWeight: '700',
+    color: '#ff8c42',
+  },
+  guideBulletText: {
+    marginTop: 4,
+    color: '#2d3748',
+    lineHeight: 20,
+  },
+  faqItem: {
+    marginTop: 18,
+  },
+  faqQuestion: {
+    fontWeight: '700',
+    color: '#2d3748',
+  },
+  faqAnswer: {
+    marginTop: 6,
+    color: '#4a5568',
+    lineHeight: 20,
+  },
+  historyModalContent: {
+    marginTop: 16,
+  },
+  historyModalActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 24,
+  },
+  primaryButton: {
+    backgroundColor: '#ff7b57',
+    borderRadius: 999,
+    paddingVertical: 14,
+    paddingHorizontal: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  primaryButtonText: {
+    color: '#ffffff',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  secondaryButton: {
+    borderWidth: 1.5,
+    borderColor: '#ff8c42',
+    borderRadius: 999,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+    marginBottom: 10,
+  },
+  secondaryButtonText: {
+    color: '#ff8c42',
+    fontWeight: '600',
+    fontSize: 15,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  buttonPressed: {
+    transform: [{ translateY: 1 }],
+  },
+});
+
+interface ButtonProps {
+  title: string;
+  onPress: () => void;
+  disabled?: boolean;
+  style?: StyleProp<ViewStyle>;
+}
+
+function PrimaryButton({ title, onPress, disabled, style }: ButtonProps): ReactElement {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      disabled={disabled}
+      style={({ pressed }) => [
+        styles.primaryButton,
+        style,
+        disabled && styles.buttonDisabled,
+        pressed && !disabled && styles.buttonPressed,
+      ]}
+    >
+      <Text style={styles.primaryButtonText}>{title}</Text>
+    </Pressable>
+  );
+}
+
+function SecondaryButton({ title, onPress, disabled, style }: ButtonProps): ReactElement {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      disabled={disabled}
+      style={({ pressed }) => [
+        styles.secondaryButton,
+        style,
+        disabled && styles.buttonDisabled,
+        pressed && !disabled && styles.buttonPressed,
+      ]}
+    >
+      <Text style={styles.secondaryButtonText}>{title}</Text>
+    </Pressable>
+  );
+}
+
+interface SegmentedControlProps {
+  value: TabKey;
+  onChange: (value: TabKey) => void;
+}
+
+function SegmentedControl({ value, onChange }: SegmentedControlProps): ReactElement {
+  return (
+    <View style={styles.segmented}>
+      {(['image', 'text'] as TabKey[]).map((key) => (
+        <Pressable
+          key={key}
+          style={({ pressed }) => [
+            styles.segmentedButton,
+            value === key && styles.segmentedButtonActive,
+            pressed && value !== key && styles.buttonPressed,
+          ]}
+          onPress={() => onChange(key)}
+        >
+          <Text style={[styles.segmentedText, value === key && styles.segmentedTextActive]}>
+            {key === 'image' ? 'Phan tich hinh anh' : 'Tao mo ta tu van ban'}
+          </Text>
+        </Pressable>
+      ))}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+function ToastBanner({ toast }: { toast: ToastState | null }): ReactElement | null {
+  if (!toast) {
+    return null;
+  }
+  return (
+    <View style={styles.toastContainer} pointerEvents="none">
+      <View
+        style={[
+          styles.toastContent,
+          toast.type === 'success' ? styles.toastSuccess : styles.toastError,
+        ]}
+      >
+        <Text style={styles.toastText}>{toast.message}</Text>
+      </View>
+    </View>
+  );
+}
+
+interface ModalLinkProps {
+  label: string;
+  actionLabel: string;
+  onPress: () => void;
+}
+
+function ModalLink({ label, actionLabel, onPress }: ModalLinkProps): ReactElement {
+  return (
+    <Pressable onPress={onPress} style={styles.modalLink}>
+      <Text style={styles.modalLinkText}>{label}</Text>
+      <Text style={styles.modalLinkAction}>{actionLabel}</Text>
+    </Pressable>
+  );
+}
+
+function LoadingOverlay({ visible }: { visible: boolean }): ReactElement | null {
+  if (!visible) {
+    return null;
+  }
+  return (
+    <View style={styles.loadingOverlay}>
+      <ActivityIndicator size="large" color="#ff8c42" />
+    </View>
+  );
+}
+
+function GuideModal({ visible, onClose }: { visible: boolean; onClose: () => void }): ReactElement {
+  return (
+    <Modal visible={visible} animationType="slide">
+      <SafeAreaView style={styles.modalWrapper}>
+        <ScrollView contentContainerStyle={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Huong dan su dung</Text>
+            <Pressable onPress={onClose} style={styles.modalClose} accessibilityRole="button">
+              <Text style={styles.modalCloseText}>Ã—</Text>
+            </Pressable>
+          </View>
+          <Text style={[styles.sectionDescription, { marginTop: 12 }]}>
+            Lam quen voi quy trinh tao mo ta san pham tren di dong va nhung meo nho de toi uu hieu
+            qua marketing.
+          </Text>
+
+          <View style={styles.guideSection}>
+            <Text style={styles.guideTitle}>Quy trinh nhanh</Text>
+            {QUICK_STEPS.map((item) => (
+              <View key={item.title} style={styles.guideBullet}>
+                <Text style={styles.guideBulletLabel}>{item.title}</Text>
+                <Text style={styles.guideBulletText}>{item.description}</Text>
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.guideSection}>
+            <Text style={styles.guideTitle}>Meo cho mobile</Text>
+            {MOBILE_TIPS.map((tip) => (
+              <View key={tip} style={styles.guideBullet}>
+                <Text style={styles.guideBulletText}>{tip}</Text>
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.guideSection}>
+            <Text style={styles.guideTitle}>Cau hoi thuong gap</Text>
+            {FAQS.map((faq) => (
+              <View key={faq.question} style={styles.faqItem}>
+                <Text style={styles.faqQuestion}>{faq.question}</Text>
+                <Text style={styles.faqAnswer}>{faq.answer}</Text>
+              </View>
+            ))}
+          </View>
+
+          <PrimaryButton title="Dong" onPress={onClose} style={{ marginTop: 28 }} />
+        </ScrollView>
+      </SafeAreaView>
+    </Modal>
+  );
+}
+
+interface HistoryDetailModalProps {
+  item: HistoryItem | null;
+  onClose: () => void;
+  onUse: () => void;
+  onCopy: () => void;
+}
+
+function HistoryDetailModal({
+  item,
+  onClose,
+  onUse,
+  onCopy,
+}: HistoryDetailModalProps): ReactElement | null {
+  if (!item) {
+    return null;
+  }
+  const imageUrl = resolveImageUrl(item.image_url);
+  return (
+    <Modal visible transparent animationType="fade">
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalCard}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Chi tiet mo ta</Text>
+            <Pressable onPress={onClose} style={styles.modalClose} accessibilityRole="button">
+              <Text style={styles.modalCloseText}>Ã—</Text>
+            </Pressable>
+          </View>
+          <View style={styles.historyModalContent}>
+            <Text style={styles.resultStyle}>{item.style}</Text>
+            <Text style={styles.historyTimestamp}>{formatVietnamTime(item.timestamp)}</Text>
+            {imageUrl ? <Image source={{ uri: imageUrl }} style={[styles.resultImage, { marginTop: 16 }]} /> : null}
+            <Text style={[styles.resultDescription, { marginTop: 18 }]}>
+              {cleanDescription(item.full_description)}
+            </Text>
+            <View style={styles.historyModalActions}>
+              <PrimaryButton
+                title="Dung mo ta nay"
+                onPress={onUse}
+                style={{ marginRight: 12, marginBottom: 10 }}
+              />
+              <SecondaryButton title="Sao chep" onPress={onCopy} />
+            </View>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+export default function App(): ReactElement {
+  return <HomeScreen />;
+}
+
+function HomeScreen(): ReactElement {
+  const [activeTab, setActiveTab] = useState<TabKey>('image');
+  const [stylesList, setStylesList] = useState<string[]>([...DEFAULT_STYLES]);
+  const [selectedStyle, setSelectedStyle] = useState<string>(DEFAULT_STYLES[0]);
+  const [images, setImages] = useState<ImageItem[]>([]);
+  const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
+  const [productInfo, setProductInfo] = useState<string>('');
+  const [result, setResult] = useState<DescriptionResponse | null>(null);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [historyDetail, setHistoryDetail] = useState<HistoryItem | null>(null);
+
+  const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+
+  const [authVisible, setAuthVisible] = useState<boolean>(false);
+  const [authMode, setAuthMode] = useState<AuthMode>('login');
+  const [authForm, setAuthForm] = useState({ identifier: '', password: '' });
+  const [authLoading, setAuthLoading] = useState<boolean>(false);
+  const [authMessage, setAuthMessage] = useState<{ type: ToastKind; message: string } | null>(null);
+
+  const [forgotIdentifier, setForgotIdentifier] = useState<string>('');
+  const [resetForm, setResetForm] = useState({
+    identifier: '',
+    token: '',
+    password: '',
+    confirmPassword: '',
+  });
+
+  const [changePasswordVisible, setChangePasswordVisible] = useState<boolean>(false);
+  const [changePasswordLoading, setChangePasswordLoading] = useState<boolean>(false);
+  const [changePasswordForm, setChangePasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+
+  const [guideVisible, setGuideVisible] = useState<boolean>(false);
+
+  const [loading, setLoading] = useState<boolean>(false);
+  const [initializing, setInitializing] = useState<boolean>(true);
+
+  const [toast, setToast] = useState<ToastState | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const isAuthenticated = Boolean(token && user);
+
+  const activeImage = useMemo<ImageItem | null>(() => {
+    if (!images.length) {
+      return null;
+    }
+    if (selectedImageId) {
+      const matched = images.find((item) => item.id === selectedImageId);
+      if (matched) {
+        return matched;
+      }
+    }
+    return images[images.length - 1];
+  }, [images, selectedImageId]);
+
+  useEffect(() => {
+    if (token) {
+      api.defaults.headers.common.Authorization = `Bearer ${token}`;
+    } else {
+      delete api.defaults.headers.common.Authorization;
+    }
+  }, [token]);
+
+  const showToast = useCallback((type: ToastKind, message: string) => {
+    setToast({ id: Date.now(), type, message });
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+    toastTimerRef.current = setTimeout(() => setToast(null), 3600);
+  }, []);
+
+  const clearToast = useCallback(() => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+    setToast(null);
+  }, []);
+
+  const fetchStyles = useCallback(async () => {
+    try {
+      const response = await api.get<string[]>('/api/styles');
+      const remoteStyles =
+        Array.isArray(response.data) && response.data.length > 0 ? response.data : DEFAULT_STYLES;
+      setStylesList(remoteStyles);
+      setSelectedStyle((prev) => (remoteStyles.includes(prev) ? prev : remoteStyles[0]));
+    } catch (error) {
+      console.warn('Fetch styles error', error);
+      showToast('error', 'Khong the tai phong cach. Su dung danh sach mac dinh.');
+    }
+  }, [showToast]);
+
+  const handleUnauthorized = useCallback(
+    (error: unknown) => {
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        setToken(null);
+        setUser(null);
+        setHistory([]);
+        void AsyncStorage.removeItem(STORAGE_KEYS.token);
+        showToast('error', 'Phien dang nhap het han. Vui long dang nhap lai.');
+        return true;
+      }
+      return false;
+    },
+    [showToast],
+  );
+
+  const fetchProtectedData = useCallback(
+    async (jwt: string) => {
+      try {
+        const [userRes, historyRes] = await Promise.all([
+          api.get<User>('/auth/me', { headers: { Authorization: `Bearer ${jwt}` } }),
+          api.get<HistoryItem[]>('/api/history', { headers: { Authorization: `Bearer ${jwt}` } }),
+        ]);
+        setUser(userRes.data);
+        setHistory(Array.isArray(historyRes.data) ? historyRes.data : []);
+      } catch (error) {
+        if (!handleUnauthorized(error)) {
+          console.warn('fetchProtectedData error', error);
+        }
+      }
+    },
+    [handleUnauthorized],
+  );
+
+  const refreshHistory = useCallback(async () => {
+    if (!token) {
+      return;
+    }
+    try {
+      const { data } = await api.get<HistoryItem[]>('/api/history');
+      setHistory(Array.isArray(data) ? data : []);
+    } catch (error) {
+      handleUnauthorized(error);
+    }
+  }, [handleUnauthorized, token]);
+
+  useEffect(() => {
+    const bootstrap = async () => {
+      try {
+        await fetchStyles();
+        const storedToken = await AsyncStorage.getItem(STORAGE_KEYS.token);
+        if (storedToken) {
+          setToken(storedToken);
+          await fetchProtectedData(storedToken);
+        }
+      } catch (error) {
+        console.warn('bootstrap error', error);
+      } finally {
+        setInitializing(false);
+      }
+    };
+    void bootstrap();
+  }, [fetchProtectedData, fetchStyles]);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handlePickImages = useCallback(async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      showToast('error', 'Can quyen truy cap thu vien hinh anh.');
+      return;
+    }
+    const assetResult = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true,
+      quality: 0.9,
+      selectionLimit: 5,
+    });
+    if (assetResult.canceled || !assetResult.assets?.length) {
+      return;
+    }
+    const newItems = assetResult.assets.map<ImageItem>((asset) => ({
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      uri: asset.uri,
+      name: asset.fileName ?? `image-${Date.now()}.jpg`,
+      mimeType: asset.mimeType ?? 'image/jpeg',
+    }));
+    setImages((prev) => [...prev, ...newItems]);
+    setSelectedImageId(newItems[newItems.length - 1].id);
+    showToast('success', newItems.length > 1 ? `Da them ${newItems.length} hinh anh` : 'Da them hinh anh');
+  }, [showToast]);
+
+  const handleOpenCamera = useCallback(async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      showToast('error', 'Can quyen su dung camera.');
+      return;
+    }
+    const capture = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.85,
+    });
+    if (capture.canceled || !capture.assets?.length) {
+      return;
+    }
+    const asset = capture.assets[0];
+    const item: ImageItem = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      uri: asset.uri,
+      name: asset.fileName ?? `capture-${Date.now()}.jpg`,
+      mimeType: asset.mimeType ?? 'image/jpeg',
+    };
+    setImages((prev) => [...prev, item]);
+    setSelectedImageId(item.id);
+    showToast('success', 'Da them hinh anh tu camera');
+  }, [showToast]);
+
+  const handleRemoveImage = useCallback((id: string) => {
+    setImages((prev) => {
+      const filtered = prev.filter((item) => item.id !== id);
+      setSelectedImageId((current) => {
+        if (current !== id) {
+          return current;
+        }
+        return filtered.length ? filtered[filtered.length - 1].id : null;
+      });
+      return filtered;
+    });
+  }, []);
+
+  const handleLogout = useCallback(() => {
+    setToken(null);
+    setUser(null);
+    setHistory([]);
+    void AsyncStorage.removeItem(STORAGE_KEYS.token);
+    showToast('success', 'Da dang xuat.');
+  }, [showToast]);
+
+  const handleAuthSubmit = useCallback(async () => {
+    if (authMode !== 'login' && authMode !== 'register') {
+      return;
+    }
+    setAuthLoading(true);
+    setAuthMessage(null);
+    try {
+      const identifier = authForm.identifier.trim();
+      const password = authForm.password.trim();
+      if (!identifier || !password) {
+        const message = 'Vui long nhap day du thong tin.';
+        setAuthMessage({ type: 'error', message });
+        showToast('error', message);
+        return;
+      }
+      const endpoint = authMode === 'login' ? '/auth/login' : '/auth/register';
+      const { data } = await api.post<TokenResponse>(endpoint, { identifier, password });
+      const accessToken = data.access_token;
+      setToken(accessToken);
+      await AsyncStorage.setItem(STORAGE_KEYS.token, accessToken);
+      await fetchProtectedData(accessToken);
+      const successMessage =
+        authMode === 'login' ? 'Dang nhap thanh cong.' : 'Dang ky thanh cong.';
+      setAuthMessage({ type: 'success', message: successMessage });
+      showToast('success', successMessage);
+      setTimeout(() => {
+        setAuthVisible(false);
+        setAuthMode('login');
+        setAuthForm({ identifier: '', password: '' });
+        setAuthMessage(null);
+      }, 900);
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.data?.detail) {
+        const detail = error.response.data.detail;
+        const message =
+          Array.isArray(detail) && detail.length
+            ? detail
+                .map((item: { msg?: string; message?: string }) => item.msg ?? item.message ?? '')
+                .join(', ')
+            : typeof detail === 'string'
+            ? detail
+            : 'Khong the xac thuc.';
+        setAuthMessage({ type: 'error', message });
+        showToast('error', message);
+      } else {
+        const message = 'Khong the xac thuc.';
+        setAuthMessage({ type: 'error', message });
+        showToast('error', message);
+      }
+    } finally {
+      setAuthLoading(false);
+    }
+  }, [authForm.identifier, authForm.password, authMode, fetchProtectedData, showToast]);
+
+  const handleForgotSubmit = useCallback(async () => {
+    const identifier = forgotIdentifier.trim();
+    if (!identifier) {
+      const message = 'Vui long nhap email hoac so dien thoai.';
+      setAuthMessage({ type: 'error', message });
+      showToast('error', message);
+      return;
+    }
+    setAuthLoading(true);
+    setAuthMessage(null);
+    try {
+      const { data } = await api.post<MessageResponse>('/auth/forgot-password', { identifier });
+      const message = data?.message ?? 'Da gui huong dan dat lai mat khau.';
+      setAuthMessage({ type: 'success', message });
+      showToast('success', message);
+    } catch (error) {
+      const message =
+        axios.isAxiosError(error) && typeof error.response?.data?.detail === 'string'
+          ? error.response.data.detail
+          : 'Khong the gui yeu cau.';
+      setAuthMessage({ type: 'error', message });
+      showToast('error', message);
+    } finally {
+      setAuthLoading(false);
+    }
+  }, [forgotIdentifier, showToast]);
+
+  const handleResetSubmit = useCallback(async () => {
+    const identifier = resetForm.identifier.trim();
+    const tokenCode = resetForm.token.trim();
+    const password = resetForm.password.trim();
+    const confirmPassword = resetForm.confirmPassword.trim();
+    if (!identifier || !tokenCode || !password || !confirmPassword) {
+      const message = 'Vui long nhap day du thong tin.';
+      setAuthMessage({ type: 'error', message });
+      showToast('error', message);
+      return;
+    }
+    if (password !== confirmPassword) {
+      const message = 'Mat khau moi khong trung nhau.';
+      setAuthMessage({ type: 'error', message });
+      showToast('error', message);
+      return;
+    }
+    setAuthLoading(true);
+    setAuthMessage(null);
+    try {
+      const { data } = await api.post<MessageResponse>('/auth/reset-password', {
+        identifier,
+        token: tokenCode,
+        new_password: password,
+      });
+      const message = data?.message ?? 'Dat lai mat khau thanh cong.';
+      setAuthMessage({ type: 'success', message });
+      showToast('success', message);
+      setTimeout(() => {
+        setAuthMode('login');
+        setResetForm({ identifier: '', token: '', password: '', confirmPassword: '' });
+        setAuthMessage(null);
+      }, 900);
+    } catch (error) {
+      const message =
+        axios.isAxiosError(error) && typeof error.response?.data?.detail === 'string'
+          ? error.response.data.detail
+          : 'Khong the dat lai mat khau.';
+      setAuthMessage({ type: 'error', message });
+      showToast('error', message);
+    } finally {
+      setAuthLoading(false);
+    }
+  }, [resetForm, showToast]);
+
+  const handleChangePasswordSubmit = useCallback(async () => {
+    const current = changePasswordForm.currentPassword.trim();
+    const next = changePasswordForm.newPassword.trim();
+    const confirm = changePasswordForm.confirmPassword.trim();
+    if (!current || !next || !confirm) {
+      showToast('error', 'Vui long nhap day du thong tin.');
+      return;
+    }
+    if (next !== confirm) {
+      showToast('error', 'Mat khau moi khong trung nhau.');
+      return;
+    }
+    setChangePasswordLoading(true);
+    try {
+      const { data } = await api.post<MessageResponse>('/auth/change-password', {
+        current_password: current,
+        new_password: next,
+      });
+      showToast('success', data?.message ?? 'Da doi mat khau.');
+      setChangePasswordVisible(false);
+      setChangePasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (error) {
+      if (handleUnauthorized(error)) {
+        return;
+      }
+      const message =
+        axios.isAxiosError(error) && typeof error.response?.data?.detail === 'string'
+          ? error.response.data.detail
+          : 'Khong the doi mat khau.';
+      showToast('error', message);
+    } finally {
+      setChangePasswordLoading(false);
+    }
+  }, [changePasswordForm, handleUnauthorized, showToast]);
+
+  const handleImageSubmit = useCallback(async () => {
+    const imageToSubmit = activeImage;
+    if (!imageToSubmit) {
+      showToast('error', 'Vui long chon it nhat mot hinh anh hop le.');
+      return;
+    }
+    setLoading(true);
+    clearToast();
+    try {
+      const formData = new FormData();
+      formData.append(
+        'file',
+        {
+          uri: imageToSubmit.uri,
+          name: imageToSubmit.name,
+          type: imageToSubmit.mimeType,
+        } as unknown as Blob,
+      );
+      formData.append('style', selectedStyle);
+      const { data } = await api.post<DescriptionResponse>('/api/descriptions/image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setResult(data);
+      if (token) {
+        await refreshHistory();
+        showToast('success', 'Da tao mo ta va luu vao lich su.');
+      } else {
+        showToast('success', 'Da tao mo ta tu hinh anh.');
+      }
+    } catch (error) {
+      if (handleUnauthorized(error)) {
+        return;
+      }
+      const message =
+        axios.isAxiosError(error) && typeof error.response?.data?.detail === 'string'
+          ? error.response.data.detail
+          : 'Khong the tao mo ta tu hinh anh.';
+      showToast('error', message);
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    activeImage,
+    clearToast,
+    handleUnauthorized,
+    refreshHistory,
+    selectedStyle,
+    showToast,
+    token,
+  ]);
+
+  const handleTextSubmit = useCallback(async () => {
+    const info = productInfo.trim();
+    if (!info) {
+      showToast('error', 'Vui long nhap thong tin san pham.');
+      return;
+    }
+    setLoading(true);
+    clearToast();
+    try {
+      const { data } = await api.post<DescriptionResponse>('/api/descriptions/text', {
+        product_info: info,
+        style: selectedStyle,
+      });
+      setResult(data);
+      if (token) {
+        await refreshHistory();
+        showToast('success', 'Da tao mo ta va luu vao lich su.');
+      } else {
+        showToast('success', 'Da tao mo ta tu van ban.');
+      }
+    } catch (error) {
+      if (handleUnauthorized(error)) {
+        return;
+      }
+      const message =
+        axios.isAxiosError(error) && typeof error.response?.data?.detail === 'string'
+          ? error.response.data.detail
+          : 'Khong the tao mo ta tu van ban.';
+      showToast('error', message);
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    clearToast,
+    handleUnauthorized,
+    productInfo,
+    refreshHistory,
+    selectedStyle,
+    showToast,
+    token,
+  ]);
+
+  const handleCopyResult = useCallback(async () => {
+    if (!result) {
+      showToast('error', 'Chua co noi dung de sao chep.');
+      return;
+    }
+    try {
+      await Clipboard.setStringAsync(cleanDescription(result.description));
+      showToast('success', 'Da sao chep noi dung.');
+    } catch (error) {
+      console.warn('clipboard error', error);
+      showToast('error', 'Khong the sao chep noi dung.');
+    }
+  }, [result, showToast]);
+
+  const handleApplyHistory = useCallback(() => {
+    if (!historyDetail) {
+      return;
+    }
+    setResult({
+      description: historyDetail.full_description,
+      history_id: historyDetail.id,
+      timestamp: historyDetail.timestamp,
+      style: historyDetail.style,
+      source: historyDetail.source,
+      image_url: historyDetail.image_url ?? null,
+    });
+    setSelectedStyle(historyDetail.style);
+    setHistoryDetail(null);
+    showToast('success', 'Da su dung mo ta tu lich su.');
+  }, [historyDetail, showToast]);
+
+  const handleCopyHistory = useCallback(async () => {
+    if (!historyDetail) {
+      return;
+    }
+    try {
+      await Clipboard.setStringAsync(cleanDescription(historyDetail.full_description));
+      showToast('success', 'Da sao chep mo ta tu lich su.');
+    } catch (error) {
+      console.warn('copy history error', error);
+      showToast('error', 'Khong the sao chep mo ta.');
+    }
+  }, [historyDetail, showToast]);
+
+  const closeAuthModal = useCallback(() => {
+    setAuthVisible(false);
+    setAuthMode('login');
+    setAuthForm({ identifier: '', password: '' });
+    setForgotIdentifier('');
+    setResetForm({ identifier: '', token: '', password: '', confirmPassword: '' });
+    setAuthMessage(null);
+  }, []);
+
+  const accountIdentifier = user?.email || user?.phone_number || '';
+  const resultImageUrl = resolveImageUrl(result?.image_url);
+  const authTitle =
+    authMode === 'login'
+      ? 'Dang nhap'
+      : authMode === 'register'
+      ? 'Dang ky tai khoan'
+      : authMode === 'forgot'
+      ? 'Quen mat khau'
+      : 'Dat lai mat khau';
+
+  const renderAuthModal = (
+    <Modal visible={authVisible} animationType="slide" transparent>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalCard}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>{authTitle}</Text>
+            <Pressable onPress={closeAuthModal} style={styles.modalClose} accessibilityRole="button">
+              <Text style={styles.modalCloseText}>X</Text>
+            </Pressable>
+          </View>
+
+          {(authMode === 'login' || authMode === 'register') && (
+            <>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="Email hoac so dien thoai"
+                autoCapitalize="none"
+                keyboardType="email-address"
+                value={authForm.identifier}
+                onChangeText={(value) => setAuthForm((prev) => ({ ...prev, identifier: value }))}
+              />
+              <TextInput
+                style={styles.modalInput}
+                placeholder="Mat khau"
+                secureTextEntry
+                value={authForm.password}
+                onChangeText={(value) => setAuthForm((prev) => ({ ...prev, password: value }))}
+              />
+              <PrimaryButton
+                title={authMode === 'login' ? 'Dang nhap' : 'Dang ky'}
+                onPress={handleAuthSubmit}
+                disabled={authLoading}
+                style={{ marginTop: 20 }}
+              />
+              <View style={styles.modalLinkRow}>
+                {authMode === 'login' ? (
+                  <>
+                    <ModalLink
+                      label="Chua co tai khoan?"
+                      actionLabel="Dang ky"
+                      onPress={() => {
+                        setAuthMode('register');
+                        setAuthMessage(null);
+                        setAuthForm({ identifier: '', password: '' });
+                      }}
+                    />
+                    <ModalLink
+                      label="Quen mat khau?"
+                      actionLabel="Khoi phuc"
+                      onPress={() => {
+                        setAuthMode('forgot');
+                        setAuthMessage(null);
+                      }}
+                    />
+                  </>
+                ) : (
+                  <ModalLink
+                    label="Da co tai khoan?"
+                    actionLabel="Dang nhap"
+                    onPress={() => {
+                      setAuthMode('login');
+                      setAuthMessage(null);
+                    }}
+                  />
+                )}
+              </View>
+            </>
+          )}
+
+          {authMode === 'forgot' && (
+            <>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="Email hoac so dien thoai"
+                autoCapitalize="none"
+                keyboardType="email-address"
+                value={forgotIdentifier}
+                onChangeText={setForgotIdentifier}
+              />
+              <PrimaryButton
+                title="Gui ma xac nhan"
+                onPress={handleForgotSubmit}
+                disabled={authLoading}
+                style={{ marginTop: 20 }}
+              />
+              <View style={styles.modalLinkRow}>
+                <ModalLink
+                  label="Da co ma?"
+                  actionLabel="Nhap ma dat lai"
+                  onPress={() => {
+                    setAuthMode('reset');
+                    setAuthMessage(null);
+                  }}
+                />
+                <ModalLink
+                  label="Quay lai"
+                  actionLabel="Dang nhap"
+                  onPress={() => {
+                    setAuthMode('login');
+                    setAuthMessage(null);
+                  }}
+                />
+              </View>
+            </>
+          )}
+
+          {authMode === 'reset' && (
+            <>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="Email hoac so dien thoai"
+                autoCapitalize="none"
+                keyboardType="email-address"
+                value={resetForm.identifier}
+                onChangeText={(value) =>
+                  setResetForm((prev) => ({ ...prev, identifier: value }))
+                }
+              />
+              <TextInput
+                style={styles.modalInput}
+                placeholder="Ma xac nhan (6 ky tu)"
+                autoCapitalize="none"
+                keyboardType="number-pad"
+                value={resetForm.token}
+                onChangeText={(value) => setResetForm((prev) => ({ ...prev, token: value }))}
+              />
+              <TextInput
+                style={styles.modalInput}
+                placeholder="Mat khau moi"
+                secureTextEntry
+                value={resetForm.password}
+                onChangeText={(value) => setResetForm((prev) => ({ ...prev, password: value }))}
+              />
+              <TextInput
+                style={styles.modalInput}
+                placeholder="Nhap lai mat khau moi"
+                secureTextEntry
+                value={resetForm.confirmPassword}
+                onChangeText={(value) =>
+                  setResetForm((prev) => ({ ...prev, confirmPassword: value }))
+                }
+              />
+              <PrimaryButton
+                title="Dat lai mat khau"
+                onPress={handleResetSubmit}
+                disabled={authLoading}
+                style={{ marginTop: 20 }}
+              />
+              <View style={styles.modalLinkRow}>
+                <ModalLink
+                  label="Quay lai"
+                  actionLabel="Dang nhap"
+                  onPress={() => {
+                    setAuthMode('login');
+                    setAuthMessage(null);
+                  }}
+                />
+              </View>
+            </>
+          )}
+
+          {authMessage ? (
+            <Text
+              style={{
+                marginTop: 18,
+                color: authMessage.type === 'success' ? '#38a169' : '#e53e3e',
+                fontWeight: '600',
+              }}
+            >
+              {authMessage.message}
+            </Text>
+          ) : null}
+        </View>
+      </View>
+    </Modal>
+  );
+
+  const renderChangePasswordModal = (
+    <Modal visible={changePasswordVisible} animationType="fade" transparent>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalCard}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Doi mat khau</Text>
+            <Pressable
+              onPress={() => setChangePasswordVisible(false)}
+              style={styles.modalClose}
+              accessibilityRole="button"
+            >
+              <Text style={styles.modalCloseText}>X</Text>
+            </Pressable>
+          </View>
+          <TextInput
+            style={styles.modalInput}
+            placeholder="Mat khau hien tai"
+            secureTextEntry
+            value={changePasswordForm.currentPassword}
+            onChangeText={(value) =>
+              setChangePasswordForm((prev) => ({ ...prev, currentPassword: value }))
+            }
+          />
+          <TextInput
+            style={styles.modalInput}
+            placeholder="Mat khau moi"
+            secureTextEntry
+            value={changePasswordForm.newPassword}
+            onChangeText={(value) =>
+              setChangePasswordForm((prev) => ({ ...prev, newPassword: value }))
+            }
+          />
+          <TextInput
+            style={styles.modalInput}
+            placeholder="Nhap lai mat khau moi"
+            secureTextEntry
+            value={changePasswordForm.confirmPassword}
+            onChangeText={(value) =>
+              setChangePasswordForm((prev) => ({ ...prev, confirmPassword: value }))
+            }
+          />
+          <PrimaryButton
+            title="Cap nhat"
+            onPress={handleChangePasswordSubmit}
+            disabled={changePasswordLoading}
+            style={{ marginTop: 24 }}
+          />
+          <SecondaryButton
+            title="Huy"
+            onPress={() => setChangePasswordVisible(false)}
+            style={{ marginTop: 12 }}
+          />
+        </View>
+      </View>
+    </Modal>
+  );
+
+  return (
+    <LinearGradient colors={['#fff5e6', '#f0f9ff']} style={styles.gradient}>
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar style="dark" />
+        <ToastBanner toast={toast} />
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.panel}>
+            <View style={styles.headerRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.headerTitle}>AI Mo Ta San Pham Trai Cay</Text>
+                <Text style={styles.headerSubtitle}>
+                  Tu hinh anh den mo ta hoan hao - Nhieu phong cach - Sao chep tien loi
+                </Text>
+                <View style={styles.headerButtons}>
+                  <SecondaryButton
+                    title="Huong dan su dung"
+                    onPress={() => setGuideVisible(true)}
+                  />
+                </View>
+              </View>
+              <View style={styles.authBox}>
+                {isAuthenticated ? (
+                  <View style={styles.authInfo}>
+                    <Text style={styles.welcomeLabel}>{accountIdentifier}</Text>
+                    <View style={styles.authActions}>
+                      <SecondaryButton
+                        title="Doi mat khau"
+                        onPress={() => {
+                          setChangePasswordForm({
+                            currentPassword: '',
+                            newPassword: '',
+                            confirmPassword: '',
+                          });
+                          setChangePasswordVisible(true);
+                        }}
+                      />
+                      <SecondaryButton title="Dang xuat" onPress={handleLogout} />
+                    </View>
+                  </View>
+                ) : (
+                  <PrimaryButton
+                    title="Dang nhap / Dang ky"
+                    onPress={() => {
+                      setAuthMode('login');
+                      setAuthForm({ identifier: '', password: '' });
+                      setAuthMessage(null);
+                      setAuthVisible(true);
+                    }}
+                  />
+                )}
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Phong cach viet</Text>
+              <View style={styles.pickerWrapper}>
+                <Picker
+                  selectedValue={selectedStyle}
+                  onValueChange={(value) => setSelectedStyle(String(value))}
+                  style={styles.picker}
+                >
+                  {stylesList.map((styleOption) => (
+                    <Picker.Item label={styleOption} value={styleOption} key={styleOption} />
+                  ))}
+                </Picker>
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <SegmentedControl value={activeTab} onChange={setActiveTab} />
+            </View>
+
+            {activeTab === 'image' ? (
+              <View style={styles.section}>
+                <View style={styles.card}>
+                  <Text style={styles.sectionTitle}>Hinh anh san pham</Text>
+                  <Text style={styles.sectionDescription}>
+                    Chon toi da 5 hinh anh ro net, hau can don gian de AI phan tich chinh xac.
+                  </Text>
+                  <View style={styles.rowInline}>
+                    <SecondaryButton title="Chon tu thu vien" onPress={handlePickImages} />
+                    <SecondaryButton title="Mo camera" onPress={handleOpenCamera} />
+                  </View>
+                  {images.length ? (
+                    <>
+                      <FlatList
+                        data={images}
+                        keyExtractor={(item) => item.id}
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.imageList}
+                        renderItem={({ item }) => {
+                          const isActive = item.id === activeImage?.id;
+                          return (
+                            <Pressable
+                              style={[styles.imageThumb, isActive && styles.imageThumbActive]}
+                              onPress={() => setSelectedImageId(item.id)}
+                            >
+                              <Image source={{ uri: item.uri }} style={styles.imageThumbImage} />
+                              <Pressable
+                                style={styles.imageRemove}
+                                onPress={(event: GestureResponderEvent) => {
+                                  event.stopPropagation()
+                                  handleRemoveImage(item.id)
+                                }}
+                                accessibilityRole="button"
+                              >
+                                <Text style={styles.imageRemoveText}>X</Text>
+                              </Pressable>
+                            </Pressable>
+                          )
+                        }}
+                      />
+                      <PrimaryButton
+                        title="Tao mo ta tu hinh anh"
+                        onPress={handleImageSubmit}
+                        disabled={loading}
+                        style={styles.actionButton}
+                      />
+                    </>
+                  ) : (
+                    <Text style={styles.placeholderText}>
+                      Chua co hinh anh. Hay them tu thu vien hoac camera.
+                    </Text>
+                  )}
+                </View>
+              </View>
+            ) : (
+              <View style={styles.section}>
+                <View style={styles.card}>
+                  <Text style={styles.sectionTitle}>Thong tin san pham</Text>
+                  <Text style={styles.sectionDescription}>
+                    Mo ta san pham chi tiet: xuat xu, huong vi, uu diem, chuong trinh khuyen mai.
+                  </Text>
+                  <TextInput
+                    style={styles.textArea}
+                    value={productInfo}
+                    onChangeText={setProductInfo}
+                    placeholder="Vi du: Tao Fuji huu co, trong tai Da Lat, vi ngot, gion, chuan GAP."
+                    placeholderTextColor="#a0aec0"
+                    multiline
+                  />
+                  <PrimaryButton
+                    title="Tao mo ta tu van ban"
+                    onPress={handleTextSubmit}
+                    disabled={loading}
+                    style={styles.actionButton}
+                  />
+                </View>
+              </View>
+            )}
+
+            <View style={styles.section}>
+              <View style={styles.card}>
+                <Text style={styles.sectionTitle}>Ket qua</Text>
+                {result ? (
+                  <>
+                    <View style={styles.resultMeta}>
+                      <Text style={styles.resultStyle}>{result.style}</Text>
+                      <Text style={styles.resultTimestamp}>
+                        {formatVietnamTime(result.timestamp)}
+                      </Text>
+                    </View>
+                    <Text style={styles.resultDescription}>
+                      {cleanDescription(result.description)}
+                    </Text>
+                    {resultImageUrl ? (
+                      <Image source={{ uri: resultImageUrl }} style={styles.resultImage} />
+                    ) : null}
+                    <View style={styles.resultActions}>
+                      <PrimaryButton
+                        title="Sao chep"
+                        onPress={handleCopyResult}
+                        style={{ marginBottom: 10 }}
+                      />
+                    </View>
+                  </>
+                ) : (
+                  <Text style={styles.placeholderText}>
+                    Chua co mo ta. Hay tao tu hinh anh hoac van ban.
+                  </Text>
+                )}
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <View style={styles.card}>
+                <Text style={styles.sectionTitle}>Lich su</Text>
+                {isAuthenticated ? (
+                  history.length ? (
+                    <FlatList
+                      data={history}
+                      keyExtractor={(item) => item.id}
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={styles.historyList}
+                      renderItem={({ item }) => (
+                        <Pressable style={styles.historyCard} onPress={() => setHistoryDetail(item)}>
+                          <Text style={styles.historyStyle}>{item.style}</Text>
+                          <Text numberOfLines={3} style={styles.historySummary}>
+                            {cleanDescription(item.summary)}
+                          </Text>
+                          <Text style={styles.historyTimestamp}>
+                            {formatVietnamTime(item.timestamp)}
+                          </Text>
+                        </Pressable>
+                      )}
+                    />
+                  ) : (
+                    <Text style={styles.placeholderText}>
+                      Chua co mo ta nao trong lich su.
+                    </Text>
+                  )
+                ) : (
+                  <Text style={styles.sectionDescription}>
+                    Dang nhap de luu va dong bo mo ta AI cua ban tren moi thiet bi.
+                  </Text>
+                )}
+              </View>
+            </View>
+          </View>
+        </ScrollView>
+        <GuideModal visible={guideVisible} onClose={() => setGuideVisible(false)} />
+        <HistoryDetailModal
+          item={historyDetail}
+          onClose={() => setHistoryDetail(null)}
+          onUse={handleApplyHistory}
+          onCopy={handleCopyHistory}
+        />
+        {authVisible ? renderAuthModal : null}
+        {changePasswordVisible ? renderChangePasswordModal : null}
+        <LoadingOverlay visible={loading || initializing} />
+      </SafeAreaView>
+    </LinearGradient>
+  );
+}

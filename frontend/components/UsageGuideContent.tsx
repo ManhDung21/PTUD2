@@ -6,62 +6,66 @@ import Link from "next/link";
 const QUICK_STEPS = [
   {
     label: "1",
-    title: "Tải ảnh hoặc nhập mô tả",
-    description: "Chọn ảnh sản phẩm (JPG/PNG < 5MB) hoặc nhập thông tin chi tiết về trái cây.",
+    title: "Tai anh hoac nhap mo ta",
+    description: "Chon anh san pham (JPG/PNG < 5MB) hoac dien thong tin chi tiet ve trai cay.",
   },
   {
     label: "2",
-    title: "Chọn phong cách",
-    description: "Giữ tông giọng phù hợp với thương hiệu: Thân thiện, chuyên nghiệp hoặc kể chuyện.",
+    title: "Chon phong cach",
+    description: "Dieu chinh giong viet phu hop voi thuong hieu: than thien, chuyen nghiep hoac ke chuyen.",
   },
   {
     label: "3",
-    title: "Sinh mô tả AI",
-    description: "Nhấn tạo mô tả để Gemini xử lý và trả về nội dung tối ưu hoá.",
+    title: "Sinh mo ta AI",
+    description: "He thong su dung mo hinh Gemini de tra ve noi dung toi uu chi trong vai giay.",
   },
   {
     label: "4",
-    title: "Chia sẻ & quản lý",
-    description: "Sao chép, tải xuống hoặc đăng lên fanpage/nhóm ngay trong ứng dụng.",
+    title: "Sao chep & quan ly",
+    description: "Sao chep hoac tai xuong mo ta de chen vao cac kenh marketing khac.",
   },
 ];
 
+
 const WEB_STEPS = [
-  "Đăng nhập để lưu lịch sử và kích hoạt các tính năng chia sẻ nhanh.",
-  "Tải ảnh hoặc nhập mô tả rồi chọn phong cách viết mong muốn.",
-  "Xem trước mô tả, sao chép, tải xuống, hoặc lưu vào lịch sử.",
-  "Dùng các nút chia sẻ Facebook/TikTok để xuất bản nội dung ngay.",
+  "Dang nhap de luu lich su va dong bo noi dung giua cac thiet bi.",
+  "Tai anh hoac nhap mo ta roi chon phong cach viet mong muon.",
+  "Xem truoc mo ta, sao chep, tai xuong hoac luu vao muc lich su.",
+  "Chen noi dung da tao vao bai dang, tin nhan hoac cac cong cu ban hang khac.",
 ];
 
+
 const MOBILE_STEPS = [
-  "Mở ứng dụng di động và đăng nhập bằng tài khoản đã đăng ký trên web.",
-  "Chọn hình từ thư viện hoặc bật camera để chụp trực tiếp sản phẩm.",
-  "Điều chỉnh phong cách, xem trước mô tả ngắn gọn và chi tiết.",
-  "Đăng lên fanpage/nhóm bằng Graph API hoặc chia sẻ qua các ứng dụng khác.",
+  "Mo ung dung di dong va dang nhap bang tai khoan da tao tren web.",
+  "Chon anh tu thu vien hoac mo camera de chup san pham truc tiep.",
+  "Dieu chinh phong cach, xem truoc mo ta ngan gon va chi tiet.",
+  "Sao chep hoac tai xuong mo ta de su dung tren cac ung dung khac.",
 ];
+
 
 const FAQs = [
   {
-    question: "Tôi có thể đăng bài lên đâu?",
+    question: "Toi co the su dung noi dung da tao nhu the nao?",
     answer:
-      "Bạn có thể đăng lên fanpage hoặc nhóm Facebook đã cấp quyền cho ứng dụng. Người dùng vẫn có thể chia sẻ thủ công lên trang cá nhân nếu muốn.",
+      "Ban co the sao chep mo ta hoac tai xuong anh de chen vao bai dang, tin nhan va cac cong cu ban hang.",
   },
   {
-    question: "Lịch sử mô tả lưu ở đâu?",
+    question: "Lich su mo ta luu o dau?",
     answer:
-      "Toàn bộ lịch sử được lưu trong tài khoản của bạn. Vào phần Lịch sử ở trang chính để xem, chỉnh sửa hoặc chia sẻ lại.",
+      "Toan bo lich su duoc luu trong tai khoan cua ban. Vao phan Lich su de xem, chinh sua hoac su dung lai.",
   },
   {
-    question: "Ứng dụng di động hoạt động offline không?",
+    question: "Ung dung di dong hoat dong offline duoc khong?",
     answer:
-      "Ứng dụng cần kết nối Internet để gửi hình ảnh và nhận mô tả từ dịch vụ AI cũng như đăng bài qua Graph API.",
+      "Ung dung can ket noi Internet de gui hinh anh va nhan mo ta tu dich vu AI, dong thoi dong bo lich su voi tai khoan.",
   },
   {
-    question: "Khi cần hỗ trợ thì làm thế nào?",
+    question: "Khi can ho tro thi lam the nao?",
     answer:
-      "Liên hệ qua email hỗ trợ trong mục Thông tin (ví dụ support@mdung21.id.vn) hoặc để lại phản hồi trực tiếp trên trang web.",
+      "Lien he qua email ho tro trong muc Thong tin (vi du support@mdung21.id.vn) hoac de lai phan hoi truc tiep tren trang web.",
   },
 ];
+
 
 const listStyle: CSSProperties = {
   display: "flex",
