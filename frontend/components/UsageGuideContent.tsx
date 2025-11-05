@@ -6,66 +6,62 @@ import Link from "next/link";
 const QUICK_STEPS = [
   {
     label: "1",
-    title: "Tai anh hoac nhap mo ta",
-    description: "Chon anh san pham (JPG/PNG < 5MB) hoac dien thong tin chi tiet ve trai cay.",
+    title: "Tải ảnh hoặc nhập mô tả",
+    description: "Chọn ảnh sản phẩm (JPG/PNG < 5MB) hoặc điền thông tin chi tiết về trái cây.",
   },
   {
     label: "2",
-    title: "Chon phong cach",
-    description: "Dieu chinh giong viet phu hop voi thuong hieu: than thien, chuyen nghiep hoac ke chuyen.",
+    title: "Chọn phong cách",
+    description: "Điều chỉnh giọng viết phù hợp với thương hiệu: thân thiện, chuyên nghiệp hoặc kể chuyện.",
   },
   {
     label: "3",
-    title: "Sinh mo ta AI",
-    description: "He thong su dung mo hinh Gemini de tra ve noi dung toi uu chi trong vai giay.",
+    title: "Sinh mô tả AI",
+    description: "Hệ thống sử dụng mô hình Gemini để trả về nội dung tối ưu chỉ trong vài giây.",
   },
   {
     label: "4",
-    title: "Sao chep & quan ly",
-    description: "Sao chep hoac tai xuong mo ta de chen vao cac kenh marketing khac.",
+    title: "Sao chép & quản lý",
+    description: "Sao chép hoặc tải xuống mô tả để chèn vào các kênh marketing khác.",
   },
 ];
 
-
 const WEB_STEPS = [
-  "Dang nhap de luu lich su va dong bo noi dung giua cac thiet bi.",
-  "Tai anh hoac nhap mo ta roi chon phong cach viet mong muon.",
-  "Xem truoc mo ta, sao chep, tai xuong hoac luu vao muc lich su.",
-  "Chen noi dung da tao vao bai dang, tin nhan hoac cac cong cu ban hang khac.",
+  "Đăng nhập để lưu lịch sử và đồng bộ nội dung giữa các thiết bị.",
+  "Tải ảnh hoặc nhập mô tả rồi chọn phong cách viết mong muốn.",
+  "Xem trước mô tả, sao chép, tải xuống hoặc lưu vào mục lịch sử.",
+  "Chèn nội dung đã tạo vào bài đăng, tin nhắn hoặc các công cụ bán hàng khác.",
 ];
-
 
 const MOBILE_STEPS = [
-  "Mo ung dung di dong va dang nhap bang tai khoan da tao tren web.",
-  "Chon anh tu thu vien hoac mo camera de chup san pham truc tiep.",
-  "Dieu chinh phong cach, xem truoc mo ta ngan gon va chi tiet.",
-  "Sao chep hoac tai xuong mo ta de su dung tren cac ung dung khac.",
+  "Mở ứng dụng di động và đăng nhập bằng tài khoản đã tạo trên web.",
+  "Chọn ảnh từ thư viện hoặc mở camera để chụp sản phẩm trực tiếp.",
+  "Điều chỉnh phong cách, xem trước mô tả ngắn gọn và chi tiết.",
+  "Sao chép hoặc tải xuống mô tả để sử dụng trên các ứng dụng khác.",
 ];
-
 
 const FAQs = [
   {
-    question: "Toi co the su dung noi dung da tao nhu the nao?",
+    question: "Tôi có thể sử dụng nội dung đã tạo như thế nào?",
     answer:
-      "Ban co the sao chep mo ta hoac tai xuong anh de chen vao bai dang, tin nhan va cac cong cu ban hang.",
+      "Bạn có thể sao chép mô tả hoặc tải xuống ảnh để chèn vào bài đăng, tin nhắn và các công cụ bán hàng.",
   },
   {
-    question: "Lich su mo ta luu o dau?",
+    question: "Lịch sử mô tả lưu ở đâu?",
     answer:
-      "Toan bo lich su duoc luu trong tai khoan cua ban. Vao phan Lich su de xem, chinh sua hoac su dung lai.",
+      "Toàn bộ lịch sử được lưu trong tài khoản của bạn. Vào phần Lịch sử để xem, chỉnh sửa hoặc sử dụng lại.",
   },
   {
-    question: "Ung dung di dong hoat dong offline duoc khong?",
+    question: "Ứng dụng di động hoạt động offline được không?",
     answer:
-      "Ung dung can ket noi Internet de gui hinh anh va nhan mo ta tu dich vu AI, dong thoi dong bo lich su voi tai khoan.",
+      "Ứng dụng cần kết nối Internet để gửi hình ảnh và nhận mô tả từ dịch vụ AI, đồng thời đồng bộ lịch sử với tài khoản.",
   },
   {
-    question: "Khi can ho tro thi lam the nao?",
+    question: "Khi cần hỗ trợ thì làm thế nào?",
     answer:
-      "Lien he qua email ho tro trong muc Thong tin (vi du support@mdung21.id.vn) hoac de lai phan hoi truc tiep tren trang web.",
+      "Liên hệ qua email hỗ trợ trong mục Thông tin (ví dụ support@mdung21.id.vn) hoặc để lại phản hồi trực tiếp trên trang web.",
   },
 ];
-
 
 const listStyle: CSSProperties = {
   display: "flex",
@@ -100,7 +96,9 @@ export function UsageGuideContent({ actionSlot, description }: UsageGuideContent
         <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
           <div>
             <p style={{ margin: 0, color: "var(--accent-lime)", fontWeight: 600 }}>Hướng dẫn sử dụng</p>
-            <h1 style={{ margin: "6px 0 12px", fontSize: 40, lineHeight: 1.1 }}>Khai thác AI mô tả sản phẩm trái cây</h1>
+            <h1 style={{ margin: "6px 0 12px", fontSize: 40, lineHeight: 1.1 }}>
+              Khai thác AI mô tả sản phẩm trái cây
+            </h1>
             <p style={{ margin: 0, color: "var(--text-secondary)" }}>
               {description ??
                 "Theo dõi các bước dưới đây để làm chủ cả phiên bản web và ứng dụng di động, giữ nguyên tông màu cam chủ đạo của dự án."}
@@ -128,14 +126,17 @@ export function UsageGuideContent({ actionSlot, description }: UsageGuideContent
                 style={{
                   background: "var(--bg-secondary)",
                   borderRadius: 20,
-                  padding: 20,
-                  boxShadow: "0 12px 32px rgba(45,55,72,0.1)",
+                  padding: "20px 24px",
+                  boxShadow: "0 12px 32px rgba(45,55,72,0.12)",
                   border: "1px solid rgba(255,255,255,0.6)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 12,
                 }}
               >
                 <span style={badgeStyle}>{step.label}</span>
-                <h3 style={{ margin: "12px 0 6px", fontSize: 18 }}>{step.title}</h3>
-                <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: 15 }}>{step.description}</p>
+                <h3 style={{ margin: "8px 0 4px", fontSize: 18, fontWeight: 700 }}>{step.title}</h3>
+                <p style={{ margin: 0, color: "var(--text-secondary)", lineHeight: 1.6 }}>{step.description}</p>
               </div>
             ))}
           </div>
@@ -143,94 +144,62 @@ export function UsageGuideContent({ actionSlot, description }: UsageGuideContent
       </div>
 
       <div className="section">
-        <div className="grid two-column">
-          <div className="card">
-            <span style={{ color: "var(--accent-orange)", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>
-              Web app
-            </span>
-            <h2 style={{ marginTop: 8 }}>Trải nghiệm trên trình duyệt</h2>
-            <p style={{ color: "var(--text-secondary)", marginBottom: 16 }}>
-              Giao diện web được tối ưu theo tông màu cam, hỗ trợ đầy đủ chức năng tạo, lưu, chia sẻ mô tả ngay trên máy tính.
-            </p>
-            <ul style={listStyle}>
-              {WEB_STEPS.map((item, index) => (
-                <li key={item} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-                  <span style={badgeStyle}>{index + 1}</span>
-                  <p style={{ margin: 0, color: "var(--text-primary)", lineHeight: 1.6 }}>{item}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="card">
-            <span style={{ color: "var(--accent-lime)", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>
-              Mobile app
-            </span>
-            <h2 style={{ marginTop: 8 }}>Ứng dụng trên di động</h2>
-            <p style={{ color: "var(--text-secondary)", marginBottom: 16 }}>
-              Phiên bản app chia sẻ cùng tông màu, tập trung vào thao tác chạm nhanh, tích hợp camera và chia sẻ fanpage/nhóm.
-            </p>
-            <ul style={listStyle}>
-              {MOBILE_STEPS.map((item, index) => (
-                <li key={item} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-                  <span style={{ ...badgeStyle, background: "rgba(78,205,196,0.2)", color: "var(--accent-lime)" }}>{index + 1}</span>
-                  <p style={{ margin: 0, color: "var(--text-primary)", lineHeight: 1.6 }}>{item}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
+        <div className="card">
+          <h2 style={{ marginTop: 0, marginBottom: 12 }}>Quy trình trên web</h2>
+          <ul style={listStyle}>
+            {WEB_STEPS.map((step) => (
+              <li key={step} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <span style={{ width: 12, height: 12, borderRadius: "50%", background: "var(--accent-orange)" }} />
+                <span style={{ color: "var(--text-secondary)", lineHeight: 1.6 }}>{step}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 
       <div className="section">
-        <div className="card" style={{ padding: 28 }}>
-          <h2 style={{ marginTop: 0 }}>Hỏi đáp nhanh</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div className="card">
+          <h2 style={{ marginTop: 0, marginBottom: 12 }}>Trải nghiệm trên mobile</h2>
+          <ul style={listStyle}>
+            {MOBILE_STEPS.map((step) => (
+              <li key={step} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <span style={{ width: 12, height: 12, borderRadius: "50%", background: "var(--accent-lime)" }} />
+                <span style={{ color: "var(--text-secondary)", lineHeight: 1.6 }}>{step}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      <div className="section">
+        <div className="card">
+          <h2 style={{ marginTop: 0, marginBottom: 16 }}>Câu hỏi thường gặp</h2>
+          <div style={{ display: "grid", gap: 16 }}>
             {FAQs.map((faq) => (
-              <details
-                key={faq.question}
-                style={{
-                  background: "rgba(255,255,255,0.85)",
-                  borderRadius: 18,
-                  border: "1px solid rgba(255,140,66,0.15)",
-                  padding: "16px 20px",
-                  cursor: "pointer",
-                }}
-              >
-                <summary style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: 16 }}>{faq.question}</summary>
-                <p style={{ margin: "12px 0 0", color: "var(--text-secondary)", lineHeight: 1.6 }}>{faq.answer}</p>
-              </details>
+              <div key={faq.question}>
+                <strong style={{ display: "block", marginBottom: 6 }}>{faq.question}</strong>
+                <p style={{ margin: 0, color: "var(--text-secondary)", lineHeight: 1.6 }}>{faq.answer}</p>
+              </div>
             ))}
           </div>
         </div>
       </div>
 
-      <div
-        className="card"
-        style={{
-          marginTop: 32,
-          background: "linear-gradient(135deg, rgba(245, 245, 245, 1), rgba(255, 138, 66, 1))",
-          border: "1px solid rgba(255, 255, 255, 1)",
-          display: "flex",
-          flexDirection: "column",
-          gap: 12,
-        }}
-      >
-        <h2 style={{ margin: 0 }}>Cần hỗ trợ thêm?</h2>
-        <p style={{ color: "var(--text-secondary)", margin: 0 }}>
-          Liên hệ đội ngũ hỗ trợ qua email <strong>mdung07102004@gmail.com</strong> hoặc gửi phản hồi ngay trong ứng dụng.
-        </p>
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          <Link href="/" className="primary-button" style={{ textDecoration: "none" }}>
-            Dùng thử ngay
-          </Link>
-          <a
+      <div className="section">
+        <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 }}>
+          <div>
+            <h2 style={{ margin: "0 0 8px" }}>Cần hỗ trợ thêm?</h2>
+            <p style={{ margin: 0, color: "var(--text-secondary)" }}>
+              Gửi email về <a href="mailto:mdung07102004@gmail.com">mdung07102004@gmail.com</a> để được phản hồi trong vòng 24 giờ.
+            </p>
+          </div>
+          <Link
+            href="/"
             className="secondary-button"
-            href="mailto:mdung07102004@gmail.com"
-            style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
+            style={{ textDecoration: "none", padding: "12px 24px" }}
           >
-            Gửi email hỗ trợ
-          </a>
+            Quay về trang chính
+          </Link>
         </div>
       </div>
     </>

@@ -79,7 +79,7 @@ interface ToastState {
   message: string;
 }
 
-const DEFAULT_STYLES = ["Tiếp thị", "Chuyên nghiệp", "Thân thiện", "Kể chuyện"];
+const DEFAULT_STYLES = ["Tiáº¿p thá»", "ChuyÃªn nghiá»p", "ThÃ¢n thiá»n", "Ká» chuyá»n"];
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const resolveImageUrl = (url?: string | null): string | null => {
   if (!url) {
@@ -91,7 +91,7 @@ const resolveImageUrl = (url?: string | null): string | null => {
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<TabKey>("image");
   const [styles, setStyles] = useState<string[]>(DEFAULT_STYLES);
-  const [selectedStyle, setSelectedStyle] = useState<string>("Tiếp thị");
+  const [selectedStyle, setSelectedStyle] = useState<string>("Tiáº¿p thá»");
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [historyDetail, setHistoryDetail] = useState<HistoryItem | null>(null);
 
@@ -156,7 +156,7 @@ export default function HomePage() {
       console.error(err);
       if (err?.response?.status === 401) {
         setToken(null);
-        showToast("error", "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
+        showToast("error", "PhiÃªn ÄÄng nháº­p ÄÃ£ háº¿t háº¡n, vui lÃ²ng ÄÄng nháº­p láº¡i.");
       }
     }
   }, [showToast]);
@@ -189,7 +189,7 @@ export default function HomePage() {
       .play()
       .catch((err) => {
         console.error(err);
-        showToast("error", "Không thể hiển thị camera.");
+        showToast("error", "KhÃ´ng thá» hiá»n thá» camera.");
         stopCamera();
       });
   }, [cameraActive, showToast, stopCamera]);
@@ -236,7 +236,7 @@ export default function HomePage() {
     } catch (err: any) {
       if (err?.response?.status === 401) {
         setToken(null);
-        showToast("error", "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
+        showToast("error", "PhiÃªn ÄÄng nháº­p ÄÃ£ háº¿t háº¡n, vui lÃ²ng ÄÄng nháº­p láº¡i.");
       }
     }
   }, [showToast, token]);
@@ -245,7 +245,7 @@ export default function HomePage() {
     (err: any) => {
       if (err?.response?.status === 401) {
         setToken(null);
-        showToast("error", "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
+        showToast("error", "PhiÃªn ÄÄng nháº­p ÄÃ£ háº¿t háº¡n, vui lÃ²ng ÄÄng nháº­p láº¡i.");
         return true;
       }
       return false;
@@ -264,10 +264,10 @@ export default function HomePage() {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
       streamRef.current = stream;
       setCameraActive(true);
-      showToast("success", "Camera đã bật");
+      showToast("success", "Camera ÄÃ£ báº­t");
     } catch (err) {
       console.error(err);
-      showToast("error", "Không thể truy cập camera. Vui lòng kiểm tra quyền truy cập.");
+      showToast("error", "KhÃ´ng thá» truy cáº­p camera. Vui lÃ²ng kiá»m tra quyá»n truy cáº­p.");
       stopCamera();
       setCameraActive(false);
     }
@@ -276,7 +276,7 @@ export default function HomePage() {
   const capturePhoto = async () => {
     const video = videoRef.current;
     if (!video) {
-      showToast("error", "Không thể chụp ảnh từ camera.");
+      showToast("error", "KhÃ´ng thá» chá»¥p áº£nh tá»« camera.");
       return;
     }
     const canvas = document.createElement("canvas");
@@ -284,13 +284,13 @@ export default function HomePage() {
     canvas.height = video.videoHeight;
     const context = canvas.getContext("2d");
     if (!context) {
-      showToast("error", "Không thể chụp ảnh từ camera.");
+      showToast("error", "KhÃ´ng thá» chá»¥p áº£nh tá»« camera.");
       return;
     }
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
     canvas.toBlob((blob) => {
       if (!blob) {
-        showToast("error", "Không thể chụp ảnh từ camera.");
+        showToast("error", "KhÃ´ng thá» chá»¥p áº£nh tá»« camera.");
         return;
       }
       const captureFile = new File([blob], `capture-${Date.now()}.png`, { type: "image/png" });
@@ -303,7 +303,7 @@ export default function HomePage() {
       };
       setImages((prev) => [...prev, newItem]);
       setSelectedImageId(newItem.id);
-      showToast("success", "Đã chụp ảnh từ camera");
+      showToast("success", "ÄÃ£ chá»¥p áº£nh tá»« camera");
     }, "image/png");
     stopCamera();
   };
@@ -326,7 +326,7 @@ export default function HomePage() {
     });
     setImages((prev) => [...prev, ...newItems]);
     setSelectedImageId(newItems[newItems.length - 1].id);
-    showToast("success", newItems.length > 1 ? `Đã thêm ${newItems.length} hình ảnh` : "Đã thêm hình ảnh");
+    showToast("success", newItems.length > 1 ? `ÄÃ£ thÃªm ${newItems.length} hÃ¬nh áº£nh` : "ÄÃ£ thÃªm hÃ¬nh áº£nh");
     event.target.value = "";
   };
 
@@ -354,7 +354,7 @@ export default function HomePage() {
   const handleImageSubmit = async () => {
     const imageToSubmit = activeImage;
     if (!imageToSubmit) {
-      showToast("error", "Vui lòng thêm ít nhất một hình ảnh hợp lệ.");
+      showToast("error", "Vui lÃ²ng thÃªm Ã­t nháº¥t má»t hÃ¬nh áº£nh há»£p lá».");
       return;
     }
     setLoading(true);
@@ -373,15 +373,15 @@ export default function HomePage() {
       setResult(data);
       if (token) {
         await refreshHistory();
-        showToast("success", "Đã tạo mô tả từ hình ảnh và lưu vào lịch sử");
+        showToast("success", "ÄÃ£ táº¡o mÃ´ táº£ tá»« hÃ¬nh áº£nh vÃ  lÆ°u vÃ o lá»ch sá»­");
       } else {
-        showToast("success", "Đã tạo mô tả từ hình ảnh. Đăng nhập để lưu lịch sử!");
+        showToast("success", "ÄÃ£ táº¡o mÃ´ táº£ tá»« hÃ¬nh áº£nh. ÄÄng nháº­p Äá» lÆ°u lá»ch sá»­!");
       }
     } catch (err: any) {
       if (handleUnauthorized(err)) {
         return;
       }
-      const detail = err?.response?.data?.detail ?? "Không thể tạo mô tả";
+      const detail = err?.response?.data?.detail ?? "KhÃ´ng thá» táº¡o mÃ´ táº£";
       showToast("error", detail);
     } finally {
       setLoading(false);
@@ -390,7 +390,7 @@ export default function HomePage() {
 
   const handleTextSubmit = async () => {
     if (!productInfo.trim()) {
-      showToast("error", "Vui lòng nhập thông tin sản phẩm");
+      showToast("error", "Vui lÃ²ng nháº­p thÃ´ng tin sáº£n pháº©m");
       return;
     }
     setLoading(true);
@@ -403,15 +403,15 @@ export default function HomePage() {
       setResult(data);
       if (token) {
         await refreshHistory();
-        showToast("success", "Đã tạo mô tả từ văn bản và lưu vào lịch sử");
+        showToast("success", "ÄÃ£ táº¡o mÃ´ táº£ tá»« vÄn báº£n vÃ  lÆ°u vÃ o lá»ch sá»­");
       } else {
-        showToast("success", "Đã tạo mô tả từ văn bản. Đăng nhập để lưu lịch sử!");
+        showToast("success", "ÄÃ£ táº¡o mÃ´ táº£ tá»« vÄn báº£n. ÄÄng nháº­p Äá» lÆ°u lá»ch sá»­!");
       }
     } catch (err: any) {
       if (handleUnauthorized(err)) {
         return;
       }
-      const detail = err?.response?.data?.detail ?? "Không thể tạo mô tả";
+      const detail = err?.response?.data?.detail ?? "KhÃ´ng thá» táº¡o mÃ´ táº£";
       showToast("error", detail);
     } finally {
       setLoading(false);
@@ -434,7 +434,7 @@ export default function HomePage() {
       const identifier = authForm.identifier.trim();
       const password = authForm.password.trim();
       if (!identifier || !password) {
-        const message = "Vui lòng nhập đầy đủ email/số điện thoại và mật khẩu hợp lệ.";
+        const message = "Vui lÃ²ng nháº­p Äáº§y Äá»§ email/sá» Äiá»n thoáº¡i vÃ  máº­t kháº©u há»£p lá».";
         setAuthMessage({ type: "error", message });
         showToast("error", message);
         setAuthLoading(false);
@@ -453,30 +453,30 @@ export default function HomePage() {
       await fetchProtectedData(newToken);
       setAuthMessage({
         type: "success",
-        message: authMode === "login" ? "Đăng nhập thành công" : "Đăng ký thành công",
+        message: authMode === "login" ? "ÄÄng nháº­p thÃ nh cÃ´ng" : "ÄÄng kÃ½ thÃ nh cÃ´ng",
       });
       setAuthForm({ identifier: "", password: "" });
-      showToast("success", authMode === "login" ? "Đăng nhập thành công" : "Đăng ký thành công");
+      showToast("success", authMode === "login" ? "ÄÄng nháº­p thÃ nh cÃ´ng" : "ÄÄng kÃ½ thÃ nh cÃ´ng");
       setTimeout(() => {
         setAuthVisible(false);
         setAuthMessage(null);
       }, 1200);
     } catch (err: any) {
-      let detail = "Không thể xác thực";
+      let detail = "KhÃ´ng thá» xÃ¡c thá»±c";
       
-      // Xử lý các loại error response khác nhau
+      // Xá»­ lÃ½ cÃ¡c loáº¡i error response khÃ¡c nhau
       if (err?.response?.data?.detail) {
         const errorDetail = err.response.data.detail;
         
-        // Nếu detail là array (validation errors từ Pydantic)
+        // Náº¿u detail lÃ  array (validation errors tá»« Pydantic)
         if (Array.isArray(errorDetail)) {
           detail = errorDetail.map((e: any) => e.msg || e.message).join(", ");
         } 
-        // Nếu detail là string
+        // Náº¿u detail lÃ  string
         else if (typeof errorDetail === "string") {
           detail = errorDetail;
         }
-        // Nếu detail là object
+        // Náº¿u detail lÃ  object
         else if (typeof errorDetail === "object") {
           detail = errorDetail.msg || errorDetail.message || JSON.stringify(errorDetail);
         }
@@ -497,14 +497,14 @@ export default function HomePage() {
     try {
       const email = forgotEmail.trim();
       if (!email) {
-        const message = "Vui lòng nhập email đã đăng ký.";
+        const message = "Vui lÃ²ng nháº­p email ÄÃ£ ÄÄng kÃ½.";
         setAuthMessage({ type: "error", message });
         showToast("error", message);
         setAuthLoading(false);
         return;
       }
       if (!EMAIL_REGEX.test(email)) {
-        const message = "Vui lòng nhập email hợp lệ.";
+        const message = "Vui lÃ²ng nháº­p email há»£p lá».";
         setAuthMessage({ type: "error", message });
         showToast("error", message);
         setAuthLoading(false);
@@ -519,7 +519,7 @@ export default function HomePage() {
       setForgotEmail("");
       setAuthMode("reset");
     } catch (err: any) {
-      let detail = "Không thể gửi mã xác thực";
+      let detail = "KhÃ´ng thá» gá»­i mÃ£ xÃ¡c thá»±c";
       if (err?.response?.data?.detail) {
         const errorDetail = err.response.data.detail;
         if (Array.isArray(errorDetail)) {
@@ -548,28 +548,28 @@ export default function HomePage() {
       const password = resetForm.password.trim();
       const confirm = resetForm.confirmPassword.trim();
       if (!identifier || !tokenValue || !password) {
-        const message = "Vui lòng nhập đầy đủ email, mã xác thực và mật khẩu mới.";
+        const message = "Vui lÃ²ng nháº­p Äáº§y Äá»§ email, mÃ£ xÃ¡c thá»±c vÃ  máº­t kháº©u má»i.";
         setAuthMessage({ type: "error", message });
         showToast("error", message);
         setAuthLoading(false);
         return;
       }
       if (!EMAIL_REGEX.test(identifier)) {
-        const message = "Vui lòng nhập email hợp lệ.";
+        const message = "Vui lÃ²ng nháº­p email há»£p lá».";
         setAuthMessage({ type: "error", message });
         showToast("error", message);
         setAuthLoading(false);
         return;
       }
       if (tokenValue.length !== 6) {
-        const message = "Mã xác thực gồm 6 chữ số.";
+        const message = "MÃ£ xÃ¡c thá»±c gá»m 6 chá»¯ sá».";
         setAuthMessage({ type: "error", message });
         showToast("error", message);
         setAuthLoading(false);
         return;
       }
       if (password !== confirm) {
-        const message = "Mật khẩu xác nhận không khớp.";
+        const message = "Máº­t kháº©u xÃ¡c nháº­n khÃ´ng khá»p.";
         setAuthMessage({ type: "error", message });
         showToast("error", message);
         setAuthLoading(false);
@@ -586,7 +586,7 @@ export default function HomePage() {
       setAuthMode("login");
       setAuthForm({ identifier, password: "" });
     } catch (err: any) {
-      let detail = "Không thể đặt lại mật khẩu";
+      let detail = "KhÃ´ng thá» Äáº·t láº¡i máº­t kháº©u";
       
       if (err?.response?.data?.detail) {
         const errorDetail = err.response.data.detail;
@@ -627,17 +627,17 @@ export default function HomePage() {
       const next = changePasswordForm.newPassword.trim();
       const confirm = changePasswordForm.confirmPassword.trim();
       if (!current || !next) {
-        showToast("error", "Vui lòng nhập đầy đủ mật khẩu hiện tại và mật khẩu mới.");
+        showToast("error", "Vui lÃ²ng nháº­p Äáº§y Äá»§ máº­t kháº©u hiá»n táº¡i vÃ  máº­t kháº©u má»i.");
         setChangePasswordLoading(false);
         return;
       }
       if (next !== confirm) {
-        showToast("error", "Mật khẩu xác nhận không khớp.");
+        showToast("error", "Máº­t kháº©u xÃ¡c nháº­n khÃ´ng khá»p.");
         setChangePasswordLoading(false);
         return;
       }
       if (current === next) {
-        showToast("error", "Mật khẩu mới phải khác mật khẩu hiện tại.");
+        showToast("error", "Máº­t kháº©u má»i pháº£i khÃ¡c máº­t kháº©u hiá»n táº¡i.");
         setChangePasswordLoading(false);
         return;
       }
@@ -649,7 +649,7 @@ export default function HomePage() {
       setChangePasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
       setChangePasswordVisible(false);
     } catch (err: any) {
-      let detail = "Không thể đổi mật khẩu";
+      let detail = "KhÃ´ng thá» Äá»i máº­t kháº©u";
       if (err?.response?.data?.detail) {
         const errorDetail = err.response.data.detail;
         if (Array.isArray(errorDetail)) {
@@ -675,7 +675,7 @@ export default function HomePage() {
     setHistory([]);
     setResult(null);
     stopCamera();
-    showToast("success", "Đã đăng xuất");
+    showToast("success", "ÄÃ£ ÄÄng xuáº¥t");
   };
 
   const activeImage = useMemo(() => {
@@ -691,65 +691,78 @@ export default function HomePage() {
     return images[0];
   }, [images, selectedImageId]);
 
+    const resultImageSrc = useMemo(() => resolveImageUrl(result?.image_url), [result]);
+  const resultTimestamp = result?.timestamp ? formatVietnamTime(result.timestamp) : null;
+  const resultSourceLabel =
+    result?.source === "image" ? "Hình ảnh" : result?.source === "text" ? "Văn bản" : null;
+  const authTitle =
+    authMode === "login"
+      ? "Đăng nhập tài khoản"
+      : authMode === "register"
+      ? "Đăng ký tài khoản mới"
+      : authMode === "forgot"
+      ? "Quên mật khẩu"
+      : "Đặt lại mật khẩu";
+
   return (
-    <div className="app-container">
-      <div className="glass-panel">
-        <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 }}>
-          <div>
-            <h1> AI Mô Tả Sản Phẩm Trái Cây </h1>
-            <p style={{ color: "var(--text-secondary)", marginBottom: 32 }}>
-              Tu hinh anh den mo ta hoan hao |  Nhieu phong cach viet |  Sao chep de dang
-            </p>
-
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => setGuideVisible(true)}
-              >
-                Hướng Dẫn Sử Dụng
-              </button>
-            </div>
+    <main className="page-shell">
+      <section className="hero-card">
+        <div className="hero-info">
+          <span className="hero-pill">AI copywriter</span>
+          <h1 className="hero-title">AI Mô Tả Sản Phẩm Trái Cây</h1>
+          <p className="hero-subtitle">
+            Tăng trải nghiệm mobile: tải ảnh hoặc nhập văn bản, chọn phong cách và nhận mô tả tối ưu chỉ trong vài giây.
+          </p>
+          <div className="hero-actions">
+            <button type="button" className="secondary-button" onClick={() => setGuideVisible(true)}>
+              Hướng dẫn sử dụng
+            </button>
           </div>
-          <div>
-            {isAuthenticated ? (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
-                <span style={{ color: "var(--text-secondary)" }}>
-                  {user?.email || user?.phone_number}
-                </span>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
-                  <button
-                    className="secondary-button"
-                    onClick={() => {
-                      setChangePasswordVisible(true);
-                      setChangePasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
-                    }}
-                  >
-                    Đổi mật khẩu
-                  </button>
-                  <button className="secondary-button" onClick={handleLogout}>
-                    Đăng xuất
-                  </button>
-                </div>
+        </div>
+        <div className="hero-auth">
+          {isAuthenticated ? (
+            <div className="stack stack--sm align-end">
+              <span className="hero-user-label">{user?.email || user?.phone_number}</span>
+              <div className="inline-actions inline-actions--wrap">
+                <button
+                  className="ghost-button"
+                  type="button"
+                  onClick={() => {
+                    setChangePasswordVisible(true);
+                    setChangePasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+                  }}
+                >
+                  Đổi mật khẩu
+                </button>
+                <button className="ghost-button" type="button" onClick={handleLogout}>
+                  Đăng xuất
+                </button>
               </div>
-            ) : (
-              <button
-                className="primary-button"
-                onClick={() => {
-                  changeAuthMode("login");
-                  setAuthForm({ identifier: "", password: "" });
-                  setAuthVisible(true);
-                }}
-              >
-                Đăng nhập / Đăng ký
-              </button>
-            )}
-          </div>
-        </header>
+            </div>
+          ) : (
+            <button
+              className="primary-button"
+              type="button"
+              onClick={() => {
+                changeAuthMode("login");
+                setAuthForm({ identifier: "", password: "" });
+                setAuthVisible(true);
+              }}
+            >
+              Đăng nhập hoặc đăng ký
+            </button>
+          )}
+        </div>
+      </section>
 
-        <div className="section">
-          <label htmlFor="style-select" style={{ fontWeight: 600, display: "block", marginBottom: 12 }}>
-             Phong cách viết
+      <section className="section-card">
+        <div>
+          <p className="section-subtitle">Bước 1</p>
+          <h2 className="section-title">Lựa chọn phong cách viết</h2>
+        </div>
+        <div className="section-content">
+          <label htmlFor="style-select" className="panel-title">
+            Phong cách mong muốn
           </label>
           <select
             id="style-select"
@@ -763,534 +776,400 @@ export default function HomePage() {
             ))}
           </select>
         </div>
+      </section>
 
-        <div className="section">
-          <div className="tab-group">
-            <button
-              className={`tab-button ${activeTab === "image" ? "active" : ""}`}
-              onClick={() => setActiveTab("image")}
-            >
-               Phân tích hình ảnh
-            </button>
-            <button
-              className={`tab-button ${activeTab === "text" ? "active" : ""}`}
-              onClick={() => setActiveTab("text")}
-            >
-               Tạo từ mô tả text
-            </button>
+      <section className="section-card">
+        <div className="section-header">
+          <div>
+            <p className="section-subtitle">Bước 2</p>
+            <h2 className="section-title">Chọn cách tạo mô tả</h2>
           </div>
         </div>
+        <div className="tab-group">
+          <button
+            className={`tab-button ${activeTab === "image" ? "active" : ""}`}
+            type="button"
+            onClick={() => setActiveTab("image")}
+          >
+            Từ ảnh
+          </button>
+          <button
+            className={`tab-button ${activeTab === "text" ? "active" : ""}`}
+            type="button"
+            onClick={() => setActiveTab("text")}
+          >
+            Từ văn bản
+          </button>
+        </div>
 
-        {activeTab === "image" && (
-          <div className="section">
-            <div className="grid two-column">
-              <div className="card">
-                <h2> Tải hoặc chụp hình ảnh sản phẩm</h2>
-                <p style={{ color: "var(--text-secondary)" }}>
-                  Hỗ trợ định dạng JPG, JPEG, PNG (dưới 5MB) hoặc dùng camera trực tiếp
+        {activeTab === "image" ? (
+          <div className="stack">
+            <div className="panel-grid panel-grid--split">
+              <div className="stack">
+                <h3 className="panel-title">Tải ảnh hoặc mở camera</h3>
+                <p className="muted-text">
+                  Hỗ trợ định dạng JPG, JPEG, PNG tối đa 5MB. Trên mobile bạn có thể chụp trực tiếp.
                 </p>
                 <input type="file" accept="image/*" multiple onChange={handleImageChange} />
-
-                <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 12 }}>
-                  {cameraActive ? (
-                    <video
-                      ref={videoRef}
-                      style={{ width: "100%", borderRadius: 20, background: "#000" }}
-                      autoPlay
-                      playsInline
-                      muted
-                    />
-                  ) : null}
-
-                  {!cameraActive && activeImage && (
-                    <div>
-                      <Image
-                        src={activeImage.previewUrl}
-                        alt="Xem trước"
-                        width={600}
-                        height={400}
-                        style={{ borderRadius: 20, width: "100%", height: "auto" }}
-                        unoptimized
-                      />
-                    </div>
-                  )}
-
-                  {!cameraActive && !activeImage && (
-                    <div
-                      style={{
-                        border: "1px dashed rgba(0,0,0,0.15)",
-                        borderRadius: 20,
-                        padding: 24,
-                        textAlign: "center",
-                        color: "var(--text-secondary)",
-                      }}
-                    >
-                      Chưa có hình ảnh nào, hãy tải lên hoặc dùng camera.
-                    </div>
-                  )}
-
-                  {images.length > 0 && (
-                    <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                      {images.map((item) => (
-                        <div
-                          key={item.id}
-                          style={{
-                            position: "relative",
-                            borderRadius: 16,
-                            overflow: "hidden",
-                            border:
-                              item.id === activeImage?.id
-                                ? "2px solid var(--accent-orange)"
-                                : "2px solid transparent",
-                            boxShadow: "0 10px 24px rgba(0,0,0,0.12)",
-                            cursor: "pointer",
+                {images.length > 0 && (
+                  <div className="thumb-strip">
+                    {images.map((item) => (
+                      <div
+                        key={item.id}
+                        className={`thumb-item ${item.id === activeImage?.id ? "active" : ""}`}
+                        onClick={() => handleSelectImage(item.id)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            handleSelectImage(item.id);
+                          }
+                        }}
+                        role="button"
+                        tabIndex={0}
+                      >
+                        <button
+                          type="button"
+                          className="thumb-remove"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleRemoveImage(item.id);
                           }}
-                          onClick={() => handleSelectImage(item.id)}
+                          aria-label="Xóa ảnh"
                         >
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRemoveImage(item.id);
-                            }}
-                            style={{
-                              position: "absolute",
-                              top: 6,
-                              right: 6,
-                              background: "rgba(0,0,0,0.55)",
-                              color: "#fff",
-                              border: "none",
-                              borderRadius: "50%",
-                              width: 28,
-                              height: 28,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              cursor: "pointer",
-                            }}
-                            aria-label="Xóa hình ảnh"
-                          >
-                            ✕
-                          </button>
-                          <Image
-                            src={item.previewUrl}
-                            alt="Hình ảnh đã chọn"
-                            width={140}
-                            height={140}
-                            style={{ objectFit: "cover", width: 140, height: 140 }}
-                            unoptimized
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                    {!cameraActive ? (
-                      <button className="secondary-button" onClick={startCamera}>
-                         Mở camera
+                          ×
+                        </button>
+                        <Image
+                          src={item.previewUrl}
+                          alt="Ảnh đã tải lên"
+                          fill
+                          sizes="88px"
+                          className="thumb-image"
+                          unoptimized
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="inline-actions inline-actions--wrap">
+                  {cameraActive ? (
+                    <>
+                      <button className="primary-button" type="button" onClick={capturePhoto}>
+                        Chụp ảnh
                       </button>
-                    ) : (
-                      <>
-                        <button className="primary-button" onClick={capturePhoto}>
-                           Chụp ảnh
-                        </button>
-                        <button className="secondary-button" onClick={stopCamera}>
-                           Đóng camera
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                <button
-                  className="primary-button"
-                  style={{ marginTop: 24, width: "100%" }}
-                  onClick={handleImageSubmit}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
-                      <span className="loader" /> Đang tạo mô tả...
-                    </span>
+                      <button className="ghost-button" type="button" onClick={stopCamera}>
+                        Đóng camera
+                      </button>
+                    </>
                   ) : (
-                    " AI tạo mô tả ngay"
-                  )}
-                </button>
-              </div>
-
-              {result && (
-                <div className="card">
-                  <h2>✨ Kết quả</h2>
-                  <p style={{ whiteSpace: "pre-line", lineHeight: 1.7 }}>{result.description}</p>
-                  <div style={{ marginTop: 24, display: "flex", gap: 12, flexWrap: "wrap" }}>
-                    <button
-                      className="secondary-button"
-                      onClick={() => navigator.clipboard.writeText(result.description)}
-                    >
-                       Sao chép
+                    <button className="ghost-button" type="button" onClick={startCamera}>
+                      Mở camera
                     </button>
-                    
-                  </div>
+                  )}
                 </div>
-              )}
+              </div>
+              <div className="preview-surface">
+                {cameraActive ? (
+                  <video ref={videoRef} className="preview-frame" autoPlay playsInline muted />
+                ) : activeImage ? (
+                  <Image
+                    src={activeImage.previewUrl}
+                    alt="Ảnh xem trước"
+                    width={600}
+                    height={400}
+                    className="preview-frame"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="preview-placeholder">
+                    Chưa có ảnh. Tải lên hoặc mở camera để chọn ảnh.
+                  </div>
+                )}
+              </div>
             </div>
+            <button
+              className="primary-button primary-button--full"
+              type="button"
+              onClick={handleImageSubmit}
+              disabled={loading}
+            >
+              {loading ? (
+                <span className="button-loader">
+                  <span className="loader" /> Đang tạo mô tả...
+                </span>
+              ) : (
+                "Sinh mô tả từ ảnh"
+              )}
+            </button>
           </div>
-        )}
-
-        {activeTab === "text" && (
-          <div className="section">
-            <div className="card" style={{ marginBottom: 24 }}>
-              <h2>📝 Nhập thông tin sản phẩm</h2>
+        ) : (
+          <div className="stack">
+            <div className="stack">
+              <h3 className="panel-title">Nhập thông tin sản phẩm</h3>
+              <p className="muted-text">
+                Mô tả nguyên liệu, hương vị và ưu điểm để AI tạo nội dung hấp dẫn.
+              </p>
               <textarea
                 rows={7}
-                placeholder="Ví dụ: Táo Fuji nhập khẩu Nhật Bản, quả to, màu đỏ tươi, ngọt giòn"
+                placeholder="Ví dụ: Táo Fuji nhập khẩu từ Nhật Bản, trái to, vỏ đỏ tươi, thịt giòn giòn..."
                 value={productInfo}
                 onChange={(event) => setProductInfo(event.target.value)}
               />
-              <button
-                className="primary-button"
-                style={{ marginTop: 20, width: "100%" }}
-                onClick={handleTextSubmit}
-                disabled={loading}
-              >
-                {loading ? (
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
-                    <span className="loader" /> Đang tạo mô tả...
-                  </span>
-                ) : (
-                  "✨ Tạo mô tả chi tiết"
-                )}
-              </button>
             </div>
-
-            {result && (
-              <div className="card">
-                <h2> Kết quả</h2>
-                <p style={{ whiteSpace: "pre-line", lineHeight: 1.7 }}>{result.description}</p>
-                <div style={{ marginTop: 24, display: "flex", gap: 12, flexWrap: "wrap" }}>
-                  <button
-                    className="secondary-button"
-                    onClick={() => navigator.clipboard.writeText(result.description)}
-                  >
-                     Sao chép
-                  </button>
-                  
-                </div>
-              </div>
-            )}
+            <button
+              className="primary-button primary-button--full"
+              type="button"
+              onClick={handleTextSubmit}
+              disabled={loading}
+            >
+              {loading ? (
+                <span className="button-loader">
+                  <span className="loader" /> Đang tạo mô tả...
+                </span>
+              ) : (
+                "Sinh mô tả từ văn bản"
+              )}
+            </button>
           </div>
         )}
+      </section>
 
-
-
-        <div className="section">
-          <h2>📜 Lịch sử mô tả</h2>
-          {!isAuthenticated ? (
-            <div style={{ textAlign: "center", padding: "40px 20px" }}>
-              <p style={{ color: "var(--text-secondary)", marginBottom: 16 }}>
-                🔒 Đăng nhập để xem và lưu lịch sử mô tả của bạn
-              </p>
-              <button
-                className="primary-button"
-                onClick={() => {
-                  setAuthVisible(true);
-                  setAuthMode("login");
-                }}
-              >
-                Đăng nhập ngay
-              </button>
+      {result && (
+        <section className="section-card">
+          <div className="section-header">
+            <div>
+              <p className="section-subtitle">Kết quả AI</p>
+              <h2 className="section-title">Mô tả đã sẵn sàng</h2>
             </div>
-          ) : history.length === 0 ? (
-            <p style={{ color: "var(--text-secondary)" }}>Chưa có lịch sử.</p>
-          ) : (
-            <div className="history-grid">
-              {history.map((item) => {
-                const imageSrc = resolveImageUrl(item.image_url);
-                return (
-                  <div key={item.id} className="history-item">
-                  <strong>{formatVietnamTime(item.timestamp)}</strong>
-                  <span style={{ color: "var(--text-secondary)" }}>
-                    Nguồn: {item.source === "image" ? "Hình ảnh" : "Văn bản"}
-                  </span>
-                  <span style={{ color: "var(--accent-orange)", fontWeight: 600 }}>
-                    Phong cách: {item.style}
-                  </span>
+            <div className="result-meta">
+              {resultTimestamp && <span className="result-meta-badge">{resultTimestamp}</span>}
+              {resultSourceLabel && <span className="result-meta-badge">{resultSourceLabel}</span>}
+              {result.style && (
+                <span className="result-meta-badge">Phong cách: {result.style}</span>
+              )}
+            </div>
+          </div>
+          {resultImageSrc && (
+            <div className="preview-surface">
+              <Image
+                src={resultImageSrc}
+                alt="Ảnh dùng để tạo mô tả"
+                width={720}
+                height={480}
+                className="preview-frame"
+                sizes="(max-width: 768px) 100vw, 680px"
+              />
+            </div>
+          )}
+          <p className="result-description">{result.description}</p>
+          <div className="inline-actions inline-actions--wrap">
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={() => navigator.clipboard.writeText(result.description)}
+            >
+              Sao chép
+            </button>
+          </div>
+        </section>
+      )}
+
+      <section className="section-card">
+        <div className="section-header">
+          <div>
+            <p className="section-subtitle">Quản lý nội dung</p>
+            <h2 className="section-title">Lịch sử mô tả</h2>
+          </div>
+        </div>
+        {!isAuthenticated ? (
+          <div className="empty-state">
+            <p className="muted-text">Đăng nhập để lưu và truy cập lịch sử mô tả đã tạo.</p>
+            <button
+              className="primary-button"
+              type="button"
+              onClick={() => {
+                setAuthVisible(true);
+                changeAuthMode("login");
+              }}
+            >
+              Đăng nhập ngay
+            </button>
+          </div>
+        ) : history.length === 0 ? (
+          <p className="muted-text">Chưa có lịch sử nào. Bắt đầu tạo mô tả ngay hôm nay.</p>
+        ) : (
+          <div className="history-grid">
+            {history.map((item) => {
+              const imageSrc = resolveImageUrl(item.image_url);
+              const sourceLabel = item.source === "image" ? "Hình ảnh" : "Văn bản";
+              return (
+                <article key={item.id} className="history-card">
+                  <div className="history-meta">
+                    <span className="history-date">{formatVietnamTime(item.timestamp)}</span>
+                    <span className="history-style">Nguồn: {sourceLabel}</span>
+                    <span className="history-style">Phong cách: {item.style}</span>
+                  </div>
                   {imageSrc && (
                     <div className="history-thumb">
                       <Image
                         src={imageSrc}
-                        alt="Ảnh mô tả"
+                        alt="Ảnh đã lưu trong lịch sử"
                         fill
                         sizes="(max-width: 768px) 100vw, 320px"
-                        style={{ objectFit: "cover" }}
+                        className="history-thumb-image"
                       />
                     </div>
                   )}
-                  <p style={{ color: "var(--text-secondary)", margin: 0 }}>{item.summary}</p>
+                  <p className="muted-text">{item.summary}</p>
                   <button
-                    className="secondary-button"
+                    className="ghost-button"
+                    type="button"
                     onClick={() => {
                       setActiveTab("text");
                       setHistoryDetail(item);
-                        setResult({
-                          description: item.full_description,
-                          history_id: item.id,
-                          timestamp: item.timestamp,
-                          style: item.style,
-                          source: item.source,
-                          image_url: item.image_url ?? null,
+                      setResult({
+                        description: item.full_description,
+                        history_id: item.id,
+                        timestamp: item.timestamp,
+                        style: item.style,
+                        source: item.source,
+                        image_url: item.image_url ?? null,
                       });
                     }}
                   >
                     Xem chi tiết
                   </button>
-                  
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
-        <footer style={{ marginTop: 48, textAlign: "center", color: "var(--text-secondary)" }}>
-          <p> Mẹo: thử nhiều phong cách viết để tìm nội dung phù hợp nhất với sản phẩm.</p>
-        </footer>
-      </div>
+      <footer className="page-footer">
+        Mẹo: thử nghiệm nhiều phong cách viết để tìm ra giọng văn phù hợp với từng mặt hàng trái cây.
+      </footer>
 
       {toast && (
-        <div
-          style={{
-            position: "fixed",
-            top: 24,
-            right: 24,
-            zIndex: 1100,
-            minWidth: 260,
-            maxWidth: 360,
-            padding: "14px 18px",
-            borderRadius: 18,
-            background: toast.type === "error" ? "#F56565" : "#38A169",
-            color: "#fff",
-            boxShadow: "0 16px 40px rgba(0,0,0,0.2)",
-            fontWeight: 600,
-            lineHeight: 1.4,
-          }}
-        >
+        <div className={`app-toast app-toast--${toast.type}`} role="status">
           {toast.message}
         </div>
       )}
 
       {guideVisible && (
         <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.55)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 16,
-            zIndex: 1200,
-          }}
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
           onClick={() => setGuideVisible(false)}
         >
           <div
-            style={{
-              width: "min(960px, 100%)",
-              maxHeight: "90vh",
-              overflowY: "auto",
-              background: "transparent",
-              borderRadius: 28,
-            }}
+            className="modal-card modal-card--guide"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="app-container" style={{ padding: 0 }}>
-              <UsageGuideContent
-                actionSlot={
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={() => setGuideVisible(false)}
-                  >
-                    Đóng
-                  </button>
-                }
-                description="Xem nhanh quy trinh su dung tren web va mobile ma khong can roi trang hien tai."
-              />
-            </div>
+            <UsageGuideContent
+              actionSlot={
+                <button
+                  type="button"
+                  className="ghost-button"
+                  onClick={() => setGuideVisible(false)}
+                >
+                  Đóng
+                </button>
+              }
+              description="Xem nhanh quy trình sử dụng trên web và mobile mà không cần rời trang hiện tại."
+            />
           </div>
         </div>
       )}
 
       {historyDetail && (
         <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.55)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 16,
-            zIndex: 1000,
-          }}
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
           onClick={() => setHistoryDetail(null)}
         >
           <div
-            style={{
-              width: "100%",
-              maxWidth: 720,
-              background: "#fff",
-              borderRadius: 28,
-              padding: 32,
-              boxShadow: "0 32px 80px rgba(0,0,0,0.2)",
-              display: "flex",
-              flexDirection: "column",
-              gap: 20,
-              maxHeight: "90vh",
-              overflowY: "auto",
-            }}
+            className="modal-card modal-card--history"
             onClick={(event) => event.stopPropagation()}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div className="modal-header">
               <div>
-                <h2 style={{ margin: "0 0 8px" }}>Chi tiết mô tả</h2>
-                <p style={{ margin: 0, color: "var(--text-secondary)" }}>
-                  {formatVietnamTime(historyDetail.timestamp)} • Nguồn: {historyDetail.source === "image" ? "Hình ảnh" : "Văn bản"}
+                <h2 className="modal-title">Chi tiết mô tả</h2>
+                <p className="muted-text">
+                  {formatVietnamTime(historyDetail.timestamp)} | Nguồn: {" "}
+                  {historyDetail.source === "image" ? "Hình ảnh" : "Văn bản"}
                 </p>
-                <p style={{ margin: "4px 0 0", color: "var(--accent-orange)", fontWeight: 600 }}>
-                  Phong cách: {historyDetail.style}
-                </p>
+                <p className="muted-text">Phong cách: {historyDetail.style}</p>
               </div>
-              <button className="secondary-button" onClick={() => setHistoryDetail(null)}>
-                Đóng
+              <button
+                type="button"
+                className="icon-button"
+                onClick={() => setHistoryDetail(null)}
+                aria-label="Đóng"
+              >
+                ×
               </button>
             </div>
             {detailImageSrc && (
-              <div className="detail-image-wrapper">
+              <div className="preview-surface">
                 <Image
                   src={detailImageSrc}
-                  alt="Ảnh mô tả"
-                  fill
+                  alt="Ảnh dùng để tạo mô tả"
+                  width={720}
+                  height={480}
+                  className="preview-frame"
                   sizes="(max-width: 768px) 100vw, 640px"
-                  style={{ objectFit: "cover" }}
                 />
               </div>
             )}
-            <div
-              style={{
-                background: "#f8f9fb",
-                padding: 24,
-                borderRadius: 20,
-                lineHeight: 1.7,
-                color: "var(--text-primary)",
-                whiteSpace: "pre-line",
-              }}
-            >
-              {historyDetail.full_description}
-            </div>
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <p className="result-description">{historyDetail.full_description}</p>
+            <div className="modal-actions">
               <button
                 className="secondary-button"
+                type="button"
                 onClick={() => navigator.clipboard.writeText(historyDetail.full_description)}
               >
-                📋 Sao chép
+                Sao chép
               </button>
-              
             </div>
           </div>
         </div>
       )}
 
-
-
       {authVisible && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.45)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 16,
-            zIndex: 1000,
-          }}
-        >
-          <div
-            style={{
-              width: "100%",
-              maxWidth: 420,
-              background: "#fff",
-              borderRadius: 24,
-              padding: 32,
-              boxShadow: "0 24px 60px rgba(0,0,0,0.12)",
-              display: "flex",
-              flexDirection: "column",
-              gap: 16,
-              position: "relative",
-            }}
-          >
-            <button
-              type="button"
-              onClick={() => {
-                setAuthVisible(false);
-                changeAuthMode("login");
-                setAuthForm({ identifier: "", password: "" });
-                setAuthMessage(null);
-              }}
-              style={{
-                position: "absolute",
-                top: 16,
-                right: 16,
-                background: "rgba(0,0,0,0.08)",
-                color: "var(--text-primary)",
-                border: "none",
-                borderRadius: "50%",
-                width: 32,
-                height: 32,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                fontSize: 20,
-                fontWeight: 600,
-                transition: "all 0.2s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(0,0,0,0.15)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "rgba(0,0,0,0.08)";
-              }}
-              aria-label="Đóng"
-            >
-              ✕
-            </button>
-            <h2 style={{ margin: 0, textAlign: "center" }}>
-              {authMode === "login"
-                ? "Đăng nhập tài khoản"
-                : authMode === "register"
-                ? "Đăng ký tài khoản mới"
-                : "Đặt lại mật khẩu"}
-            </h2>
+        <div className="modal-overlay" role="dialog" aria-modal="true">
+          <div className="modal-card modal-card--auth">
+            <div className="modal-header">
+              <h2 className="modal-title">{authTitle}</h2>
+              <button
+                type="button"
+                className="icon-button"
+                onClick={() => {
+                  setAuthVisible(false);
+                  changeAuthMode("login");
+                  setAuthForm({ identifier: "", password: "" });
+                  setAuthMessage(null);
+                }}
+                aria-label="Đóng"
+              >
+                ×
+              </button>
+            </div>
             {authMessage && (
               <div
-                className="error-box"
-                style={{
-                  borderColor: authMessage.type === "success" ? "#38A169" : undefined,
-                  background: authMessage.type === "success" ? "rgba(56,161,105,0.12)" : undefined,
-                  color: authMessage.type === "success" ? "#276749" : undefined,
-                }}
+                className={`alert-box ${
+                  authMessage.type === "success" ? "alert-box--success" : "alert-box--error"
+                }`}
               >
                 {authMessage.message}
               </div>
             )}
             {(authMode === "login" || authMode === "register") && (
-              <form onSubmit={handleAuthSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <form className="stack" onSubmit={handleAuthSubmit}>
                 <input
                   type="text"
-                  placeholder="Email hoặc Số điện thoại"
+                  placeholder="Email hoặc số điện thoại"
                   value={authForm.identifier}
                   onChange={(event) => setAuthForm((prev) => ({ ...prev, identifier: event.target.value }))}
                   required
@@ -1303,13 +1182,13 @@ export default function HomePage() {
                   required
                   minLength={6}
                 />
-                <button className="primary-button" type="submit" disabled={authLoading}>
+                <button className="primary-button primary-button--full" type="submit" disabled={authLoading}>
                   {authLoading ? "Đang xử lý..." : authMode === "login" ? "Đăng nhập" : "Đăng ký"}
                 </button>
               </form>
             )}
             {authMode === "forgot" && (
-              <form onSubmit={handleForgotSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <form className="stack" onSubmit={handleForgotSubmit}>
                 <input
                   type="email"
                   placeholder="Nhập email đã đăng ký"
@@ -1317,13 +1196,13 @@ export default function HomePage() {
                   onChange={(event) => setForgotEmail(event.target.value)}
                   required
                 />
-                <button className="primary-button" type="submit" disabled={authLoading}>
+                <button className="primary-button primary-button--full" type="submit" disabled={authLoading}>
                   {authLoading ? "Đang xử lý..." : "Gửi mã xác thực"}
                 </button>
               </form>
             )}
             {authMode === "reset" && (
-              <form onSubmit={handleResetSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <form className="stack" onSubmit={handleResetSubmit}>
                 <input
                   type="email"
                   placeholder="Email đã đăng ký"
@@ -1359,29 +1238,29 @@ export default function HomePage() {
                   required
                   minLength={6}
                 />
-                <button className="primary-button" type="submit" disabled={authLoading}>
+                <button className="primary-button primary-button--full" type="submit" disabled={authLoading}>
                   {authLoading ? "Đang xử lý..." : "Đặt lại mật khẩu"}
                 </button>
               </form>
             )}
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <div className="modal-actions">
               {authMode === "login" && (
                 <>
-                  <button className="secondary-button" type="button" onClick={() => changeAuthMode("register")} style={{ flex: 1 }}>
-                     Đăng ký tài khoản
+                  <button className="ghost-button" type="button" onClick={() => changeAuthMode("register")}>
+                    Đăng ký tài khoản
                   </button>
-                  <button className="secondary-button" type="button" onClick={() => changeAuthMode("forgot")} style={{ flex: 1 }}>
+                  <button className="ghost-button" type="button" onClick={() => changeAuthMode("forgot")}>
                     Quên mật khẩu
                   </button>
                 </>
               )}
               {authMode === "register" && (
-                <button className="secondary-button" type="button" onClick={() => changeAuthMode("login")} style={{ width: "100%" }}>
+                <button className="ghost-button" type="button" onClick={() => changeAuthMode("login")}>
                   Đã có tài khoản? Đăng nhập
                 </button>
               )}
               {(authMode === "reset" || authMode === "forgot") && (
-                <button className="secondary-button" type="button" onClick={() => changeAuthMode("login")} style={{ width: "100%" }}>
+                <button className="ghost-button" type="button" onClick={() => changeAuthMode("login")}>
                   Quay lại đăng nhập
                 </button>
               )}
@@ -1391,73 +1270,30 @@ export default function HomePage() {
       )}
 
       {changePasswordVisible && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.45)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 16,
-            zIndex: 1000,
-          }}
-        >
-          <div
-            style={{
-              width: "100%",
-              maxWidth: 420,
-              background: "#fff",
-              borderRadius: 24,
-              padding: 32,
-              boxShadow: "0 24px 60px rgba(0,0,0,0.12)",
-              display: "flex",
-              flexDirection: "column",
-              gap: 16,
-              position: "relative",
-            }}
-          >
-            <button
-              type="button"
-              onClick={() => {
-                setChangePasswordVisible(false);
-                setChangePasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
-              }}
-              style={{
-                position: "absolute",
-                top: 16,
-                right: 16,
-                background: "rgba(0,0,0,0.08)",
-                color: "var(--text-primary)",
-                border: "none",
-                borderRadius: "50%",
-                width: 32,
-                height: 32,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                fontSize: 20,
-                fontWeight: 600,
-                transition: "all 0.2s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(0,0,0,0.15)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "rgba(0,0,0,0.08)";
-              }}
-              aria-label="Đóng"
-            >
-              ✕
-            </button>
-            <h2 style={{ margin: 0, textAlign: "center" }}>Đổi mật khẩu</h2>
-            <form onSubmit={handleChangePasswordSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="modal-overlay" role="dialog" aria-modal="true">
+          <div className="modal-card modal-card--auth">
+            <div className="modal-header">
+              <h2 className="modal-title">Đổi mật khẩu</h2>
+              <button
+                type="button"
+                className="icon-button"
+                onClick={() => {
+                  setChangePasswordVisible(false);
+                  setChangePasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+                }}
+                aria-label="Đóng"
+              >
+                ×
+              </button>
+            </div>
+            <form className="stack" onSubmit={handleChangePasswordSubmit}>
               <input
                 type="password"
                 placeholder="Mật khẩu hiện tại"
                 value={changePasswordForm.currentPassword}
-                onChange={(event) => setChangePasswordForm((prev) => ({ ...prev, currentPassword: event.target.value }))}
+                onChange={(event) =>
+                  setChangePasswordForm((prev) => ({ ...prev, currentPassword: event.target.value }))
+                }
                 required
                 minLength={6}
               />
@@ -1465,7 +1301,9 @@ export default function HomePage() {
                 type="password"
                 placeholder="Mật khẩu mới"
                 value={changePasswordForm.newPassword}
-                onChange={(event) => setChangePasswordForm((prev) => ({ ...prev, newPassword: event.target.value }))}
+                onChange={(event) =>
+                  setChangePasswordForm((prev) => ({ ...prev, newPassword: event.target.value }))
+                }
                 required
                 minLength={6}
               />
@@ -1473,18 +1311,24 @@ export default function HomePage() {
                 type="password"
                 placeholder="Nhập lại mật khẩu mới"
                 value={changePasswordForm.confirmPassword}
-                onChange={(event) => setChangePasswordForm((prev) => ({ ...prev, confirmPassword: event.target.value }))}
+                onChange={(event) =>
+                  setChangePasswordForm((prev) => ({ ...prev, confirmPassword: event.target.value }))
+                }
                 required
                 minLength={6}
               />
-              <button className="primary-button" type="submit" disabled={changePasswordLoading}>
+              <button
+                className="primary-button primary-button--full"
+                type="submit"
+                disabled={changePasswordLoading}
+              >
                 {changePasswordLoading ? "Đang xử lý..." : "Cập nhật mật khẩu"}
               </button>
             </form>
           </div>
         </div>
       )}
-    </div>
+    </main>
   );
 }
-//note
+

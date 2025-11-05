@@ -23,6 +23,7 @@ import Constants from 'expo-constants';
 import * as ImagePicker from 'expo-image-picker';
 import * as Clipboard from 'expo-clipboard';
 import { Picker } from '@react-native-picker/picker';
+import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 
 declare const process: { env?: Record<string, string | undefined> } | undefined;
 
@@ -33,50 +34,50 @@ const API_BASE_URL = expoExtra.apiBaseUrl ?? envApiBaseUrl ?? 'http://localhost:
 
 const STORAGE_KEYS = { token: 'fruitmate-token' };
 
-const DEFAULT_STYLES = ['Tiep thi', 'Chuyen nghiep', 'Than thien', 'Ke chuyen'];
+const DEFAULT_STYLES = ['Tiếp thị', 'Chuyên nghiệp', 'Thân thiện', 'Kể chuyện'];
 const QUICK_STEPS = [
   {
-    title: '1. Tai anh hoac nhap mo ta',
+    title: '1. Tải ảnh hoặc nhập mô tả',
     description:
-      'Chon hinh san pham ro net (PNG/JPG < 5MB) hoac nhap noi dung chi tiet ve trai cay.',
+      'Chọn hình sản phẩm rõ nét (PNG/JPG < 5MB) hoặc nhập nội dung chi tiết về trái cây.',
   },
   {
-    title: '2. Chon phong cach phu hop',
+    title: '2. Chọn phong cách phù hợp',
     description:
-      'Dieu chinh phong cach viet de phu hop voi thuong hieu: than thien, chuyen nghiep hoac ke chuyen.',
+      'Điều chỉnh phong cách viết để phù hợp với thương hiệu: thân thiện, chuyên nghiệp hoặc kể chuyện.',
   },
   {
-    title: '3. Tao noi dung bang AI',
-    description: 'He thong su dung mo hinh Gemini de sinh mo ta toi uu chi trong vai giay.',
+    title: '3. Tạo nội dung bằng AI',
+    description: 'Hệ thống sử dụng mô hình Gemini để sinh mô tả tối ưu chỉ trong vài giây.',
   },
   {
-    title: '4. Sao chep va quan ly',
+    title: '4. Sao chép và quản lý',
     description:
-      'Sao chep hoac tai xuong mo ta de chen vao cac cong cu marketing khac.',
+      'Sao chép hoặc tải xuống mô tả để chèn vào các công cụ marketing khác.',
   },
 ];
 
 const MOBILE_TIPS = [
-  'Dang nhap de dong bo lich su giua web va mobile.',
-  'Ket noi camera de chup san pham truc tiep va tao mo ta ngay lap tuc.',
-  'Su dung nut Sao chep de chen noi dung vao cac ung dung ban hang quen thuoc.',
+  'Đăng nhập để đồng bộ lịch sử giữa web và mobile.',
+  'Kết nối camera để chụp sản phẩm trực tiếp và tạo mô tả ngay lập tức.',
+  'Sử dụng nút Sao chép để chèn nội dung vào các ứng dụng bán hàng quen thuộc.',
 ];
 
 const FAQS = [
   {
-    question: 'Toi co the su dung noi dung da tao nhu the nao?',
+    question: 'Tôi có thể sử dụng nội dung đã tạo như thế nào?',
     answer:
-      'Ban co the sao chep mo ta de su dung tren cac kenh ban hang hoac cong cu marketing khac.',
+      'Bạn có thể sao chép mô tả để sử dụng trên các kênh bán hàng hoặc công cụ marketing khác.',
   },
   {
-    question: 'Lich su mo ta duoc luu o dau?',
+    question: 'Lịch sử mô tả được lưu ở đâu?',
     answer:
-      'Toan bo mo ta duoc luu trong tai khoan cua ban. Vao muc Lich su de xem lai va tai su dung.',
+      'Toàn bộ mô tả được lưu trong tài khoản của bạn. Vào mục Lịch sử để xem lại và tái sử dụng.',
   },
   {
-    question: 'Ung dung co hoat dong offline khong?',
+    question: 'Ứng dụng có hoạt động offline không?',
     answer:
-      'Ung dung can ket noi Internet de gui hinh anh va nhan noi dung tu dich vu AI cung nhu dong bo lich su.',
+      'Ứng dụng cần kết nối Internet để gửi hình ảnh và nhận nội dung từ dịch vụ AI cũng như đồng bộ lịch sử.',
   },
 ];
 
@@ -166,72 +167,118 @@ function cleanDescription(value?: string | null): string {
   return value?.replace(/\s+/g, ' ').trim() ?? '';
 }
 
-const PANEL_BACKGROUND = 'rgba(255,255,255,0.86)';
-const BORDER_COLOR = 'rgba(226,232,240,0.9)';
+const GRADIENT_COLORS = ['#fef3c7', '#e0f2fe', '#f8f5ff'] as const;
+const SURFACE_BASE = 'rgba(255,255,255,0.92)';
+const SURFACE_MUTED = 'rgba(255,255,255,0.72)';
+const BORDER_COLOR = 'rgba(148,163,184,0.3)';
+const SHADOW_COLOR = 'rgba(15,23,42,0.12)';
+const PRIMARY_ACCENT = '#f97316';
+const SECONDARY_ACCENT = '#fb7185';
 
 const styles = StyleSheet.create({
   gradient: { flex: 1 },
   safeArea: { flex: 1 },
   scrollContent: {
-    padding: 24,
-    paddingBottom: 96,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 160,
   },
   panel: {
-    backgroundColor: PANEL_BACKGROUND,
-    borderRadius: 28,
+    backgroundColor: SURFACE_BASE,
+    borderRadius: 32,
     padding: 24,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
-    shadowColor: '#ff8c42',
-    shadowOffset: { width: 0, height: 18 },
+    borderColor: 'rgba(255,255,255,0.55)',
+    shadowColor: PRIMARY_ACCENT,
+    shadowOffset: { width: 0, height: 20 },
     shadowOpacity: 0.18,
-    shadowRadius: 24,
+    shadowRadius: 32,
     elevation: 12,
   },
-  headerRow: {
+  heroBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: 'rgba(249,115,22,0.12)',
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    marginBottom: 24,
+    alignItems: 'center',
+    gap: 6,
   },
-  headerTitle: {
-    fontSize: 26,
+  heroBadgeText: {
+    color: PRIMARY_ACCENT,
+    fontWeight: '600',
+    fontSize: 12,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+  },
+  heroTitle: {
+    marginTop: 18,
+    fontSize: 30,
+    lineHeight: 34,
     fontWeight: '700',
-    color: '#2d3748',
+    color: '#1f2937',
   },
-  headerSubtitle: {
-    marginTop: 8,
-    color: '#718096',
-    lineHeight: 20,
+  heroSubtitle: {
+    marginTop: 10,
+    color: '#4b5563',
+    fontSize: 16,
+    lineHeight: 22,
   },
-  headerButtons: {
+  heroActions: {
     flexDirection: 'row',
-    marginTop: 16,
+    flexWrap: 'wrap',
+    marginTop: 18,
+    columnGap: 12,
+    rowGap: 12,
   },
-  authBox: {
-    marginLeft: 16,
-    alignItems: 'flex-end',
-    maxWidth: 220,
+  heroAuthBox: {
+    marginTop: 22,
+    padding: 18,
+    backgroundColor: SURFACE_MUTED,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.6)',
+    gap: 12,
   },
-  authInfo: {
-    alignItems: 'flex-end',
-  },
-  welcomeLabel: {
-    color: '#718096',
-    marginBottom: 12,
+  heroAuthLabel: {
+    color: '#4b5563',
+    marginBottom: 8,
+    fontSize: 14,
   },
   authActions: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'flex-end',
+    justifyContent: 'flex-start',
+    columnGap: 12,
+    rowGap: 10,
   },
   section: {
     marginTop: 28,
   },
-  sectionLabel: {
-    fontWeight: '600',
-    color: '#2d3748',
+  sectionLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 12,
+  },
+  sectionIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(249,115,22,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  sectionLabelText: {
+    fontWeight: '700',
+    color: '#1f2937',
+    fontSize: 18,
+  },
+  sectionLabelHint: {
+    color: '#6b7280',
+    fontSize: 13,
+    marginTop: 2,
   },
   pickerWrapper: {
     borderWidth: 1,
@@ -246,67 +293,74 @@ const styles = StyleSheet.create({
   },
   segmented: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.7)',
-    padding: 6,
+    backgroundColor: SURFACE_MUTED,
+    padding: 8,
     borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.6)',
   },
   segmentedButton: {
     flex: 1,
     borderRadius: 999,
-    paddingVertical: 14,
+    paddingVertical: 10,
     paddingHorizontal: 12,
     alignItems: 'center',
   },
   segmentedButtonActive: {
     backgroundColor: '#ffffff',
-    shadowColor: '#ff8c42',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 6,
+    shadowColor: PRIMARY_ACCENT,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.18,
+    shadowRadius: 16,
+    elevation: 8,
   },
   segmentedText: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '600',
-    color: '#718096',
+    color: '#6b7280',
     textAlign: 'center',
   },
   segmentedTextActive: {
-    color: '#ff8c42',
+    color: PRIMARY_ACCENT,
+  },
+  segmentedIcon: {
+    marginBottom: 4,
   },
   card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 24,
-    padding: 20,
+    backgroundColor: SURFACE_BASE,
+    borderRadius: 28,
+    padding: 22,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.6)',
-    shadowColor: '#2d3748',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 6,
+    borderColor: 'rgba(255,255,255,0.55)',
+    shadowColor: SHADOW_COLOR,
+    shadowOffset: { width: 0, height: 18 },
+    shadowOpacity: 0.16,
+    shadowRadius: 28,
+    elevation: 10,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
-    color: '#2d3748',
+    color: '#1f2937',
   },
   sectionDescription: {
     marginTop: 8,
-    color: '#718096',
-    lineHeight: 20,
+    color: '#4b5563',
+    lineHeight: 21,
   },
   rowInline: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginTop: 16,
+    columnGap: 12,
+    rowGap: 12,
   },
   actionButton: {
-    marginTop: 20,
+    marginTop: 24,
   },
   placeholderText: {
     marginTop: 16,
-    color: '#a0aec0',
+    color: '#94a3b8',
     fontStyle: 'italic',
   },
   imageList: {
@@ -316,14 +370,20 @@ const styles = StyleSheet.create({
   imageThumb: {
     width: 110,
     height: 90,
-    borderRadius: 18,
+    borderRadius: 20,
     marginRight: 12,
     overflow: 'hidden',
     borderWidth: 2,
     borderColor: 'transparent',
+    backgroundColor: SURFACE_MUTED,
+    shadowColor: SHADOW_COLOR,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.12,
+    shadowRadius: 14,
+    elevation: 6,
   },
   imageThumbActive: {
-    borderColor: '#ff8c42',
+    borderColor: PRIMARY_ACCENT,
   },
   imageThumbImage: {
     width: '100%',
@@ -333,7 +393,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -8,
     right: -8,
-    backgroundColor: '#ff6b6b',
+    backgroundColor: SECONDARY_ACCENT,
     width: 26,
     height: 26,
     borderRadius: 13,
@@ -353,39 +413,51 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    color: '#2d3748',
+    color: '#1f2937',
     textAlignVertical: 'top',
     backgroundColor: '#ffffff',
+    shadowColor: 'rgba(15,23,42,0.05)',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 4,
   },
   resultMeta: {
-    marginTop: 16,
+    marginTop: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   resultStyle: {
     fontWeight: '600',
-    color: '#ff8c42',
+    color: PRIMARY_ACCENT,
   },
   resultTimestamp: {
-    color: '#a0aec0',
+    color: '#94a3b8',
     fontSize: 12,
   },
   resultDescription: {
-    marginTop: 12,
-    color: '#2d3748',
+    marginTop: 16,
+    color: '#1f2937',
     lineHeight: 22,
+    backgroundColor: 'rgba(255,255,255,0.88)',
+    borderRadius: 20,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(148,163,184,0.2)',
   },
   resultImage: {
-    marginTop: 16,
+    marginTop: 18,
     width: '100%',
-    height: 180,
-    borderRadius: 18,
+    aspectRatio: 4 / 3,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: 'rgba(148,163,184,0.25)',
   },
   resultActions: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: 16,
+    marginTop: 20,
   },
   historyList: {
     marginTop: 16,
@@ -394,28 +466,28 @@ const styles = StyleSheet.create({
   historyCard: {
     width: 220,
     marginRight: 12,
-    borderRadius: 18,
+    borderRadius: 22,
     borderLeftWidth: 4,
-    borderLeftColor: '#ff8c42',
-    backgroundColor: 'rgba(255,255,255,0.85)',
-    padding: 16,
-    shadowColor: '#2d3748',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
+    borderLeftColor: PRIMARY_ACCENT,
+    backgroundColor: SURFACE_MUTED,
+    padding: 18,
+    shadowColor: SHADOW_COLOR,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.12,
+    shadowRadius: 14,
+    elevation: 6,
   },
   historyStyle: {
-    color: '#ff8c42',
+    color: PRIMARY_ACCENT,
     fontWeight: '600',
   },
   historySummary: {
     marginTop: 8,
-    color: '#2d3748',
+    color: '#1f2937',
   },
   historyTimestamp: {
     marginTop: 12,
-    color: '#a0aec0',
+    color: '#94a3b8',
     fontSize: 12,
   },
   toastContainer: {
@@ -493,14 +565,14 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#2d3748',
+    color: '#1f2937',
   },
   modalClose: {
     padding: 6,
   },
   modalCloseText: {
     fontSize: 20,
-    color: '#718096',
+    color: '#6b7280',
   },
   modalInput: {
     marginTop: 16,
@@ -528,7 +600,7 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   modalLinkAction: {
-    color: '#ff8c42',
+    color: PRIMARY_ACCENT,
     fontWeight: '600',
   },
   guideSection: {
@@ -537,18 +609,18 @@ const styles = StyleSheet.create({
   guideTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#2d3748',
+    color: '#1f2937',
   },
   guideBullet: {
     marginTop: 12,
   },
   guideBulletLabel: {
     fontWeight: '700',
-    color: '#ff8c42',
+    color: PRIMARY_ACCENT,
   },
   guideBulletText: {
     marginTop: 4,
-    color: '#2d3748',
+    color: '#374151',
     lineHeight: 20,
   },
   faqItem: {
@@ -556,11 +628,11 @@ const styles = StyleSheet.create({
   },
   faqQuestion: {
     fontWeight: '700',
-    color: '#2d3748',
+    color: '#1f2937',
   },
   faqAnswer: {
     marginTop: 6,
-    color: '#4a5568',
+    color: '#4b5563',
     lineHeight: 20,
   },
   historyModalContent: {
@@ -572,13 +644,13 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   primaryButton: {
-    backgroundColor: '#ff7b57',
+    backgroundColor: PRIMARY_ACCENT,
     borderRadius: 999,
     paddingVertical: 14,
     paddingHorizontal: 26,
     alignItems: 'center',
     justifyContent: 'center',
-  },
+    },
   primaryButtonText: {
     color: '#ffffff',
     fontWeight: '600',
@@ -586,7 +658,7 @@ const styles = StyleSheet.create({
   },
   secondaryButton: {
     borderWidth: 1.5,
-    borderColor: '#ff8c42',
+    borderColor: PRIMARY_ACCENT,
     borderRadius: 999,
     paddingVertical: 12,
     paddingHorizontal: 24,
@@ -594,17 +666,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 10,
     marginBottom: 10,
+    backgroundColor: 'rgba(255,255,255,0.94)',
   },
   secondaryButtonText: {
-    color: '#ff8c42',
+    color: PRIMARY_ACCENT,
     fontWeight: '600',
     fontSize: 15,
   },
   buttonDisabled: {
-    opacity: 0.6,
+    opacity: 0.5,
   },
   buttonPressed: {
     transform: [{ translateY: 1 }],
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonIcon: {
+    marginRight: 8,
   },
 });
 
@@ -613,9 +694,10 @@ interface ButtonProps {
   onPress: () => void;
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
+  icon?: ReactElement;
 }
 
-function PrimaryButton({ title, onPress, disabled, style }: ButtonProps): ReactElement {
+function PrimaryButton({ title, onPress, disabled, style, icon }: ButtonProps): ReactElement {
   return (
     <Pressable
       accessibilityRole="button"
@@ -628,12 +710,15 @@ function PrimaryButton({ title, onPress, disabled, style }: ButtonProps): ReactE
         pressed && !disabled && styles.buttonPressed,
       ]}
     >
-      <Text style={styles.primaryButtonText}>{title}</Text>
+      <View style={styles.buttonContent}>
+        {icon ? <View style={styles.buttonIcon}>{icon}</View> : null}
+        <Text style={styles.primaryButtonText}>{title}</Text>
+      </View>
     </Pressable>
   );
 }
 
-function SecondaryButton({ title, onPress, disabled, style }: ButtonProps): ReactElement {
+function SecondaryButton({ title, onPress, disabled, style, icon }: ButtonProps): ReactElement {
   return (
     <Pressable
       accessibilityRole="button"
@@ -646,7 +731,10 @@ function SecondaryButton({ title, onPress, disabled, style }: ButtonProps): Reac
         pressed && !disabled && styles.buttonPressed,
       ]}
     >
-      <Text style={styles.secondaryButtonText}>{title}</Text>
+      <View style={styles.buttonContent}>
+        {icon ? <View style={styles.buttonIcon}>{icon}</View> : null}
+        <Text style={styles.secondaryButtonText}>{title}</Text>
+      </View>
     </Pressable>
   );
 }
@@ -657,9 +745,22 @@ interface SegmentedControlProps {
 }
 
 function SegmentedControl({ value, onChange }: SegmentedControlProps): ReactElement {
+  const items: Array<{ key: TabKey; icon: ReactElement; label: string }> = [
+    {
+      key: 'image',
+      icon: <Feather name="image" size={20} color={value === 'image' ? PRIMARY_ACCENT : '#94a3b8'} />,
+      label: 'Hình ảnh',
+    },
+    {
+      key: 'text',
+      icon: <Feather name="type" size={20} color={value === 'text' ? PRIMARY_ACCENT : '#94a3b8'} />,
+      label: 'Văn bản',
+    },
+  ];
+
   return (
     <View style={styles.segmented}>
-      {(['image', 'text'] as TabKey[]).map((key) => (
+      {items.map(({ key, icon, label }) => (
         <Pressable
           key={key}
           style={({ pressed }) => [
@@ -668,12 +769,31 @@ function SegmentedControl({ value, onChange }: SegmentedControlProps): ReactElem
             pressed && value !== key && styles.buttonPressed,
           ]}
           onPress={() => onChange(key)}
-        >
-          <Text style={[styles.segmentedText, value === key && styles.segmentedTextActive]}>
-            {key === 'image' ? 'Phan tich hinh anh' : 'Tao mo ta tu van ban'}
-          </Text>
+          >
+          <View style={{ alignItems: 'center' }}>
+            <View style={styles.segmentedIcon}>{icon}</View>
+            <Text style={[styles.segmentedText, value === key && styles.segmentedTextActive]}>{label}</Text>
+          </View>
         </Pressable>
       ))}
+    </View>
+  );
+}
+
+interface SectionHeadingProps {
+  icon: ReactElement;
+  title: string;
+  hint?: string;
+}
+
+function SectionHeading({ icon, title, hint }: SectionHeadingProps): ReactElement {
+  return (
+    <View style={styles.sectionLabelRow}>
+      <View style={styles.sectionIconWrap}>{icon}</View>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.sectionLabelText}>{title}</Text>
+        {hint ? <Text style={styles.sectionLabelHint}>{hint}</Text> : null}
+      </View>
     </View>
   );
 }
@@ -728,7 +848,7 @@ function GuideModal({ visible, onClose }: { visible: boolean; onClose: () => voi
       <SafeAreaView style={styles.modalWrapper}>
         <ScrollView contentContainerStyle={styles.modalContent}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Huong dan su dung</Text>
+            <Text style={styles.modalTitle}>Hướng dẫn su dung</Text>
             <Pressable onPress={onClose} style={styles.modalClose} accessibilityRole="button">
               <Text style={styles.modalCloseText}>Ã—</Text>
             </Pressable>
@@ -767,7 +887,7 @@ function GuideModal({ visible, onClose }: { visible: boolean; onClose: () => voi
             ))}
           </View>
 
-          <PrimaryButton title="Dong" onPress={onClose} style={{ marginTop: 28 }} />
+          <PrimaryButton title="Đóng" onPress={onClose} style={{ marginTop: 28 }} />
         </ScrollView>
       </SafeAreaView>
     </Modal>
@@ -810,11 +930,16 @@ function HistoryDetailModal({
             </Text>
             <View style={styles.historyModalActions}>
               <PrimaryButton
-                title="Dung mo ta nay"
+                title="Dùng mô tả này"
+                icon={<Feather name="check-circle" size={18} color="#ffffff" />}
                 onPress={onUse}
                 style={{ marginRight: 12, marginBottom: 10 }}
               />
-              <SecondaryButton title="Sao chep" onPress={onCopy} />
+              <SecondaryButton
+                title="Sao chép"
+                icon={<Feather name="copy" size={18} color={PRIMARY_ACCENT} />}
+                onPress={onCopy}
+              />
             </View>
           </View>
         </View>
@@ -918,7 +1043,7 @@ function HomeScreen(): ReactElement {
       setSelectedStyle((prev) => (remoteStyles.includes(prev) ? prev : remoteStyles[0]));
     } catch (error) {
       console.warn('Fetch styles error', error);
-      showToast('error', 'Khong the tai phong cach. Su dung danh sach mac dinh.');
+      showToast('error', 'Không thể tải phong cách. Sử dụng danh sách mặc định.');
     }
   }, [showToast]);
 
@@ -929,7 +1054,7 @@ function HomeScreen(): ReactElement {
         setUser(null);
         setHistory([]);
         void AsyncStorage.removeItem(STORAGE_KEYS.token);
-        showToast('error', 'Phien dang nhap het han. Vui long dang nhap lai.');
+        showToast('error', 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
         return true;
       }
       return false;
@@ -996,7 +1121,7 @@ function HomeScreen(): ReactElement {
   const handlePickImages = useCallback(async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      showToast('error', 'Can quyen truy cap thu vien hinh anh.');
+      showToast('error', 'Cần quyền truy cập thư viện hình ảnh.');
       return;
     }
     const assetResult = await ImagePicker.launchImageLibraryAsync({
@@ -1016,13 +1141,13 @@ function HomeScreen(): ReactElement {
     }));
     setImages((prev) => [...prev, ...newItems]);
     setSelectedImageId(newItems[newItems.length - 1].id);
-    showToast('success', newItems.length > 1 ? `Da them ${newItems.length} hinh anh` : 'Da them hinh anh');
+    showToast('success', newItems.length > 1 ? `Da them ${newItems.length} hinh anh` : 'Đã thêm hình ảnh');
   }, [showToast]);
 
   const handleOpenCamera = useCallback(async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
-      showToast('error', 'Can quyen su dung camera.');
+      showToast('error', 'Cần quyền sử dụng camera.');
       return;
     }
     const capture = await ImagePicker.launchCameraAsync({
@@ -1041,7 +1166,7 @@ function HomeScreen(): ReactElement {
     };
     setImages((prev) => [...prev, item]);
     setSelectedImageId(item.id);
-    showToast('success', 'Da them hinh anh tu camera');
+    showToast('success', 'Đã thêm hình ảnh từ camera');
   }, [showToast]);
 
   const handleRemoveImage = useCallback((id: string) => {
@@ -1062,7 +1187,7 @@ function HomeScreen(): ReactElement {
     setUser(null);
     setHistory([]);
     void AsyncStorage.removeItem(STORAGE_KEYS.token);
-    showToast('success', 'Da dang xuat.');
+    showToast('success', 'Đã đăng xuất.');
   }, [showToast]);
 
   const handleAuthSubmit = useCallback(async () => {
@@ -1075,7 +1200,7 @@ function HomeScreen(): ReactElement {
       const identifier = authForm.identifier.trim();
       const password = authForm.password.trim();
       if (!identifier || !password) {
-        const message = 'Vui long nhap day du thong tin.';
+        const message = 'Vui lòng nhập đầy đủ thông tin.';
         setAuthMessage({ type: 'error', message });
         showToast('error', message);
         return;
@@ -1087,7 +1212,7 @@ function HomeScreen(): ReactElement {
       await AsyncStorage.setItem(STORAGE_KEYS.token, accessToken);
       await fetchProtectedData(accessToken);
       const successMessage =
-        authMode === 'login' ? 'Dang nhap thanh cong.' : 'Dang ky thanh cong.';
+        authMode === 'login' ? 'Đăng nhập thành công.' : 'Đăng ký thành công.';
       setAuthMessage({ type: 'success', message: successMessage });
       showToast('success', successMessage);
       setTimeout(() => {
@@ -1106,11 +1231,11 @@ function HomeScreen(): ReactElement {
                 .join(', ')
             : typeof detail === 'string'
             ? detail
-            : 'Khong the xac thuc.';
+            : 'Không thể xác thực.';
         setAuthMessage({ type: 'error', message });
         showToast('error', message);
       } else {
-        const message = 'Khong the xac thuc.';
+        const message = 'Không thể xác thực.';
         setAuthMessage({ type: 'error', message });
         showToast('error', message);
       }
@@ -1122,7 +1247,7 @@ function HomeScreen(): ReactElement {
   const handleForgotSubmit = useCallback(async () => {
     const identifier = forgotIdentifier.trim();
     if (!identifier) {
-      const message = 'Vui long nhap email hoac so dien thoai.';
+      const message = 'Vui lòng nhập email hoặc số điện thoại.';
       setAuthMessage({ type: 'error', message });
       showToast('error', message);
       return;
@@ -1131,14 +1256,14 @@ function HomeScreen(): ReactElement {
     setAuthMessage(null);
     try {
       const { data } = await api.post<MessageResponse>('/auth/forgot-password', { identifier });
-      const message = data?.message ?? 'Da gui huong dan dat lai mat khau.';
+      const message = data?.message ?? 'Đã gửi hướng dẫn đặt lại mật khẩu.';
       setAuthMessage({ type: 'success', message });
       showToast('success', message);
     } catch (error) {
       const message =
         axios.isAxiosError(error) && typeof error.response?.data?.detail === 'string'
           ? error.response.data.detail
-          : 'Khong the gui yeu cau.';
+          : 'Không thể gửi yêu cầu.';
       setAuthMessage({ type: 'error', message });
       showToast('error', message);
     } finally {
@@ -1152,13 +1277,13 @@ function HomeScreen(): ReactElement {
     const password = resetForm.password.trim();
     const confirmPassword = resetForm.confirmPassword.trim();
     if (!identifier || !tokenCode || !password || !confirmPassword) {
-      const message = 'Vui long nhap day du thong tin.';
+      const message = 'Vui lòng nhập đầy đủ thông tin.';
       setAuthMessage({ type: 'error', message });
       showToast('error', message);
       return;
     }
     if (password !== confirmPassword) {
-      const message = 'Mat khau moi khong trung nhau.';
+      const message = 'Mật khẩu mới không trùng nhau.';
       setAuthMessage({ type: 'error', message });
       showToast('error', message);
       return;
@@ -1171,7 +1296,7 @@ function HomeScreen(): ReactElement {
         token: tokenCode,
         new_password: password,
       });
-      const message = data?.message ?? 'Dat lai mat khau thanh cong.';
+      const message = data?.message ?? 'Đặt lại mật khẩu thành công.';
       setAuthMessage({ type: 'success', message });
       showToast('success', message);
       setTimeout(() => {
@@ -1183,7 +1308,7 @@ function HomeScreen(): ReactElement {
       const message =
         axios.isAxiosError(error) && typeof error.response?.data?.detail === 'string'
           ? error.response.data.detail
-          : 'Khong the dat lai mat khau.';
+          : 'Không thể đặt lại mật khẩu.';
       setAuthMessage({ type: 'error', message });
       showToast('error', message);
     } finally {
@@ -1196,11 +1321,11 @@ function HomeScreen(): ReactElement {
     const next = changePasswordForm.newPassword.trim();
     const confirm = changePasswordForm.confirmPassword.trim();
     if (!current || !next || !confirm) {
-      showToast('error', 'Vui long nhap day du thong tin.');
+      showToast('error', 'Vui lòng nhập đầy đủ thông tin.');
       return;
     }
     if (next !== confirm) {
-      showToast('error', 'Mat khau moi khong trung nhau.');
+      showToast('error', 'Mật khẩu mới không trùng nhau.');
       return;
     }
     setChangePasswordLoading(true);
@@ -1209,7 +1334,7 @@ function HomeScreen(): ReactElement {
         current_password: current,
         new_password: next,
       });
-      showToast('success', data?.message ?? 'Da doi mat khau.');
+      showToast('success', data?.message ?? 'Đã đổi mật khẩu.');
       setChangePasswordVisible(false);
       setChangePasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (error) {
@@ -1219,7 +1344,7 @@ function HomeScreen(): ReactElement {
       const message =
         axios.isAxiosError(error) && typeof error.response?.data?.detail === 'string'
           ? error.response.data.detail
-          : 'Khong the doi mat khau.';
+          : 'Không thể đổi mật khẩu.';
       showToast('error', message);
     } finally {
       setChangePasswordLoading(false);
@@ -1229,7 +1354,7 @@ function HomeScreen(): ReactElement {
   const handleImageSubmit = useCallback(async () => {
     const imageToSubmit = activeImage;
     if (!imageToSubmit) {
-      showToast('error', 'Vui long chon it nhat mot hinh anh hop le.');
+      showToast('error', 'Vui lòng chọn ít nhất một hình ảnh hợp lệ.');
       return;
     }
     setLoading(true);
@@ -1251,9 +1376,9 @@ function HomeScreen(): ReactElement {
       setResult(data);
       if (token) {
         await refreshHistory();
-        showToast('success', 'Da tao mo ta va luu vao lich su.');
+        showToast('success', 'Đã tạo mô tả và lưu vào lịch sử.');
       } else {
-        showToast('success', 'Da tao mo ta tu hinh anh.');
+        showToast('success', 'Đã tạo mô tả từ hình ảnh.');
       }
     } catch (error) {
       if (handleUnauthorized(error)) {
@@ -1262,7 +1387,7 @@ function HomeScreen(): ReactElement {
       const message =
         axios.isAxiosError(error) && typeof error.response?.data?.detail === 'string'
           ? error.response.data.detail
-          : 'Khong the tao mo ta tu hinh anh.';
+          : 'Không thể tạo mô tả từ hình ảnh.';
       showToast('error', message);
     } finally {
       setLoading(false);
@@ -1280,7 +1405,7 @@ function HomeScreen(): ReactElement {
   const handleTextSubmit = useCallback(async () => {
     const info = productInfo.trim();
     if (!info) {
-      showToast('error', 'Vui long nhap thong tin san pham.');
+      showToast('error', 'Vui lòng nhập thông tin sản phẩm.');
       return;
     }
     setLoading(true);
@@ -1293,9 +1418,9 @@ function HomeScreen(): ReactElement {
       setResult(data);
       if (token) {
         await refreshHistory();
-        showToast('success', 'Da tao mo ta va luu vao lich su.');
+        showToast('success', 'Đã tạo mô tả và lưu vào lịch sử.');
       } else {
-        showToast('success', 'Da tao mo ta tu van ban.');
+        showToast('success', 'Đã tạo mô tả từ văn bản.');
       }
     } catch (error) {
       if (handleUnauthorized(error)) {
@@ -1304,7 +1429,7 @@ function HomeScreen(): ReactElement {
       const message =
         axios.isAxiosError(error) && typeof error.response?.data?.detail === 'string'
           ? error.response.data.detail
-          : 'Khong the tao mo ta tu van ban.';
+          : 'Không thể tạo mô tả từ văn bản.';
       showToast('error', message);
     } finally {
       setLoading(false);
@@ -1321,15 +1446,15 @@ function HomeScreen(): ReactElement {
 
   const handleCopyResult = useCallback(async () => {
     if (!result) {
-      showToast('error', 'Chua co noi dung de sao chep.');
+      showToast('error', 'Chưa có nội dung để sao chép.');
       return;
     }
     try {
       await Clipboard.setStringAsync(cleanDescription(result.description));
-      showToast('success', 'Da sao chep noi dung.');
+      showToast('success', 'Đã sao chép nội dung.');
     } catch (error) {
       console.warn('clipboard error', error);
-      showToast('error', 'Khong the sao chep noi dung.');
+      showToast('error', 'Không thể sao chép nội dung.');
     }
   }, [result, showToast]);
 
@@ -1347,7 +1472,7 @@ function HomeScreen(): ReactElement {
     });
     setSelectedStyle(historyDetail.style);
     setHistoryDetail(null);
-    showToast('success', 'Da su dung mo ta tu lich su.');
+    showToast('success', 'Đã sử dụng mô tả từ lịch sử.');
   }, [historyDetail, showToast]);
 
   const handleCopyHistory = useCallback(async () => {
@@ -1356,10 +1481,10 @@ function HomeScreen(): ReactElement {
     }
     try {
       await Clipboard.setStringAsync(cleanDescription(historyDetail.full_description));
-      showToast('success', 'Da sao chep mo ta tu lich su.');
+      showToast('success', 'Đã sao chép mô tả từ lịch sử.');
     } catch (error) {
       console.warn('copy history error', error);
-      showToast('error', 'Khong the sao chep mo ta.');
+      showToast('error', 'Không thể sao chép mô tả.');
     }
   }, [historyDetail, showToast]);
 
@@ -1376,12 +1501,12 @@ function HomeScreen(): ReactElement {
   const resultImageUrl = resolveImageUrl(result?.image_url);
   const authTitle =
     authMode === 'login'
-      ? 'Dang nhap'
+      ? 'Đăng nhập'
       : authMode === 'register'
-      ? 'Dang ky tai khoan'
+      ? 'Đăng ký tài khoản'
       : authMode === 'forgot'
-      ? 'Quen mat khau'
-      : 'Dat lai mat khau';
+      ? 'Quên mật khẩu'
+      : 'Đặt lại mật khẩu';
 
   const renderAuthModal = (
     <Modal visible={authVisible} animationType="slide" transparent>
@@ -1398,7 +1523,7 @@ function HomeScreen(): ReactElement {
             <>
               <TextInput
                 style={styles.modalInput}
-                placeholder="Email hoac so dien thoai"
+                placeholder="Email hoặc số điện thoại"
                 autoCapitalize="none"
                 keyboardType="email-address"
                 value={authForm.identifier}
@@ -1406,13 +1531,13 @@ function HomeScreen(): ReactElement {
               />
               <TextInput
                 style={styles.modalInput}
-                placeholder="Mat khau"
+                placeholder="Mật khẩu"
                 secureTextEntry
                 value={authForm.password}
                 onChangeText={(value) => setAuthForm((prev) => ({ ...prev, password: value }))}
               />
               <PrimaryButton
-                title={authMode === 'login' ? 'Dang nhap' : 'Dang ky'}
+                title={authMode === 'login' ? 'Đăng nhập' : 'Đăng ký'}
                 onPress={handleAuthSubmit}
                 disabled={authLoading}
                 style={{ marginTop: 20 }}
@@ -1421,8 +1546,8 @@ function HomeScreen(): ReactElement {
                 {authMode === 'login' ? (
                   <>
                     <ModalLink
-                      label="Chua co tai khoan?"
-                      actionLabel="Dang ky"
+                      label="Chưa có tài khoản?"
+                      actionLabel="Đăng ký"
                       onPress={() => {
                         setAuthMode('register');
                         setAuthMessage(null);
@@ -1430,8 +1555,8 @@ function HomeScreen(): ReactElement {
                       }}
                     />
                     <ModalLink
-                      label="Quen mat khau?"
-                      actionLabel="Khoi phuc"
+                      label="Quên mật khẩu?"
+                      actionLabel="Khôi phục"
                       onPress={() => {
                         setAuthMode('forgot');
                         setAuthMessage(null);
@@ -1440,8 +1565,8 @@ function HomeScreen(): ReactElement {
                   </>
                 ) : (
                   <ModalLink
-                    label="Da co tai khoan?"
-                    actionLabel="Dang nhap"
+                    label="Đã có tài khoản?"
+                    actionLabel="Đăng nhập"
                     onPress={() => {
                       setAuthMode('login');
                       setAuthMessage(null);
@@ -1456,30 +1581,30 @@ function HomeScreen(): ReactElement {
             <>
               <TextInput
                 style={styles.modalInput}
-                placeholder="Email hoac so dien thoai"
+                placeholder="Email hoặc số điện thoại"
                 autoCapitalize="none"
                 keyboardType="email-address"
                 value={forgotIdentifier}
                 onChangeText={setForgotIdentifier}
               />
               <PrimaryButton
-                title="Gui ma xac nhan"
+                title="Gửi mã xác nhận"
                 onPress={handleForgotSubmit}
                 disabled={authLoading}
                 style={{ marginTop: 20 }}
               />
               <View style={styles.modalLinkRow}>
                 <ModalLink
-                  label="Da co ma?"
-                  actionLabel="Nhap ma dat lai"
+                  label="Đã có mã?"
+                  actionLabel="Nhập mã đặt lại"
                   onPress={() => {
                     setAuthMode('reset');
                     setAuthMessage(null);
                   }}
                 />
                 <ModalLink
-                  label="Quay lai"
-                  actionLabel="Dang nhap"
+                  label="Quay lại"
+                  actionLabel="Đăng nhập"
                   onPress={() => {
                     setAuthMode('login');
                     setAuthMessage(null);
@@ -1493,7 +1618,7 @@ function HomeScreen(): ReactElement {
             <>
               <TextInput
                 style={styles.modalInput}
-                placeholder="Email hoac so dien thoai"
+                placeholder="Email hoặc số điện thoại"
                 autoCapitalize="none"
                 keyboardType="email-address"
                 value={resetForm.identifier}
@@ -1503,7 +1628,7 @@ function HomeScreen(): ReactElement {
               />
               <TextInput
                 style={styles.modalInput}
-                placeholder="Ma xac nhan (6 ky tu)"
+                placeholder="Mã xác nhận (6 ký tự)"
                 autoCapitalize="none"
                 keyboardType="number-pad"
                 value={resetForm.token}
@@ -1511,14 +1636,14 @@ function HomeScreen(): ReactElement {
               />
               <TextInput
                 style={styles.modalInput}
-                placeholder="Mat khau moi"
+                placeholder="Mật khẩu mới"
                 secureTextEntry
                 value={resetForm.password}
                 onChangeText={(value) => setResetForm((prev) => ({ ...prev, password: value }))}
               />
               <TextInput
                 style={styles.modalInput}
-                placeholder="Nhap lai mat khau moi"
+                placeholder="Nhập lại mật khẩu mới"
                 secureTextEntry
                 value={resetForm.confirmPassword}
                 onChangeText={(value) =>
@@ -1526,15 +1651,15 @@ function HomeScreen(): ReactElement {
                 }
               />
               <PrimaryButton
-                title="Dat lai mat khau"
+                title="Đặt lại mật khẩu"
                 onPress={handleResetSubmit}
                 disabled={authLoading}
                 style={{ marginTop: 20 }}
               />
               <View style={styles.modalLinkRow}>
                 <ModalLink
-                  label="Quay lai"
-                  actionLabel="Dang nhap"
+                  label="Quay lại"
+                  actionLabel="Đăng nhập"
                   onPress={() => {
                     setAuthMode('login');
                     setAuthMessage(null);
@@ -1565,7 +1690,7 @@ function HomeScreen(): ReactElement {
       <View style={styles.modalOverlay}>
         <View style={styles.modalCard}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Doi mat khau</Text>
+            <Text style={styles.modalTitle}>Đổi mật khẩu</Text>
             <Pressable
               onPress={() => setChangePasswordVisible(false)}
               style={styles.modalClose}
@@ -1576,7 +1701,7 @@ function HomeScreen(): ReactElement {
           </View>
           <TextInput
             style={styles.modalInput}
-            placeholder="Mat khau hien tai"
+            placeholder="Mật khẩu hiện tại"
             secureTextEntry
             value={changePasswordForm.currentPassword}
             onChangeText={(value) =>
@@ -1585,7 +1710,7 @@ function HomeScreen(): ReactElement {
           />
           <TextInput
             style={styles.modalInput}
-            placeholder="Mat khau moi"
+            placeholder="Mật khẩu mới"
             secureTextEntry
             value={changePasswordForm.newPassword}
             onChangeText={(value) =>
@@ -1594,7 +1719,7 @@ function HomeScreen(): ReactElement {
           />
           <TextInput
             style={styles.modalInput}
-            placeholder="Nhap lai mat khau moi"
+            placeholder="Nhập lại mật khẩu mới"
             secureTextEntry
             value={changePasswordForm.confirmPassword}
             onChangeText={(value) =>
@@ -1602,13 +1727,14 @@ function HomeScreen(): ReactElement {
             }
           />
           <PrimaryButton
-            title="Cap nhat"
+            title="Cập nhật"
             onPress={handleChangePasswordSubmit}
             disabled={changePasswordLoading}
             style={{ marginTop: 24 }}
           />
           <SecondaryButton
-            title="Huy"
+            title="Hủy"
+            icon={<Feather name="x-circle" size={18} color={PRIMARY_ACCENT} />}
             onPress={() => setChangePasswordVisible(false)}
             style={{ marginTop: 12 }}
           />
@@ -1618,7 +1744,7 @@ function HomeScreen(): ReactElement {
   );
 
   return (
-    <LinearGradient colors={['#fff5e6', '#f0f9ff']} style={styles.gradient}>
+    <LinearGradient colors={GRADIENT_COLORS} style={styles.gradient}>
       <SafeAreaView style={styles.safeArea}>
         <StatusBar style="dark" />
         <ToastBanner toast={toast} />
@@ -1627,81 +1753,110 @@ function HomeScreen(): ReactElement {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.panel}>
-            <View style={styles.headerRow}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.headerTitle}>AI Mo Ta San Pham Trai Cay</Text>
-                <Text style={styles.headerSubtitle}>
-                  Tu hinh anh den mo ta hoan hao - Nhieu phong cach - Sao chep tien loi
-                </Text>
-                <View style={styles.headerButtons}>
-                  <SecondaryButton
-                    title="Huong dan su dung"
-                    onPress={() => setGuideVisible(true)}
-                  />
-                </View>
-              </View>
-              <View style={styles.authBox}>
-                {isAuthenticated ? (
-                  <View style={styles.authInfo}>
-                    <Text style={styles.welcomeLabel}>{accountIdentifier}</Text>
-                    <View style={styles.authActions}>
-                      <SecondaryButton
-                        title="Doi mat khau"
-                        onPress={() => {
-                          setChangePasswordForm({
-                            currentPassword: '',
-                            newPassword: '',
-                            confirmPassword: '',
-                          });
-                          setChangePasswordVisible(true);
-                        }}
-                      />
-                      <SecondaryButton title="Dang xuat" onPress={handleLogout} />
-                    </View>
+            <View style={styles.heroBadge}>
+              <Feather name="zap" size={16} color={PRIMARY_ACCENT} />
+              <Text style={styles.heroBadgeText}>AI copywriter</Text>
+            </View>
+            <Text style={styles.heroTitle}>AI Mo Ta San Pham Trai Cay</Text>
+            <Text style={styles.heroSubtitle}>
+              Tang trai nghiem mobile: tai anh hoac nhap van ban, chon phong cach va nhan mo ta toi uu chi trong vai giay.
+            </Text>
+            <View style={styles.heroActions}>
+              <SecondaryButton
+                title="Hướng dẫn"
+                icon={<Feather name="book-open" size={18} color={PRIMARY_ACCENT} />}
+                onPress={() => setGuideVisible(true)}
+              />
+            </View>
+            <View style={styles.heroAuthBox}>
+              {isAuthenticated ? (
+                <View>
+                  <Text style={styles.heroAuthLabel}>{accountIdentifier}</Text>
+                  <View style={styles.authActions}>
+                    <SecondaryButton
+                      title="Đổi mật khẩu"
+                      icon={<Feather name="key" size={18} color={PRIMARY_ACCENT} />}
+                      onPress={() => {
+                        setChangePasswordForm({
+                          currentPassword: '',
+                          newPassword: '',
+                          confirmPassword: '',
+                        });
+                        setChangePasswordVisible(true);
+                      }}
+                    />
+                    <SecondaryButton
+                      title="Đăng xuất"
+                      icon={<Feather name="log-out" size={18} color={PRIMARY_ACCENT} />}
+                      onPress={handleLogout}
+                    />
                   </View>
-                ) : (
-                  <PrimaryButton
-                    title="Dang nhap / Dang ky"
-                    onPress={() => {
-                      setAuthMode('login');
-                      setAuthForm({ identifier: '', password: '' });
-                      setAuthMessage(null);
-                      setAuthVisible(true);
-                    }}
-                  />
-                )}
-              </View>
+                </View>
+              ) : (
+                <PrimaryButton
+                  title="Đăng nhập / Đăng ký"
+                  icon={<Feather name="log-in" size={18} color="#ffffff" />}
+                  onPress={() => {
+                    setAuthMode('login');
+                    setAuthForm({ identifier: '', password: '' });
+                    setAuthMessage(null);
+                    setAuthVisible(true);
+                  }}
+                />
+              )}
             </View>
+          </View>
 
-            <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Phong cach viet</Text>
-              <View style={styles.pickerWrapper}>
-                <Picker
-                  selectedValue={selectedStyle}
-                  onValueChange={(value) => setSelectedStyle(String(value))}
-                  style={styles.picker}
-                >
-                  {stylesList.map((styleOption) => (
-                    <Picker.Item label={styleOption} value={styleOption} key={styleOption} />
-                  ))}
-                </Picker>
-              </View>
+          <View style={styles.section}>
+            <SectionHeading
+              icon={<Feather name="sliders" size={20} color={PRIMARY_ACCENT} />}
+              title="Phong cách viết"
+              hint="Lựa chọn giọng viết phù hợp với thương hiệu"
+            />
+            <View style={styles.pickerWrapper}>
+              <Picker
+                selectedValue={selectedStyle}
+                onValueChange={(value) => setSelectedStyle(String(value))}
+                style={styles.picker}
+              >
+                {stylesList.map((styleOption) => (
+                  <Picker.Item label={styleOption} value={styleOption} key={styleOption} />
+                ))}
+              </Picker>
             </View>
+          </View>
 
-            <View style={styles.section}>
-              <SegmentedControl value={activeTab} onChange={setActiveTab} />
-            </View>
+          <View style={styles.section}>
+            <SectionHeading
+              icon={<MaterialCommunityIcons name="source-branch" size={20} color={PRIMARY_ACCENT} />}
+              title="Lựa chọn đầu vào"
+              hint="Chọn cách AI tạo mô tả"
+            />
+            <SegmentedControl value={activeTab} onChange={setActiveTab} />
+          </View>
 
             {activeTab === 'image' ? (
               <View style={styles.section}>
                 <View style={styles.card}>
-                  <Text style={styles.sectionTitle}>Hinh anh san pham</Text>
+                  <SectionHeading
+                    icon={<Feather name="image" size={20} color={PRIMARY_ACCENT} />}
+                    title="Sinh mô tả từ hình ảnh"
+                    hint="Tải tối đa 5 hình ảnh rõ nét"
+                  />
                   <Text style={styles.sectionDescription}>
-                    Chon toi da 5 hinh anh ro net, hau can don gian de AI phan tich chinh xac.
+                    Chon hinh san pham ro net, hau can don gian de AI phan tich chinh xac.
                   </Text>
                   <View style={styles.rowInline}>
-                    <SecondaryButton title="Chon tu thu vien" onPress={handlePickImages} />
-                    <SecondaryButton title="Mo camera" onPress={handleOpenCamera} />
+                    <SecondaryButton
+                      title="Thư viện"
+                      icon={<Feather name="image" size={18} color={PRIMARY_ACCENT} />}
+                      onPress={handlePickImages}
+                    />
+                    <SecondaryButton
+                      title="Camera"
+                      icon={<Feather name="camera" size={18} color={PRIMARY_ACCENT} />}
+                      onPress={handleOpenCamera}
+                    />
                   </View>
                   {images.length ? (
                     <>
@@ -1733,12 +1888,13 @@ function HomeScreen(): ReactElement {
                           )
                         }}
                       />
-                      <PrimaryButton
-                        title="Tao mo ta tu hinh anh"
-                        onPress={handleImageSubmit}
-                        disabled={loading}
-                        style={styles.actionButton}
-                      />
+                  <PrimaryButton
+                    title="Sinh từ hình ảnh"
+                    icon={<Feather name="zap" size={18} color="#ffffff" />}
+                    onPress={handleImageSubmit}
+                    disabled={loading}
+                    style={styles.actionButton}
+                  />
                     </>
                   ) : (
                     <Text style={styles.placeholderText}>
@@ -1750,20 +1906,22 @@ function HomeScreen(): ReactElement {
             ) : (
               <View style={styles.section}>
                 <View style={styles.card}>
-                  <Text style={styles.sectionTitle}>Thong tin san pham</Text>
-                  <Text style={styles.sectionDescription}>
-                    Mo ta san pham chi tiet: xuat xu, huong vi, uu diem, chuong trinh khuyen mai.
-                  </Text>
+                  <SectionHeading
+                    icon={<Feather name="type" size={20} color={PRIMARY_ACCENT} />}
+                    title="Sinh mô tả từ văn bản"
+                    hint="Mô tả chi tiết xuất xứ, hương vị và ưu điểm"
+                  />
                   <TextInput
                     style={styles.textArea}
                     value={productInfo}
                     onChangeText={setProductInfo}
-                    placeholder="Vi du: Tao Fuji huu co, trong tai Da Lat, vi ngot, gion, chuan GAP."
+                    placeholder="Ví dụ: Táo Fuji hữu cơ, trồng tại Đà Lạt, vị ngọt, giòn, chuẩn GAP."
                     placeholderTextColor="#a0aec0"
                     multiline
                   />
                   <PrimaryButton
-                    title="Tao mo ta tu van ban"
+                    title="Sinh từ văn bản"
+                    icon={<Feather name="edit-3" size={18} color="#ffffff" />}
                     onPress={handleTextSubmit}
                     disabled={loading}
                     style={styles.actionButton}
@@ -1774,7 +1932,11 @@ function HomeScreen(): ReactElement {
 
             <View style={styles.section}>
               <View style={styles.card}>
-                <Text style={styles.sectionTitle}>Ket qua</Text>
+                <SectionHeading
+                  icon={<Feather name="file-text" size={20} color={PRIMARY_ACCENT} />}
+                  title="Kết quả AI"
+                  hint="Nội dung sẵn sàng sử dụng"
+                />
                 {result ? (
                   <>
                     <View style={styles.resultMeta}>
@@ -1791,7 +1953,8 @@ function HomeScreen(): ReactElement {
                     ) : null}
                     <View style={styles.resultActions}>
                       <PrimaryButton
-                        title="Sao chep"
+                        title="Sao chép"
+                        icon={<Feather name="copy" size={18} color="#ffffff" />}
                         onPress={handleCopyResult}
                         style={{ marginBottom: 10 }}
                       />
@@ -1807,7 +1970,11 @@ function HomeScreen(): ReactElement {
 
             <View style={styles.section}>
               <View style={styles.card}>
-                <Text style={styles.sectionTitle}>Lich su</Text>
+                <SectionHeading
+                  icon={<Feather name="clock" size={20} color={PRIMARY_ACCENT} />}
+                  title="Lịch sử mô tả"
+                  hint="Tự động đồng bộ khi đăng nhập"
+                />
                 {isAuthenticated ? (
                   history.length ? (
                     <FlatList
@@ -1835,10 +2002,9 @@ function HomeScreen(): ReactElement {
                   )
                 ) : (
                   <Text style={styles.sectionDescription}>
-                    Dang nhap de luu va dong bo mo ta AI cua ban tren moi thiet bi.
+                    Đăng nhập de luu va dong bo mo ta AI cua ban tren moi thiet bi.
                   </Text>
                 )}
-              </View>
             </View>
           </View>
         </ScrollView>
