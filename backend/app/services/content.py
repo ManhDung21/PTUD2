@@ -58,10 +58,10 @@ Trả về nội dung theo định dạng sau:
 ✨ [Slogan 1 câu ấn tượng, có thể kèm emoji hoặc chơi chữ nhẹ]
 
 📝 Mô tả:
-[100-150 từ sinh động, kể lại trải nghiệm thưởng thức, nhấn mạnh nguồn gốc, độ tươi, hương vị và lợi ích. 
+[30-70 từ sinh động, kể lại trải nghiệm thưởng thức, nhấn mạnh nguồn gốc, độ tươi, hương vị và lợi ích. 
 Giọng văn nên giàu cảm xúc, mời gọi và truyền cảm hứng mua hàng.]
 
-💎 Điểm nổi bật:
+💎 Điểm nổi bật(Ngắn gọn):
 • [Chất lượng vượt trội hoặc quy trình canh tác đặc biệt]
 • [Nguồn gốc rõ ràng, vùng trồng nổi tiếng]
 • [Hương vị đặc trưng - ngọt thanh, giòn mát, thơm tự nhiên…]
@@ -69,16 +69,16 @@ Giọng văn nên giàu cảm xúc, mời gọi và truyền cảm hứng mua h�
 • [Độ tươi mới - cam kết từ vườn đến tay người mua]
 
 🌟 Lợi ích:
-[3-4 lợi ích thực tế - ví dụ: tốt cho sức khỏe, giúp thư giãn, phù hợp làm quà biếu…]
+[1-2 lợi ích thực tế - ví dụ: tốt cho sức khỏe, giúp thư giãn, phù hợp làm quà biếu…]
 
 🎁 Cam kết:
 [Đảm bảo chất lượng, đổi trả linh hoạt, giao hàng tận nơi, hỗ trợ tận tình]
 
 🍽️ Gợi ý:
-[2-3 cách dùng sáng tạo - ví dụ: ăn trực tiếp, làm sinh tố, chế biến món tráng miệng]
+[1-2 cách dùng sáng tạo - ví dụ: ăn trực tiếp, làm sinh tố, chế biến món tráng miệng]
 
 #️⃣ Từ khóa:
-[5-7 hashtag hoặc từ khóa phổ biến, cách nhau bằng dấu phẩy]
+[1-2 hashtag hoặc từ khóa phổ biến, cách nhau bằng dấu phẩy]
 
 Viết bằng TIẾNG VIỆT tự nhiên, cảm xúc, mạch lạc và mang năng lượng tích cực.và kết quả trả về không có giấu *
 """
@@ -99,10 +99,10 @@ Trả về nội dung theo định dạng:
 ✨ [Slogan 1 câu sáng tạo - dễ nhớ, tạo ấn tượng đầu tiên mạnh mẽ]
 
 📝 Mô tả:
-[Khoảng 100-150 từ mô tả hấp dẫn, khơi gợi cảm xúc, nêu rõ nguồn gốc, hương vị, giá trị, lợi ích và lý do nên chọn sản phẩm này.
+[Khoảng 30-70 từ mô tả hấp dẫn, khơi gợi cảm xúc, nêu rõ nguồn gốc, hương vị, giá trị, lợi ích và lý do nên chọn sản phẩm này.
 Hãy khiến người đọc như đang “nếm thử bằng trí tưởng tượng”.]
 
-💎 Điểm nổi bật:
+💎 Điểm nổi bật(Ngắn Gọn):
 • [Chất lượng / quy trình đặc biệt]
 • [Nguồn gốc / vùng trồng uy tín]
 • [Hương vị tự nhiên]
@@ -110,16 +110,16 @@ Hãy khiến người đọc như đang “nếm thử bằng trí tưởng tư�
 • [Độ tươi và độ an toàn]
 
 🌟 Lợi ích:
-[3-4 lợi ích rõ ràng, nhấn mạnh giá trị cho sức khỏe và cảm xúc]
+[1-2 lợi ích rõ ràng, nhấn mạnh giá trị cho sức khỏe và cảm xúc]
 
 🎁 Cam kết:
 [Chất lượng chuẩn, giao hàng nhanh, hỗ trợ tận tâm, đổi trả linh hoạt]
 
 🍽️ Gợi ý:
-[2-3 cách dùng sáng tạo - ví dụ: kết hợp món ăn, quà tặng, thức uống…]
+[1-2 cách dùng sáng tạo - ví dụ: kết hợp món ăn, quà tặng, thức uống…]
 
 #️⃣ Từ khóa:
-[5-7 hashtag hoặc từ khóa tìm kiếm, ngăn cách bằng dấu phẩy]
+[1-2 hashtag hoặc từ khóa tìm kiếm, ngăn cách bằng dấu phẩy]
 
 Viết TIẾNG VIỆT tự nhiên, tràn đầy năng lượng, truyền cảm hứng mua hàng.
 không có giấu * trong mô tả của tôi
