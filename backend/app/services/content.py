@@ -63,15 +63,14 @@ Giọng văn nên giàu cảm xúc, mời gọi và truyền cảm hứng mua h�
 
 💎 Điểm nổi bật(Ngắn gọn):
 • [Chất lượng vượt trội hoặc quy trình canh tác đặc biệt]
-• [Nguồn gốc rõ ràng, vùng trồng nổi tiếng]
 • [Hương vị đặc trưng - ngọt thanh, giòn mát, thơm tự nhiên…]
 • [Giá trị dinh dưỡng và lợi ích sức khỏe]
-• [Độ tươi mới - cam kết từ vườn đến tay người mua]
+
 
 🌟 Lợi ích:
 [1-2 lợi ích thực tế - ví dụ: tốt cho sức khỏe, giúp thư giãn, phù hợp làm quà biếu…]
 
-🎁 Cam kết:
+🎁 Cam kết(ngắn gọn):
 [Đảm bảo chất lượng, đổi trả linh hoạt, giao hàng tận nơi, hỗ trợ tận tình]
 
 🍽️ Gợi ý:
