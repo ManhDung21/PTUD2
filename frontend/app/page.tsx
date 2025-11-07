@@ -79,7 +79,7 @@ interface ToastState {
   message: string;
 }
 
-const DEFAULT_STYLES = ["Tiáº¿p thá»", "ChuyÃªn nghiá»p", "ThÃ¢n thiá»n", "Ká» chuyá»n"];
+const DEFAULT_STYLES = ["Tiếp thị", "Chuyên nghiệp", "Thân thiện", "Kể chuyện"];
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const resolveImageUrl = (url?: string | null): string | null => {
   if (!url) {
@@ -91,7 +91,7 @@ const resolveImageUrl = (url?: string | null): string | null => {
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<TabKey>("image");
   const [styles, setStyles] = useState<string[]>(DEFAULT_STYLES);
-  const [selectedStyle, setSelectedStyle] = useState<string>("Tiáº¿p thá»");
+  const [selectedStyle, setSelectedStyle] = useState<string>("Tiếp thị");
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [historyDetail, setHistoryDetail] = useState<HistoryItem | null>(null);
 
@@ -156,7 +156,7 @@ export default function HomePage() {
       console.error(err);
       if (err?.response?.status === 401) {
         setToken(null);
-        showToast("error", "PhiÃªn ÄÄng nháº­p ÄÃ£ háº¿t háº¡n, vui lÃ²ng ÄÄng nháº­p láº¡i.");
+        showToast("error", "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
       }
     }
   }, [showToast]);
@@ -189,7 +189,7 @@ export default function HomePage() {
       .play()
       .catch((err) => {
         console.error(err);
-        showToast("error", "KhÃ´ng thá» hiá»n thá» camera.");
+        showToast("error", "Không thể hiển thị camera.");
         stopCamera();
       });
   }, [cameraActive, showToast, stopCamera]);
@@ -236,7 +236,7 @@ export default function HomePage() {
     } catch (err: any) {
       if (err?.response?.status === 401) {
         setToken(null);
-        showToast("error", "PhiÃªn ÄÄng nháº­p ÄÃ£ háº¿t háº¡n, vui lÃ²ng ÄÄng nháº­p láº¡i.");
+        showToast("error", "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
       }
     }
   }, [showToast, token]);
@@ -245,7 +245,7 @@ export default function HomePage() {
     (err: any) => {
       if (err?.response?.status === 401) {
         setToken(null);
-        showToast("error", "PhiÃªn ÄÄng nháº­p ÄÃ£ háº¿t háº¡n, vui lÃ²ng ÄÄng nháº­p láº¡i.");
+        showToast("error", "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
         return true;
       }
       return false;
@@ -264,10 +264,10 @@ export default function HomePage() {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
       streamRef.current = stream;
       setCameraActive(true);
-      showToast("success", "Camera ÄÃ£ báº­t");
+      showToast("success", "Camera đã bật");
     } catch (err) {
       console.error(err);
-      showToast("error", "KhÃ´ng thá» truy cáº­p camera. Vui lÃ²ng kiá»m tra quyá»n truy cáº­p.");
+      showToast("error", "Không thể truy cập camera. Vui lòng kiểm tra quyền truy cập.");
       stopCamera();
       setCameraActive(false);
     }
@@ -276,7 +276,7 @@ export default function HomePage() {
   const capturePhoto = async () => {
     const video = videoRef.current;
     if (!video) {
-      showToast("error", "KhÃ´ng thá» chá»¥p áº£nh tá»« camera.");
+      showToast("error", "Không thể chụp ảnh từ camera.");
       return;
     }
     const canvas = document.createElement("canvas");
@@ -284,13 +284,13 @@ export default function HomePage() {
     canvas.height = video.videoHeight;
     const context = canvas.getContext("2d");
     if (!context) {
-      showToast("error", "KhÃ´ng thá» chá»¥p áº£nh tá»« camera.");
+      showToast("error", "Không thể chụp ảnh từ camera.");
       return;
     }
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
     canvas.toBlob((blob) => {
       if (!blob) {
-        showToast("error", "KhÃ´ng thá» chá»¥p áº£nh tá»« camera.");
+        showToast("error", "Không thể chụp ảnh từ camera.");
         return;
       }
       const captureFile = new File([blob], `capture-${Date.now()}.png`, { type: "image/png" });
@@ -303,7 +303,7 @@ export default function HomePage() {
       };
       setImages((prev) => [...prev, newItem]);
       setSelectedImageId(newItem.id);
-      showToast("success", "ÄÃ£ chá»¥p áº£nh tá»« camera");
+      showToast("success", "Đã chụp ảnh từ camera");
     }, "image/png");
     stopCamera();
   };
@@ -326,7 +326,7 @@ export default function HomePage() {
     });
     setImages((prev) => [...prev, ...newItems]);
     setSelectedImageId(newItems[newItems.length - 1].id);
-    showToast("success", newItems.length > 1 ? `ÄÃ£ thÃªm ${newItems.length} hÃ¬nh áº£nh` : "ÄÃ£ thÃªm hÃ¬nh áº£nh");
+    showToast("success", newItems.length > 1 ? `Đã thêm ${newItems.length} hình ảnh` : "Đã thêm hình ảnh");
     event.target.value = "";
   };
 
@@ -354,7 +354,7 @@ export default function HomePage() {
   const handleImageSubmit = async () => {
     const imageToSubmit = activeImage;
     if (!imageToSubmit) {
-      showToast("error", "Vui lÃ²ng thÃªm Ã­t nháº¥t má»t hÃ¬nh áº£nh há»£p lá».");
+      showToast("error", "Vui lòng thêm ít nhất một hình ảnh hợp lệ.");
       return;
     }
     setLoading(true);
@@ -373,15 +373,15 @@ export default function HomePage() {
       setResult(data);
       if (token) {
         await refreshHistory();
-        showToast("success", "ÄÃ£ táº¡o mÃ´ táº£ tá»« hÃ¬nh áº£nh vÃ  lÆ°u vÃ o lá»ch sá»­");
+        showToast("success", "Đã tạo mô tả từ hình ảnh và lưu vào lịch sử");
       } else {
-        showToast("success", "ÄÃ£ táº¡o mÃ´ táº£ tá»« hÃ¬nh áº£nh. ÄÄng nháº­p Äá» lÆ°u lá»ch sá»­!");
+        showToast("success", "Đã tạo mô tả từ hình ảnh. Đăng nhập để lưu lịch sử!");
       }
     } catch (err: any) {
       if (handleUnauthorized(err)) {
         return;
       }
-      const detail = err?.response?.data?.detail ?? "KhÃ´ng thá» táº¡o mÃ´ táº£";
+      const detail = err?.response?.data?.detail ?? "Không thể tạo mô tả";
       showToast("error", detail);
     } finally {
       setLoading(false);
@@ -390,7 +390,7 @@ export default function HomePage() {
 
   const handleTextSubmit = async () => {
     if (!productInfo.trim()) {
-      showToast("error", "Vui lÃ²ng nháº­p thÃ´ng tin sáº£n pháº©m");
+      showToast("error", "Vui lòng nhập thông tin sản phẩm");
       return;
     }
     setLoading(true);
@@ -403,15 +403,15 @@ export default function HomePage() {
       setResult(data);
       if (token) {
         await refreshHistory();
-        showToast("success", "ÄÃ£ táº¡o mÃ´ táº£ tá»« vÄn báº£n vÃ  lÆ°u vÃ o lá»ch sá»­");
+        showToast("success", "Đã tạo mô tả từ văn bản và lưu vào lịch sử");
       } else {
-        showToast("success", "ÄÃ£ táº¡o mÃ´ táº£ tá»« vÄn báº£n. ÄÄng nháº­p Äá» lÆ°u lá»ch sá»­!");
+        showToast("success", "Đã tạo mô tả từ văn bản. Đăng nhập để lưu lịch sử!");
       }
     } catch (err: any) {
       if (handleUnauthorized(err)) {
         return;
       }
-      const detail = err?.response?.data?.detail ?? "KhÃ´ng thá» táº¡o mÃ´ táº£";
+      const detail = err?.response?.data?.detail ?? "Không thể tạo mô tả";
       showToast("error", detail);
     } finally {
       setLoading(false);
@@ -434,7 +434,7 @@ export default function HomePage() {
       const identifier = authForm.identifier.trim();
       const password = authForm.password.trim();
       if (!identifier || !password) {
-        const message = "Vui lÃ²ng nháº­p Äáº§y Äá»§ email/sá» Äiá»n thoáº¡i vÃ  máº­t kháº©u há»£p lá».";
+        const message = "Vui lòng nhập đầy đủ email/số điện thoại và mật khẩu hợp lệ.";
         setAuthMessage({ type: "error", message });
         showToast("error", message);
         setAuthLoading(false);
@@ -453,30 +453,30 @@ export default function HomePage() {
       await fetchProtectedData(newToken);
       setAuthMessage({
         type: "success",
-        message: authMode === "login" ? "ÄÄng nháº­p thÃ nh cÃ´ng" : "ÄÄng kÃ½ thÃ nh cÃ´ng",
+        message: authMode === "login" ? "Đăng nhập thành công" : "Đăng ký thành công",
       });
       setAuthForm({ identifier: "", password: "" });
-      showToast("success", authMode === "login" ? "ÄÄng nháº­p thÃ nh cÃ´ng" : "ÄÄng kÃ½ thÃ nh cÃ´ng");
+      showToast("success", authMode === "login" ? "Đăng nhập thành công" : "Đăng ký thành công");
       setTimeout(() => {
         setAuthVisible(false);
         setAuthMessage(null);
       }, 1200);
     } catch (err: any) {
-      let detail = "KhÃ´ng thá» xÃ¡c thá»±c";
+      let detail = "Không thể xác thực";
       
-      // Xá»­ lÃ½ cÃ¡c loáº¡i error response khÃ¡c nhau
+      // Xử­ lÝ½ cÝ¡c loả¡i error response khác nhau
       if (err?.response?.data?.detail) {
         const errorDetail = err.response.data.detail;
         
-        // Náº¿u detail lÃ  array (validation errors tá»« Pydantic)
+        // Nả¿u detail lÝ  array (validation errors từ Pydantic)
         if (Array.isArray(errorDetail)) {
           detail = errorDetail.map((e: any) => e.msg || e.message).join(", ");
         } 
-        // Náº¿u detail lÃ  string
+        // Nả¿u detail lÝ  string
         else if (typeof errorDetail === "string") {
           detail = errorDetail;
         }
-        // Náº¿u detail lÃ  object
+        // Nả¿u detail lÝ  object
         else if (typeof errorDetail === "object") {
           detail = errorDetail.msg || errorDetail.message || JSON.stringify(errorDetail);
         }
@@ -497,14 +497,14 @@ export default function HomePage() {
     try {
       const email = forgotEmail.trim();
       if (!email) {
-        const message = "Vui lÃ²ng nháº­p email ÄÃ£ ÄÄng kÃ½.";
+        const message = "Vui lòng nhập email để đăng ký.";
         setAuthMessage({ type: "error", message });
         showToast("error", message);
         setAuthLoading(false);
         return;
       }
       if (!EMAIL_REGEX.test(email)) {
-        const message = "Vui lÃ²ng nháº­p email há»£p lá».";
+        const message = "Vui lòng nhập email hợp lệ.";
         setAuthMessage({ type: "error", message });
         showToast("error", message);
         setAuthLoading(false);
@@ -519,7 +519,7 @@ export default function HomePage() {
       setForgotEmail("");
       setAuthMode("reset");
     } catch (err: any) {
-      let detail = "KhÃ´ng thá» gá»­i mÃ£ xÃ¡c thá»±c";
+      let detail = "Không thể gửi mã xác thực";
       if (err?.response?.data?.detail) {
         const errorDetail = err.response.data.detail;
         if (Array.isArray(errorDetail)) {
@@ -548,28 +548,28 @@ export default function HomePage() {
       const password = resetForm.password.trim();
       const confirm = resetForm.confirmPassword.trim();
       if (!identifier || !tokenValue || !password) {
-        const message = "Vui lÃ²ng nháº­p Äáº§y Äá»§ email, mÃ£ xÃ¡c thá»±c vÃ  máº­t kháº©u má»i.";
+        const message = "Vui lòng nhập đầy đủ email, mã xác thực và mật khẩu mới.";
         setAuthMessage({ type: "error", message });
         showToast("error", message);
         setAuthLoading(false);
         return;
       }
       if (!EMAIL_REGEX.test(identifier)) {
-        const message = "Vui lÃ²ng nháº­p email há»£p lá».";
+        const message = "Vui lòng nhập email hợp lệ.";
         setAuthMessage({ type: "error", message });
         showToast("error", message);
         setAuthLoading(false);
         return;
       }
       if (tokenValue.length !== 6) {
-        const message = "MÃ£ xÃ¡c thá»±c gá»m 6 chá»¯ sá».";
+        const message = "Mã xác thực gồm 6 chữ số.";
         setAuthMessage({ type: "error", message });
         showToast("error", message);
         setAuthLoading(false);
         return;
       }
       if (password !== confirm) {
-        const message = "Máº­t kháº©u xÃ¡c nháº­n khÃ´ng khá»p.";
+        const message = "Mật khẩu xác nhận không khớp";
         setAuthMessage({ type: "error", message });
         showToast("error", message);
         setAuthLoading(false);
@@ -586,7 +586,7 @@ export default function HomePage() {
       setAuthMode("login");
       setAuthForm({ identifier, password: "" });
     } catch (err: any) {
-      let detail = "KhÃ´ng thá» Äáº·t láº¡i máº­t kháº©u";
+      let detail = "Không thể đặt lại mật khẩu";
       
       if (err?.response?.data?.detail) {
         const errorDetail = err.response.data.detail;
@@ -627,17 +627,17 @@ export default function HomePage() {
       const next = changePasswordForm.newPassword.trim();
       const confirm = changePasswordForm.confirmPassword.trim();
       if (!current || !next) {
-        showToast("error", "Vui lÃ²ng nháº­p Äáº§y Äá»§ máº­t kháº©u hiá»n táº¡i vÃ  máº­t kháº©u má»i.");
+        showToast("error", "Vui lòng nhập đầy đủ mật khẩu hiện tại và mật khẩu mới.");
         setChangePasswordLoading(false);
         return;
       }
       if (next !== confirm) {
-        showToast("error", "Máº­t kháº©u xÃ¡c nháº­n khÃ´ng khá»p.");
+        showToast("error", "Mật khẩu xác nhận không khớp.");
         setChangePasswordLoading(false);
         return;
       }
       if (current === next) {
-        showToast("error", "Máº­t kháº©u má»i pháº£i khÃ¡c máº­t kháº©u hiá»n táº¡i.");
+        showToast("error", "Mật khẩu mới phải khác mật khẩu hiện tại.");
         setChangePasswordLoading(false);
         return;
       }
@@ -649,7 +649,7 @@ export default function HomePage() {
       setChangePasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
       setChangePasswordVisible(false);
     } catch (err: any) {
-      let detail = "KhÃ´ng thá» Äá»i máº­t kháº©u";
+      let detail = "Không thể đặt lại mật khẩu";
       if (err?.response?.data?.detail) {
         const errorDetail = err.response.data.detail;
         if (Array.isArray(errorDetail)) {
@@ -675,7 +675,7 @@ export default function HomePage() {
     setHistory([]);
     setResult(null);
     stopCamera();
-    showToast("success", "ÄÃ£ ÄÄng xuáº¥t");
+    showToast("success", "Đã đăng xuất");
   };
 
   const activeImage = useMemo(() => {
@@ -708,7 +708,6 @@ export default function HomePage() {
     <main className="page-shell">
       <section className="hero-card">
         <div className="hero-info">
-          <span className="hero-pill">AI copywriter</span>
           <h1 className="hero-title">AI Mô Tả Sản Phẩm Trái Cây</h1>
           <p className="hero-subtitle">
             Tăng trải nghiệm mobile: tải ảnh hoặc nhập văn bản, chọn phong cách và nhận mô tả tối ưu chỉ trong vài giây.
@@ -976,13 +975,13 @@ export default function HomePage() {
       <section className="section-card">
         <div className="section-header">
           <div>
-            <p className="section-subtitle">Quản lý nội dung</p>
+            <p className="section-subtitle">Quản lý mô tả</p>
             <h2 className="section-title">Lịch sử mô tả</h2>
           </div>
         </div>
         {!isAuthenticated ? (
           <div className="empty-state">
-            <p className="muted-text">Đăng nhập để lưu và truy cập lịch sử mô tả đã tạo.</p>
+            <p className="muted-text">Đăng nhập để lưu và xem lịch sử mô tả đã tạo.</p>
             <button
               className="primary-button"
               type="button"
@@ -1046,7 +1045,7 @@ export default function HomePage() {
       </section>
 
       <footer className="page-footer">
-        Mẹo: thử nghiệm nhiều phong cách viết để tìm ra giọng văn phù hợp với từng mặt hàng trái cây.
+        Mẹo: Thử nghiệm nhiều phong cách viết để tìm ra giọng văn phù hợp với từng sản phẩm.
       </footer>
 
       {toast && (

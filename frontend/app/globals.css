@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 :root {
   --bg-primary: linear-gradient(150deg, #fef3c7 0%, #e0f2fe 45%, #f8f5ff 100%);
   --bg-secondary: #ffffff;
@@ -15,7 +17,7 @@
   --shadow-soft: 0 20px 40px rgba(15, 23, 42, 0.12);
   --radius-lg: 24px;
   --radius-xl: 32px;
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
 }
 
 html,
