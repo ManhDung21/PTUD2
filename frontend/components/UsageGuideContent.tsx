@@ -22,22 +22,22 @@ const QUICK_STEPS = [
   {
     label: "4",
     title: "Sao chép & quản lý",
-    description: "Sao chép hoặc tải xuống mô tả để chèn vào các kênh marketing khác.",
+    description: "Sao chép hoặc tải xuống mô tả để chèn vào các kênh thương mại điện tử khác.",
   },
 ];
 
 const WEB_STEPS = [
   "Đăng nhập để lưu lịch sử và đồng bộ nội dung giữa các thiết bị.",
   "Tải ảnh hoặc nhập mô tả rồi chọn phong cách viết mong muốn.",
-  "Xem trước mô tả, sao chép, tải xuống hoặc lưu vào mục lịch sử.",
+  "Xem trước mô tả, sao chép, lưu vào mục lịch sử.",
   "Chèn nội dung đã tạo vào bài đăng, tin nhắn hoặc các công cụ bán hàng khác.",
 ];
 
 const MOBILE_STEPS = [
-  "Mở ứng dụng di động và đăng nhập bằng tài khoản đã tạo trên web.",
+  "Mở ứng dụng di động và đăng nhập bằng tài khoản mà bạn đã tạo ở trang.",
   "Chọn ảnh từ thư viện hoặc mở camera để chụp sản phẩm trực tiếp.",
   "Điều chỉnh phong cách, xem trước mô tả ngắn gọn và chi tiết.",
-  "Sao chép hoặc tải xuống mô tả để sử dụng trên các ứng dụng khác.",
+  "Sao chép mô tả để sử dụng trên các ứng dụng khác.",
 ];
 
 const FAQs = [
@@ -49,7 +49,7 @@ const FAQs = [
   {
     question: "Lịch sử mô tả lưu ở đâu?",
     answer:
-      "Toàn bộ lịch sử được lưu trong tài khoản của bạn. Vào phần Lịch sử để xem, chỉnh sửa hoặc sử dụng lại.",
+      "Toàn bộ lịch sử được lưu trong tài khoản mà bạn đã đăng nhập. Nên bạn cần đăng ký tài khoản, để xem được lịch sử lâu dài.",
   },
   {
     question: "Ứng dụng di động hoạt động offline được không?",
@@ -59,7 +59,7 @@ const FAQs = [
   {
     question: "Khi cần hỗ trợ thì làm thế nào?",
     answer:
-      "Liên hệ qua email hỗ trợ trong mục Thông tin (ví dụ support@mdung21.id.vn) hoặc để lại phản hồi trực tiếp trên trang web.",
+      "Liên hệ qua email hỗ trợ trong mục Thông tin (ví dụ support@mdung21.id.vn).",
   },
 ];
 
