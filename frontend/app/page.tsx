@@ -710,14 +710,14 @@ export default function HomePage() {
         <div className="hero-info">
           <h1 className="hero-title">AI Mô Tả Sản Phẩm Trái Cây</h1>
           <p className="hero-subtitle">
-            Tăng trải nghiệm mobile: tải ảnh hoặc nhập văn bản, chọn phong cách và nhận mô tả tối ưu chỉ trong vài giây.
+            Biến hình ảnh thành lời nói bán hàng. AI tự động viết mô tả trái cây hấp dẫn, giúp bạn chốt đơn nhanh hơn. Tải ảnh lên và trải nghiệm ngay!
           </p>
           <div className="hero-actions">
             <button type="button" className="secondary-button" onClick={() => setGuideVisible(true)}>
               Hướng dẫn sử dụng
             </button>
           </div>
-        </div>
+        </div>  
         <div className="hero-auth">
           {isAuthenticated ? (
             <div className="stack stack--sm align-end">
@@ -761,7 +761,7 @@ export default function HomePage() {
         </div>
         <div className="section-content">
           <label htmlFor="style-select" className="panel-title">
-            Phong cách mong muốn
+            Phong cách mô tả
           </label>
           <select
             id="style-select"
@@ -936,7 +936,7 @@ export default function HomePage() {
         <section className="section-card">
           <div className="section-header">
             <div>
-              <p className="section-subtitle">Kết quả AI</p>
+              <p className="section-subtitle">Kết quả </p>
               <h2 className="section-title">Mô tả đã sẵn sàng</h2>
             </div>
             <div className="result-meta">
