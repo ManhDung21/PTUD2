@@ -45,83 +45,71 @@ def get_style_prompt(style: str) -> str:
 
 
 def _image_prompt(style: str) -> str:
-    return f"""Hãy hóa thân thành một chuyên gia tiếp thị giàu cảm xúc.
-Nhiệm vụ: Viết bài mô tả bán hàng cho sản phẩm TRÁI CÂY trong hình ảnh. 
+    return f"""Viết mô tả bán hàng cho sản phẩm TRÁI CÂY trong hình ảnh. 
 {get_style_prompt(style)}
 
-Hãy viết sao cho người đọc CẢM NHẬN được hương vị, màu sắc và giá trị thật của sản phẩm — không chỉ đọc mà còn muốn MUA NGAY.
+Trả về theo định dạng:
 
-Trả về nội dung theo định dạng sau:
+🎯 [Tiêu đề ngắn gọn, có từ khóa SEO]
 
-🎯 [Tiêu đề sản phẩm ngắn gọn, có từ khóa SEO, thu hút và gợi cảm xúc]
-
-✨ [Slogan 1 câu ấn tượng, có thể kèm emoji hoặc chơi chữ nhẹ]
+✨ [Slogan 1 câu ấn tượng]
 
 📝 Mô tả:
-[30-70 từ sinh động, kể lại trải nghiệm thưởng thức, nhấn mạnh nguồn gốc, độ tươi, hương vị và lợi ích. 
-Giọng văn nên giàu cảm xúc, mời gọi và truyền cảm hứng mua hàng.]
+[30-70 từ sinh động về trải nghiệm, nguồn gốc, hương vị và lợi ích]
 
-💎 Điểm nổi bật(Ngắn gọn):
-• [Chất lượng vượt trội hoặc quy trình canh tác đặc biệt]
-• [Hương vị đặc trưng - ngọt thanh, giòn mát, thơm tự nhiên…]
-• [Giá trị dinh dưỡng và lợi ích sức khỏe]
-
+💎 Điểm nổi bật:
+• [Chất lượng/quy trình]
+• [Hương vị đặc trưng]
+• [Giá trị dinh dưỡng]
 
 🌟 Lợi ích:
-[1-2 lợi ích thực tế - ví dụ: tốt cho sức khỏe, giúp thư giãn, phù hợp làm quà biếu…]
+[1-2 lợi ích thực tế]
 
-🎁 Cam kết(ngắn gọn):
-[Đảm bảo chất lượng, đổi trả linh hoạt, giao hàng tận nơi, hỗ trợ tận tình]
+🎁 Cam kết:
+[Chất lượng, giao hàng, hỗ trợ]
 
 🍽️ Gợi ý:
-[1-2 cách dùng sáng tạo - ví dụ: ăn trực tiếp, làm sinh tố, chế biến món tráng miệng]
+[1-2 cách sử dụng]
 
 #️⃣ Từ khóa:
-[1-2 hashtag hoặc từ khóa phổ biến, cách nhau bằng dấu phẩy]
+[1-2 hashtag/từ khóa]
 
-Viết bằng TIẾNG VIỆT tự nhiên, cảm xúc, mạch lạc và mang năng lượng tích cực.và kết quả trả về không có giấu *
+Viết TIẾNG VIỆT tự nhiên, giàu cảm xúc. Không dùng dấu *.
 """
 
 
 def _text_prompt(product_info: str, style: str) -> str:
-    return f"""Bạn là chuyên gia nội dung thương mại điện tử, hãy viết bài mô tả hấp dẫn cho sản phẩm:
-"{product_info}" 
+    return f"""Viết mô tả hấp dẫn cho sản phẩm: "{product_info}" 
 {get_style_prompt(style)}
 
-Mục tiêu: khiến người đọc CẢM NHẬN được giá trị và muốn sở hữu sản phẩm ngay lập tức.
-Giọng văn nên tự nhiên, truyền cảm, phù hợp với khách hàng Việt Nam hiện đại.
+Trả về theo định dạng:
 
-Trả về nội dung theo định dạng:
+🎯 [Tiêu đề ngắn gọn, có từ khóa SEO]
 
-🎯 [Tiêu đề sản phẩm ngắn gọn, chứa từ khóa chính và gợi tò mò]
-
-✨ [Slogan 1 câu sáng tạo - dễ nhớ, tạo ấn tượng đầu tiên mạnh mẽ]
+✨ [Slogan 1 câu sáng tạo]
 
 📝 Mô tả:
-[Khoảng 30-70 từ mô tả hấp dẫn, khơi gợi cảm xúc, nêu rõ nguồn gốc, hương vị, giá trị, lợi ích và lý do nên chọn sản phẩm này.
-Hãy khiến người đọc như đang “nếm thử bằng trí tưởng tượng”.]
+[30-70 từ khơi gợi cảm xúc về nguồn gốc, hương vị, giá trị và lợi ích]
 
-💎 Điểm nổi bật(Ngắn Gọn):
-• [Chất lượng / quy trình đặc biệt]
-• [Nguồn gốc / vùng trồng uy tín]
+💎 Điểm nổi bật:
+• [Chất lượng/quy trình]
+• [Nguồn gốc/vùng trồng]
 • [Hương vị tự nhiên]
 • [Giá trị dinh dưỡng]
-• [Độ tươi và độ an toàn]
 
 🌟 Lợi ích:
-[1-2 lợi ích rõ ràng, nhấn mạnh giá trị cho sức khỏe và cảm xúc]
+[1-2 lợi ích cho sức khỏe và cảm xúc]
 
 🎁 Cam kết:
-[Chất lượng chuẩn, giao hàng nhanh, hỗ trợ tận tâm, đổi trả linh hoạt]
+[Chất lượng, giao hàng, hỗ trợ, đổi trả]
 
 🍽️ Gợi ý:
-[1-2 cách dùng sáng tạo - ví dụ: kết hợp món ăn, quà tặng, thức uống…]
+[1-2 cách sử dụng sáng tạo]
 
 #️⃣ Từ khóa:
-[1-2 hashtag hoặc từ khóa tìm kiếm, ngăn cách bằng dấu phẩy]
+[1-2 hashtag/từ khóa]
 
-Viết TIẾNG VIỆT tự nhiên, tràn đầy năng lượng, truyền cảm hứng mua hàng.
-không có giấu * trong mô tả của tôi
+Viết TIẾNG VIỆT tự nhiên, truyền cảm hứng. Không dùng dấu *.
 """
 
 
