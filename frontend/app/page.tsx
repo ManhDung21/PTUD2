@@ -464,6 +464,7 @@ export default function HomePage() {
     } catch (err: any) {
       let detail = "Không thể xác thực";
       
+ 
       // Xử lý các loại error response khác nhau
       if (err?.response?.data?.detail) {
         const errorDetail = err.response.data.detail;
@@ -477,6 +478,7 @@ export default function HomePage() {
           detail = errorDetail;
         }
         // Nếu detail là object
+
         else if (typeof errorDetail === "object") {
           detail = errorDetail.msg || errorDetail.message || JSON.stringify(errorDetail);
         }
@@ -498,6 +500,7 @@ export default function HomePage() {
       const email = forgotEmail.trim();
       if (!email) {
         const message = "Vui lòng nhập email đã đăng ký.";
+
         setAuthMessage({ type: "error", message });
         showToast("error", message);
         setAuthLoading(false);
@@ -568,7 +571,7 @@ export default function HomePage() {
         setAuthLoading(false);
         return;
       }
-      if (password !== confirm) {
+      if (password !== confirm) { 
         const message = "Mật khẩu xác nhận không khớp.";
         setAuthMessage({ type: "error", message });
         showToast("error", message);
@@ -708,17 +711,16 @@ export default function HomePage() {
     <main className="page-shell">
       <section className="hero-card">
         <div className="hero-info">
-          <span className="hero-pill">AI copywriter</span>
           <h1 className="hero-title">AI Mô Tả Sản Phẩm Trái Cây</h1>
           <p className="hero-subtitle">
-            Tăng trải nghiệm mobile: tải ảnh hoặc nhập văn bản, chọn phong cách và nhận mô tả tối ưu chỉ trong vài giây.
+            Biến hình ảnh thành lời nói bán hàng. AI tự động viết mô tả trái cây hấp dẫn, giúp bạn chốt đơn nhanh hơn. Tải ảnh lên và trải nghiệm ngay!
           </p>
           <div className="hero-actions">
             <button type="button" className="secondary-button" onClick={() => setGuideVisible(true)}>
               Hướng dẫn sử dụng
             </button>
           </div>
-        </div>
+        </div>  
         <div className="hero-auth">
           {isAuthenticated ? (
             <div className="stack stack--sm align-end">
@@ -762,7 +764,7 @@ export default function HomePage() {
         </div>
         <div className="section-content">
           <label htmlFor="style-select" className="panel-title">
-            Phong cách mong muốn
+            Phong cách mô tả
           </label>
           <select
             id="style-select"
@@ -948,7 +950,7 @@ export default function HomePage() {
         <section className="section-card">
           <div className="section-header">
             <div>
-              <p className="section-subtitle">Kết quả AI</p>
+              <p className="section-subtitle">Kết quả </p>
               <h2 className="section-title">Mô tả đã sẵn sàng</h2>
             </div>
             <div className="result-meta">
@@ -987,13 +989,13 @@ export default function HomePage() {
       <section className="section-card">
         <div className="section-header">
           <div>
-            <p className="section-subtitle">Quản lý nội dung</p>
+            <p className="section-subtitle">Quản lý mô tả</p>
             <h2 className="section-title">Lịch sử mô tả</h2>
           </div>
         </div>
         {!isAuthenticated ? (
           <div className="empty-state">
-            <p className="muted-text">Đăng nhập để lưu và truy cập lịch sử mô tả đã tạo.</p>
+            <p className="muted-text">Đăng nhập để lưu và xem lịch sử mô tả đã tạo.</p>
             <button
               className="primary-button"
               type="button"
@@ -1057,7 +1059,7 @@ export default function HomePage() {
       </section>
 
       <footer className="page-footer">
-        Mẹo: thử nghiệm nhiều phong cách viết để tìm ra giọng văn phù hợp với từng mặt hàng trái cây.
+        Mẹo: Thử nghiệm nhiều phong cách viết để tìm ra giọng văn phù hợp với từng sản phẩm.
       </footer>
 
       {toast && (
