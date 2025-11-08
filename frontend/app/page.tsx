@@ -1090,6 +1090,7 @@ export default function HomePage() {
                 </button>
               }
               description="Xem nhanh quy trình sử dụng trên web và mobile mà không cần rời trang hiện tại."
+              onBackToHome={() => setGuideVisible(false)}
             />
           </div>
         </div>

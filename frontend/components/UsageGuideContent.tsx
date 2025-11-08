@@ -87,9 +87,10 @@ const badgeStyle: CSSProperties = {
 interface UsageGuideContentProps {
   actionSlot?: ReactNode;
   description?: string;
+  onBackToHome?: () => void;
 }
 
-export function UsageGuideContent({ actionSlot, description }: UsageGuideContentProps) {
+export function UsageGuideContent({ actionSlot, description, onBackToHome }: UsageGuideContentProps) {
   return (
     <>
       <div className="glass-panel" style={{ marginBottom: 32 }}>
@@ -193,13 +194,24 @@ export function UsageGuideContent({ actionSlot, description }: UsageGuideContent
               Gửi email về <a href="mailto:mdung07102004@gmail.com">mdung07102004@gmail.com</a> để được phản hồi trong vòng 24 giờ.
             </p>
           </div>
-          <Link
-            href="/"
-            className="secondary-button"
-            style={{ textDecoration: "none", padding: "12px 24px" }}
-          >
-            Quay về trang chính
-          </Link>
+          {onBackToHome ? (
+            <button
+              type="button"
+              className="secondary-button"
+              style={{ padding: "12px 24px" }}
+              onClick={onBackToHome}
+            >
+              Quay về trang chính
+            </button>
+          ) : (
+            <Link
+              href="/"
+              className="secondary-button"
+              style={{ textDecoration: "none", padding: "12px 24px" }}
+            >
+              Quay về trang chính
+            </Link>
+          )}
         </div>
       </div>
     </>
