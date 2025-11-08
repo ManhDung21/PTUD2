@@ -27,10 +27,46 @@ import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 
 declare const process: { env?: Record<string, string | undefined> } | undefined;
 
-const expoExtra = (Constants.expoConfig?.extra ?? {}) as { apiBaseUrl?: string };
+type ExpoExtra = { apiBaseUrl?: string };
+
+const extraSources: ExpoExtra[] = [
+  (Constants.expoConfig?.extra ?? {}) as ExpoExtra,
+  ((Constants.manifest2 as { extra?: ExpoExtra } | null)?.extra) ?? {},
+  ((Constants.manifest as { extra?: ExpoExtra } | null)?.extra) ?? {},
+];
+
 const envApiBaseUrl =
-  (typeof process !== 'undefined' && process?.env?.EXPO_PUBLIC_API_BASE_URL) || undefined;
-const API_BASE_URL = expoExtra.apiBaseUrl ?? envApiBaseUrl ?? 'http://localhost:8000';
+  (typeof process !== 'undefined' && process?.env?.EXPO_PUBLIC_API_BASE_URL) ||
+  (typeof process !== 'undefined' && process?.env?.NEXT_PUBLIC_API_BASE_URL) ||
+  undefined;
+
+const deriveLanApiBase = (): string | undefined => {
+  const hostUri =
+    Constants.expoConfig?.hostUri ||
+    ((Constants.manifest as { hostUri?: string } | null)?.hostUri ?? null) ||
+    ((Constants.manifest2 as { extra?: { expoClient?: { hostUri?: string } } } | null)?.extra
+      ?.expoClient?.hostUri ??
+      null);
+  if (!hostUri) {
+    return undefined;
+  }
+  const [host] = hostUri.split(':');
+  if (!host || host === 'localhost' || host === '127.0.0.1') {
+    return undefined;
+  }
+  return `http://${host}:8000`;
+};
+
+const API_BASE_URL =
+  extraSources.find((item) => item.apiBaseUrl)?.apiBaseUrl ||
+  envApiBaseUrl ||
+  deriveLanApiBase() ||
+  'http://localhost:8000';
+
+if (__DEV__) {
+  // eslint-disable-next-line no-console
+  console.log('[mobile] API base URL:', API_BASE_URL);
+}
 
 const STORAGE_KEYS = { token: 'fruitmate-token' };
 
@@ -391,19 +427,26 @@ const styles = StyleSheet.create({
   },
   imageRemove: {
     position: 'absolute',
-    top: -8,
-    right: -8,
+    top: 6,
+    right: 6,
     backgroundColor: SECONDARY_ACCENT,
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    shadowColor: SHADOW_COLOR,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 4,
   },
   imageRemoveText: {
     color: '#ffffff',
     fontWeight: '700',
-    fontSize: 16,
+    fontSize: 14,
   },
   textArea: {
     marginTop: 16,
@@ -1755,12 +1798,10 @@ function HomeScreen(): ReactElement {
           <View style={styles.panel}>
             <View style={styles.heroBadge}>
               <Feather name="zap" size={16} color={PRIMARY_ACCENT} />
-              <Text style={styles.heroBadgeText}>AI copywriter</Text>
+              <Text style={styles.heroBadgeText}>ND Shop</Text>
             </View>
-            <Text style={styles.heroTitle}>AI Mo Ta San Pham Trai Cay</Text>
-            <Text style={styles.heroSubtitle}>
-              Tang trai nghiem mobile: tai anh hoac nhap van ban, chon phong cach va nhan mo ta toi uu chi trong vai giay.
-            </Text>
+            <Text style={styles.heroTitle}>Mô Tả Sản Phẩm Trái Cây</Text>
+
             <View style={styles.heroActions}>
               <SecondaryButton
                 title="Hướng dẫn"

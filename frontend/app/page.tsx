@@ -1058,9 +1058,7 @@ export default function HomePage() {
         )}
       </section>
 
-      <footer className="page-footer">
-        Mẹo: Thử nghiệm nhiều phong cách viết để tìm ra giọng văn phù hợp với từng sản phẩm.
-      </footer>
+
 
       {toast && (
         <div className={`app-toast app-toast--${toast.type}`} role="status">
