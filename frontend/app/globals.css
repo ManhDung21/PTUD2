@@ -462,6 +462,16 @@ textarea {
   transform: translateY(-1px);
 }
 
+.ghost-button--danger {
+  border-color: rgba(220, 38, 38, 0.45);
+  color: #dc2626;
+}
+
+.ghost-button--danger:hover {
+  background: rgba(254, 226, 226, 0.9);
+  border-color: rgba(220, 38, 38, 0.6);
+}
+
 .button-loader {
   display: inline-flex;
   align-items: center;
