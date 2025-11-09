@@ -891,18 +891,18 @@ function GuideModal({ visible, onClose }: { visible: boolean; onClose: () => voi
       <SafeAreaView style={styles.modalWrapper}>
         <ScrollView contentContainerStyle={styles.modalContent}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Hướng dẫn su dung</Text>
+            <Text style={styles.modalTitle}>Hướng dẫn sử dụng</Text>
             <Pressable onPress={onClose} style={styles.modalClose} accessibilityRole="button">
-              <Text style={styles.modalCloseText}>Ã—</Text>
+              <Text style={styles.modalCloseText}>×</Text>
             </Pressable>
           </View>
           <Text style={[styles.sectionDescription, { marginTop: 12 }]}>
-            Lam quen voi quy trinh tao mo ta san pham tren di dong va nhung meo nho de toi uu hieu
-            qua marketing.
+            Làm quen với quy trình tạo mô tả sản phẩm trên di động và những mẹo nhỏ để tối ưu hiệu
+            quả marketing.
           </Text>
 
           <View style={styles.guideSection}>
-            <Text style={styles.guideTitle}>Quy trinh nhanh</Text>
+            <Text style={styles.guideTitle}>Quy trình nhanh</Text>
             {QUICK_STEPS.map((item) => (
               <View key={item.title} style={styles.guideBullet}>
                 <Text style={styles.guideBulletLabel}>{item.title}</Text>
@@ -912,7 +912,7 @@ function GuideModal({ visible, onClose }: { visible: boolean; onClose: () => voi
           </View>
 
           <View style={styles.guideSection}>
-            <Text style={styles.guideTitle}>Meo cho mobile</Text>
+            <Text style={styles.guideTitle}>Mẹo cho mobile</Text>
             {MOBILE_TIPS.map((tip) => (
               <View key={tip} style={styles.guideBullet}>
                 <Text style={styles.guideBulletText}>{tip}</Text>
@@ -921,7 +921,7 @@ function GuideModal({ visible, onClose }: { visible: boolean; onClose: () => voi
           </View>
 
           <View style={styles.guideSection}>
-            <Text style={styles.guideTitle}>Cau hoi thuong gap</Text>
+            <Text style={styles.guideTitle}>Câu hỏi thường gặp</Text>
             {FAQS.map((faq) => (
               <View key={faq.question} style={styles.faqItem}>
                 <Text style={styles.faqQuestion}>{faq.question}</Text>
@@ -959,9 +959,9 @@ function HistoryDetailModal({
       <View style={styles.modalOverlay}>
         <View style={styles.modalCard}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Chi tiet mo ta</Text>
+            <Text style={styles.modalTitle}>Chi tiết mô tả</Text>
             <Pressable onPress={onClose} style={styles.modalClose} accessibilityRole="button">
-              <Text style={styles.modalCloseText}>Ã—</Text>
+              <Text style={styles.modalCloseText}>×</Text>
             </Pressable>
           </View>
           <View style={styles.historyModalContent}>
@@ -1885,7 +1885,7 @@ function HomeScreen(): ReactElement {
                     hint="Tải tối đa 5 hình ảnh rõ nét"
                   />
                   <Text style={styles.sectionDescription}>
-                    Chon hinh san pham ro net, hau can don gian de AI phan tich chinh xac.
+                    Chọn hình sản phẩm rõ nét, hậu cảnh đơn giản để AI phân tích chính xác.
                   </Text>
                   <View style={styles.rowInline}>
                     <SecondaryButton
@@ -1939,7 +1939,7 @@ function HomeScreen(): ReactElement {
                     </>
                   ) : (
                     <Text style={styles.placeholderText}>
-                      Chua co hinh anh. Hay them tu thu vien hoac camera.
+                      Chưa có hình ảnh. Hãy thêm từ thư viện hoặc camera.
                     </Text>
                   )}
                 </View>
@@ -2003,7 +2003,7 @@ function HomeScreen(): ReactElement {
                   </>
                 ) : (
                   <Text style={styles.placeholderText}>
-                    Chua co mo ta. Hay tao tu hinh anh hoac van ban.
+                    Chưa có mô tả. Hãy tạo từ hình ảnh hoặc văn bản.
                   </Text>
                 )}
               </View>
@@ -2038,12 +2038,12 @@ function HomeScreen(): ReactElement {
                     />
                   ) : (
                     <Text style={styles.placeholderText}>
-                      Chua co mo ta nao trong lich su.
+                      Chưa có mô tả nào trong lịch sử.
                     </Text>
                   )
                 ) : (
                   <Text style={styles.sectionDescription}>
-                    Đăng nhập de luu va dong bo mo ta AI cua ban tren moi thiet bi.
+                    Đăng nhập để lưu và đồng bộ mô tả AI của bạn trên mọi thiết bị.
                   </Text>
                 )}
             </View>
