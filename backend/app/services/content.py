@@ -45,7 +45,7 @@ def get_style_prompt(style: str) -> str:
 
 
 def _image_prompt(style: str) -> str:
-    return f"""Viết mô tả bán hàng cho sản phẩm TRÁI CÂY trong hình ảnh. 
+    return f"""Viết mô tả bán hàng cho sản phẩm TRÁI CÂY trong hình ảnh.(nhận diện hình ảnh nếu không phải hình ảnh hãy trả lại cho tôi câu nói"Ảnh bạn cung cấp không phải là trái cây tôi không thể tả mô tả") 
 {get_style_prompt(style)}
 
 Trả về theo định dạng:
@@ -55,7 +55,7 @@ Trả về theo định dạng:
 ✨ [Slogan 1 câu ấn tượng]
 
 📝 Mô tả:
-[30-70 từ sinh động về trải nghiệm, nguồn gốc, hương vị và lợi ích]
+[30-50 từ sinh động về trải nghiệm, nguồn gốc, hương vị và lợi ích]
 
 💎 Điểm nổi bật:
 • [Chất lượng/quy trình]
