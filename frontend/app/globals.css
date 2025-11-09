@@ -669,7 +669,7 @@ textarea {
 
 .modal-card--history .preview-frame-wrapper {
   width: 100%;
-  max-width: 560px;
+  max-width: 400px;
   height: clamp(220px, 40vh, 320px);
   margin: 0 auto;
 }
