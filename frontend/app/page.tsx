@@ -1160,28 +1160,34 @@ export default function HomePage() {
                 ×
               </button>
             </div>
-            {detailImageSrc && (
-              <div className="preview-surface">
-                <div className="preview-frame-wrapper">
-                  <Image
-                    src={detailImageSrc}
-                    alt="Ảnh dùng để tạo mô tả"
-                    fill
-                    className="preview-frame"
-                    sizes="(max-width: 768px) 100vw, 640px"
-                  />
+            <div className="history-detail-grid">
+              {detailImageSrc && (
+                <div className="preview-surface history-detail-image">
+                  <div className="preview-frame-wrapper">
+                    <Image
+                      src={detailImageSrc}
+                      alt="Ảnh dùng để tạo mô tả"
+                      fill
+                      className="preview-frame"
+                      sizes="(max-width: 768px) 90vw, 420px"
+                    />
+                  </div>
+                </div>
+              )}
+              <div className="history-detail-content">
+                <p className="result-description history-detail-description">
+                  {historyDetail.full_description}
+                </p>
+                <div className="modal-actions history-detail-actions">
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={() => navigator.clipboard.writeText(historyDetail.full_description)}
+                  >
+                    Sao chép
+                  </button>
                 </div>
               </div>
-            )}
-            <p className="result-description">{historyDetail.full_description}</p>
-            <div className="modal-actions">
-              <button
-                className="secondary-button"
-                type="button"
-                onClick={() => navigator.clipboard.writeText(historyDetail.full_description)}
-              >
-                Sao chép
-              </button>
             </div>
           </div>
         </div>
