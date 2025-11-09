@@ -342,6 +342,7 @@ button {
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-lg);
   padding: 12px;
+  width: 100%;
   min-height: 220px;
   display: flex;
   align-items: center;
@@ -352,6 +353,10 @@ button {
   position: relative;
   width: 100%;
   max-width: 100%;
+  aspect-ratio: 3 / 2;
+  border-radius: calc(var(--radius-lg) - 6px);
+  overflow: hidden;
+  background: #000000;
 }
 
 .preview-remove {
@@ -380,12 +385,14 @@ button {
 
 .preview-frame {
   width: 100%;
-  border-radius: calc(var(--radius-lg) - 6px);
+  height: 100%;
+  border-radius: 0;
   object-fit: cover;
-  max-height: 360px;
 }
 
 video.preview-frame {
+  width: 100%;
+  height: 100%;
   background: #000000;
 }
 

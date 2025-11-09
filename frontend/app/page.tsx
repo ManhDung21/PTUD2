@@ -906,7 +906,9 @@ export default function HomePage() {
               </div>
               <div className="preview-surface">
                 {cameraActive ? (
-                  <video ref={videoRef} className="preview-frame" autoPlay playsInline muted />
+                  <div className="preview-frame-wrapper">
+                    <video ref={videoRef} className="preview-frame" autoPlay playsInline muted />
+                  </div>
                 ) : activeImage ? (
                   <div className="preview-frame-wrapper">
                     <button
@@ -917,12 +919,12 @@ export default function HomePage() {
                     >
                       X
                     </button>
-                    <Image
+                                        <Image
                       src={activeImage.previewUrl}
                       alt="Ảnh xem trước"
-                      width={600}
-                      height={400}
+                      fill
                       className="preview-frame"
+                      sizes="(max-width: 768px) 100vw, 600px"
                       unoptimized
                     />
                   </div>
@@ -997,14 +999,15 @@ export default function HomePage() {
           </div>
           {resultImageSrc && (
             <div className="preview-surface">
-              <Image
-                src={resultImageSrc}
-                alt="Ảnh dùng để tạo mô tả"
-                width={720}
-                height={480}
-                className="preview-frame"
-                sizes="(max-width: 768px) 100vw, 680px"
-              />
+              <div className="preview-frame-wrapper">
+                <Image
+                  src={resultImageSrc}
+                  alt="Ảnh dùng để tạo mô tả"
+                  fill
+                  className="preview-frame"
+                  sizes="(max-width: 768px) 100vw, 680px"
+                />
+              </div>
             </div>
           )}
           <p className="result-description">{result.description}</p>
@@ -1159,14 +1162,15 @@ export default function HomePage() {
             </div>
             {detailImageSrc && (
               <div className="preview-surface">
-                <Image
-                  src={detailImageSrc}
-                  alt="Ảnh dùng để tạo mô tả"
-                  width={720}
-                  height={480}
-                  className="preview-frame"
-                  sizes="(max-width: 768px) 100vw, 640px"
-                />
+                <div className="preview-frame-wrapper">
+                  <Image
+                    src={detailImageSrc}
+                    alt="Ảnh dùng để tạo mô tả"
+                    fill
+                    className="preview-frame"
+                    sizes="(max-width: 768px) 100vw, 640px"
+                  />
+                </div>
               </div>
             )}
             <p className="result-description">{historyDetail.full_description}</p>
