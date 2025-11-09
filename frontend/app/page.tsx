@@ -751,7 +751,7 @@ export default function HomePage() {
                 setAuthVisible(true);
               }}
             >
-              Đăng nhập hoặc đăng ký
+              Đăng Nhập
             </button>
           )}
         </div>
@@ -867,15 +867,6 @@ export default function HomePage() {
                       <button className="ghost-button" type="button" onClick={startCamera}>
                         Mở camera
                       </button>
-                      {activeImage && (
-                        <button
-                          className="ghost-button ghost-button--danger"
-                          type="button"
-                          onClick={() => handleRemoveImage(activeImage.id)}
-                        >
-                          Xóa ảnh đang chọn
-                        </button>
-                      )}
                     </>
                   )}
                 </div>
@@ -884,14 +875,24 @@ export default function HomePage() {
                 {cameraActive ? (
                   <video ref={videoRef} className="preview-frame" autoPlay playsInline muted />
                 ) : activeImage ? (
-                  <Image
-                    src={activeImage.previewUrl}
-                    alt="Ảnh xem trước"
-                    width={600}
-                    height={400}
-                    className="preview-frame"
-                    unoptimized
-                  />
+                  <div className="preview-frame-wrapper">
+                    <button
+                      type="button"
+                      className="preview-remove"
+                      aria-label="Xóa ảnh đang xem"
+                      onClick={() => handleRemoveImage(activeImage.id)}
+                    >
+                      X
+                    </button>
+                    <Image
+                      src={activeImage.previewUrl}
+                      alt="Ảnh xem trước"
+                      width={600}
+                      height={400}
+                      className="preview-frame"
+                      unoptimized
+                    />
+                  </div>
                 ) : (
                   <div className="preview-placeholder">
                     Chưa có ảnh. Tải lên hoặc mở camera để chọn ảnh.

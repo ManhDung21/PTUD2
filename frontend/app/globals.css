@@ -348,6 +348,36 @@ button {
   justify-content: center;
 }
 
+.preview-frame-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+}
+
+.preview-remove {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(15, 23, 42, 0.65);
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.preview-remove:hover {
+  background: rgba(15, 23, 42, 0.85);
+  transform: translateY(-1px);
+}
+
 .preview-frame {
   width: 100%;
   border-radius: calc(var(--radius-lg) - 6px);
