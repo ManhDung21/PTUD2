@@ -663,6 +663,17 @@ textarea {
   width: min(100%, 720px);
 }
 
+.modal-card--history .preview-surface {
+  padding: clamp(8px, 2vw, 16px);
+}
+
+.modal-card--history .preview-frame-wrapper {
+  width: 100%;
+  max-width: 560px;
+  height: clamp(220px, 40vh, 320px);
+  margin: 0 auto;
+}
+
 .modal-header {
   display: flex;
   justify-content: space-between;
