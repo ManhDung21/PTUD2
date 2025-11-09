@@ -19,10 +19,30 @@ const formatVietnamTime = (timestamp?: string | null): string => {
   if (Number.isNaN(date.getTime())) {
     return timestamp;
   }
-  return date.toLocaleString("vi-VN", {
+
+  const formatter = new Intl.DateTimeFormat("vi-VN", {
     timeZone: "Asia/Ho_Chi_Minh",
     hour12: false,
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
   });
+
+  const parts = formatter.formatToParts(date).reduce<Record<string, string>>((acc, part) => {
+    if (part.type && part.value) {
+      acc[part.type] = part.value;
+    }
+    return acc;
+  }, {});
+
+  if (parts.hour && parts.minute && parts.second && parts.day && parts.month && parts.year) {
+    return `${parts.hour}:${parts.minute}:${parts.second} ${parts.day}/${parts.month}/${parts.year}`;
+  }
+
+  return formatter.format(date);
 };
 
 type TabKey = "image" | "text";
@@ -742,17 +762,30 @@ export default function HomePage() {
               </div>
             </div>
           ) : (
-            <button
-              className="primary-button"
-              type="button"
-              onClick={() => {
-                changeAuthMode("login");
-                setAuthForm({ identifier: "", password: "" });
-                setAuthVisible(true);
-              }}
-            >
-              Đăng Nhập
-            </button>
+            <div className="stack stack--sm align-end">
+              <button
+                className="primary-button"
+                type="button"
+                onClick={() => {
+                  changeAuthMode("login");
+                  setAuthForm({ identifier: "", password: "" });
+                  setAuthVisible(true);
+                }}
+              >
+                Đăng Nhập
+              </button>
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={() => {
+                  changeAuthMode("register");
+                  setAuthForm({ identifier: "", password: "" });
+                  setAuthVisible(true);
+                }}
+              >
+                Đăng ký
+              </button>
+            </div>
           )}
         </div>
       </section>
