@@ -331,6 +331,7 @@ button {
   justify-content: center;
   cursor: pointer;
   transition: background 0.2s ease;
+  z-index: 2;
 }
 
 .thumb-remove:hover {
@@ -376,6 +377,7 @@ button {
   justify-content: center;
   cursor: pointer;
   transition: background 0.2s ease, transform 0.2s ease;
+  z-index: 2;
 }
 
 .preview-remove:hover {
