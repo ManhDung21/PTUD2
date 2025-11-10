@@ -1,6 +1,6 @@
 """History helpers for converting MongoDB documents to API responses."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Iterable, Optional
 
@@ -8,6 +8,24 @@ from bson import ObjectId
 from pymongo.collection import Collection
 
 from ..db.models import DescriptionDocument
+
+
+def _ensure_utc(value: datetime | str | None) -> datetime:
+    """Convert stored timestamps to UTC-aware datetimes for consistent API responses."""
+    if isinstance(value, datetime):
+        dt = value
+    elif isinstance(value, str):
+        try:
+            normalized = value.replace("Z", "+00:00")
+            dt = datetime.fromisoformat(normalized)
+        except ValueError:
+            dt = datetime.now(timezone.utc)
+    else:
+        dt = datetime.now(timezone.utc)
+
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
 
 
 def _image_url(image_path: Optional[str]) -> Optional[str]:
@@ -37,7 +55,7 @@ def _image_url(image_path: Optional[str]) -> Optional[str]:
 
 def history_item_from_doc(description: DescriptionDocument) -> Dict[str, str | None]:
     content = description.get("content", "")
-    timestamp = description.get("timestamp") or datetime.utcnow()
+    timestamp = _ensure_utc(description.get("timestamp"))
     return {
         "id": str(description.get("_id", "")),
         "timestamp": timestamp.isoformat(),

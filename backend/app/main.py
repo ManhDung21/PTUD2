@@ -1,7 +1,7 @@
 """FastAPI application entrypoint backed by MongoDB."""
 
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from pathlib import Path
 from typing import Optional
@@ -32,6 +32,29 @@ from .schemas import (
 )
 from .services import auth, content, email as email_service, history as history_service
 from .services import cloudinary_service
+
+
+def utc_now() -> datetime:
+    """Return timezone-aware current UTC datetime."""
+    return datetime.now(timezone.utc)
+
+
+def _ensure_utc_datetime(value: datetime | str | None) -> datetime:
+    """Normalize stored timestamps (string or naive datetime) to UTC-aware datetime."""
+    if isinstance(value, datetime):
+        dt = value
+    elif isinstance(value, str):
+        try:
+            normalized = value.replace("Z", "+00:00")
+            dt = datetime.fromisoformat(normalized)
+        except ValueError:
+            dt = utc_now()
+    else:
+        dt = utc_now()
+
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
 
 def is_email(identifier: str) -> bool:
     """Kiểm tra xem identifier có phải là email không."""
@@ -85,7 +108,7 @@ def _token_subject(user: UserDocument) -> str:
 
 
 def _user_out(user: UserDocument) -> UserOut:
-    created_at = user.get("created_at", datetime.utcnow())
+    created_at = _ensure_utc_datetime(user.get("created_at"))
     return UserOut(
         id=str(user["_id"]),
         email=user.get("email"),
@@ -139,7 +162,7 @@ def seed_admin_user() -> None:
         "email": email,
         "phone_number": None,
         "hashed_password": auth.hash_password("123456"),
-        "created_at": datetime.utcnow(),
+        "created_at": utc_now(),
     }
     users.insert_one(admin)
 
@@ -187,7 +210,7 @@ def register(payload: UserCreate, db: Database = Depends(get_database)) -> Token
 
     user: UserDocument = {
         "hashed_password": auth.hash_password(payload.password),
-        "created_at": datetime.utcnow(),
+        "created_at": utc_now(),
     }
 
     if email is not None:
@@ -237,8 +260,8 @@ def forgot_password(
     reset_entry: PasswordResetTokenDocument = {
         "user_id": user["_id"],
         "token_hash": token_hash,
-        "created_at": datetime.utcnow(),
-        "expires_at": datetime.utcnow() + timedelta(minutes=30),
+        "created_at": utc_now(),
+        "expires_at": utc_now() + timedelta(minutes=30),
         "used": False,
     }
     result = tokens.insert_one(reset_entry)
@@ -281,7 +304,8 @@ def reset_password(
     if not token_entry or not auth.match_reset_token(payload.token, token_entry["token_hash"]):
         raise HTTPException(status_code=400, detail="Mã xác thực không hợp lệ")
 
-    if token_entry.get("expires_at", datetime.utcnow()) < datetime.utcnow():
+    expires_at = _ensure_utc_datetime(token_entry.get("expires_at"))
+    if expires_at < utc_now():
         tokens.update_one({"_id": token_entry["_id"]}, {"$set": {"used": True}})
         raise HTTPException(status_code=400, detail="Mã xác thực đã hết hạn")
 
@@ -403,7 +427,7 @@ async def generate_description_from_image(
     if current_user:
         description_doc: DescriptionDocument = {
             "user_id": current_user["_id"],
-            "timestamp": datetime.utcnow(),
+            "timestamp": utc_now(),
             "source": "image",
             "style": style,
             "content": description_text,
@@ -415,7 +439,7 @@ async def generate_description_from_image(
     return DescriptionResponse(
         description=description_text,
         history_id=history_payload["id"] if history_payload else "",
-        timestamp=history_payload["timestamp"] if history_payload else datetime.utcnow().isoformat(),
+        timestamp=history_payload["timestamp"] if history_payload else utc_now().isoformat(),
         style=style,
         source="image",
         image_url=history_payload.get("image_url") if history_payload else image_url,
@@ -438,7 +462,7 @@ async def generate_description_from_text(
     if current_user:
         description_doc: DescriptionDocument = {
             "user_id": current_user["_id"],
-            "timestamp": datetime.utcnow(),
+            "timestamp": utc_now(),
             "source": "text",
             "style": payload.style,
             "content": description_text,
@@ -450,7 +474,7 @@ async def generate_description_from_text(
     return DescriptionResponse(
         description=description_text,
         history_id=history_payload["id"] if history_payload else "",
-        timestamp=history_payload["timestamp"] if history_payload else datetime.utcnow().isoformat(),
+        timestamp=history_payload["timestamp"] if history_payload else utc_now().isoformat(),
         style=payload.style,
         source="text",
         image_url=history_payload.get("image_url") if history_payload else None,
