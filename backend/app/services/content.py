@@ -45,7 +45,7 @@ def get_style_prompt(style: str) -> str:
 
 
 def _image_prompt(style: str) -> str:
-    return f"""Viết mô tả bán hàng cho sản phẩm TRÁI CÂY trong hình ảnh.(nhận diện hình ảnh nếu không phải hình ảnh hãy trả lại cho tôi câu nói"Ảnh bạn cung cấp không phải là trái cây tôi không thể tả mô tả") 
+    return f"""Viết mô tả bán hàng cho sản phẩm TRÁI CÂY trong hình ảnh.(nhận diện hình ảnh nếu không phải hình ảnh hãy trả lại cho tôi câu nói"Ảnh bạn cung cấp không phải là trái cây tôi không thể tạo mô tả!!") 
 {get_style_prompt(style)}
 
 Trả về theo định dạng:
