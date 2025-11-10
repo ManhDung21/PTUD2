@@ -63,6 +63,7 @@ Trả về theo định dạng:
 • [Giá trị dinh dưỡng]
 
 🌟 Lợi ích:
+(Ngắn gọn súc tích)
 [1-2 lợi ích thực tế]
 
 🎁 Cam kết :
@@ -90,27 +91,28 @@ Trả về theo định dạng:
 ✨ [Slogan 1 câu sáng tạo]
 
 📝 Mô tả:
-[30-70 từ khơi gợi cảm xúc về nguồn gốc, hương vị, giá trị và lợi ích]
+[30-40 từ khơi gợi cảm xúc về nguồn gốc, hương vị, giá trị và lợi ích]
 
-💎 Điểm nổi bật:
+💎 Điểm nổi bật(ngắn gọn 20-25 từ):
 • [Chất lượng/quy trình]
-• [Nguồn gốc/vùng trồng]
-• [Hương vị tự nhiên]
+• [Hương vị đặc trưng]
 • [Giá trị dinh dưỡng]
 
 🌟 Lợi ích:
-[1-2 lợi ích cho sức khỏe và cảm xúc]
+(Ngắn gọn súc tích)
+[1-2 lợi ích thực tế]
 
-🎁 Cam kết:
-[Chất lượng, giao hàng, hỗ trợ, đổi trả]
+🎁 Cam kết :
+(ngắn gọn 10- 20 từ khoá)
+[Chất lượng, giao hàng, hỗ trợ]
 
-🍽️ Gợi ý:
-[1-2 cách sử dụng sáng tạo]
+🍽️ Gợi ý(ngắn gọn 10-20 từ):
+[1-2 cách sử dụng]
 
 #️⃣ Từ khóa:
 [1-2 hashtag/từ khóa]
 
-Viết TIẾNG VIỆT tự nhiên, truyền cảm hứng. Không dùng dấu *.
+Viết TIẾNG VIỆT tự nhiên, giàu cảm xúc. Không dùng dấu *.
 """
 
 
