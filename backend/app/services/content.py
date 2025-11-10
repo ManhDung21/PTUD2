@@ -55,9 +55,9 @@ Trả về theo định dạng:
 ✨ [Slogan 1 câu ấn tượng]
 
 📝 Mô tả:
-[30-50 từ sinh động về trải nghiệm, nguồn gốc, hương vị và lợi ích]
+[20-40 từ sinh động về trải nghiệm, nguồn gốc, hương vị và lợi ích]
 
-💎 Điểm nổi bật:
+💎 Điểm nổi bật(ngắn gọn 20-25 từ):
 • [Chất lượng/quy trình]
 • [Hương vị đặc trưng]
 • [Giá trị dinh dưỡng]
@@ -65,10 +65,11 @@ Trả về theo định dạng:
 🌟 Lợi ích:
 [1-2 lợi ích thực tế]
 
-🎁 Cam kết:
+🎁 Cam kết :
+(ngắn gọn 10- 20 từ khoá)
 [Chất lượng, giao hàng, hỗ trợ]
 
-🍽️ Gợi ý:
+🍽️ Gợi ý(ngắn gọn 10-20 từ):
 [1-2 cách sử dụng]
 
 #️⃣ Từ khóa:
