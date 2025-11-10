@@ -63,7 +63,7 @@ Trả về theo định dạng:
 • [Giá trị dinh dưỡng]
 
 🌟 Lợi ích:
-(Ngắn gọn súc tích)
+(Ngắn gọn súc tích khoảng 10-20 từ)
 [1-2 lợi ích thực tế]
 
 🎁 Cam kết :
