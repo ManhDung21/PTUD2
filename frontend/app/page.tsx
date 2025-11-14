@@ -302,7 +302,7 @@ export default function HomePage() {
             const profile =
               profilePayload?.data?.user ||
               profilePayload?.data?.users?.[0] ||
-              null;z``
+              null;
             setTikTokProfile(profile);
           }
         } catch (profileError) {
