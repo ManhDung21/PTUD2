@@ -98,7 +98,7 @@ export function UsageGuideContent({ actionSlot, description, onBackToHome }: Usa
           <div>
             <p style={{ margin: 0, color: "var(--accent-lime)", fontWeight: 600 }}>Hướng dẫn sử dụng</p>
             <h1 style={{ margin: "6px 0 12px", fontSize: 40, lineHeight: 1.1 }}>
-              Khai thác AI mô tả sản phẩm trái cây
+              Khai thác FruiText AI mô tả sản phẩm trái cây
             </h1>
             <p style={{ margin: 0, color: "var(--text-secondary)" }}>
               {description ??

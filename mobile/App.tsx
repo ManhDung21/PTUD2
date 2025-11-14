@@ -77,7 +77,7 @@ const readEnvValue = (...keys: string[]): string | undefined => {
 };
 
 const APP_SCHEME =
-  getExtraValue('appScheme') ?? readEnvValue('EXPO_PUBLIC_APP_SCHEME', 'APP_SCHEME') ?? 'fruitmate';
+  getExtraValue('appScheme') ?? readEnvValue('EXPO_PUBLIC_APP_SCHEME', 'APP_SCHEME') ?? 'fruitext';
 const DEFAULT_REDIRECT_URI = AuthSession.makeRedirectUri({ scheme: APP_SCHEME });
 const FACEBOOK_APP_ID =
   getExtraValue('facebookAppId') ??
@@ -138,7 +138,7 @@ if (__DEV__) {
   console.log('[mobile] API base URL:', API_BASE_URL);
 }
 
-const STORAGE_KEYS = { token: 'fruitmate-token' };
+const STORAGE_KEYS = { token: 'fruitext-token' };
 
 const DEFAULT_STYLES = ['Tiếp thị', 'Chuyên nghiệp', 'Thân thiện', 'Kể chuyện'];
 const QUICK_STEPS = [

@@ -53,7 +53,7 @@ const resolveApiBaseUrl = () => {
 
 export default ({ config }: ConfigContext): ExpoConfig => {
   const apiBaseUrl = resolveApiBaseUrl();
-  const scheme = readEnvValue('EXPO_PUBLIC_APP_SCHEME', 'APP_SCHEME') ?? 'fruitmate';
+  const scheme = readEnvValue('EXPO_PUBLIC_APP_SCHEME', 'APP_SCHEME') ?? 'fruitext';
   const facebookAppId = readEnvValue('EXPO_PUBLIC_FACEBOOK_APP_ID', 'FACEBOOK_APP_ID');
   const facebookRedirectUri = readEnvValue(
     'EXPO_PUBLIC_FACEBOOK_REDIRECT_URI',
@@ -70,7 +70,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   );
   const shareFallbackUrl =
     readEnvValue('EXPO_PUBLIC_SHARE_FALLBACK_URL', 'SHARE_FALLBACK_URL') ??
-    'https://fruitmate.app';
+    'https://fruitext.ai';
 
   return {
     name: 'mobile',

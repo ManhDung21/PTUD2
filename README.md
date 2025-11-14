@@ -1,4 +1,4 @@
-# 🍎 AI Mô Tả Sản Phẩm Trái Cây Tự Động
+# 🍎 FruiText AI - Mô Tả Sản Phẩm Trái Cây Tự Động
 
 Ứng dụng web AI thông minh giúp tạo mô tả sản phẩm trái cây chuyên nghiệp cho sàn thương mại điện tử, sử dụng Google Gemini AI với kiến trúc FastAPI + Next.js.
 
@@ -305,14 +305,14 @@ Facebook Login + TikTok Login/Share now power both the Expo mobile app (`mobile/
 | Target | Variable | Description |
 | ------ | -------- | ----------- |
 | Web / Mobile | EXPO_PUBLIC_API_BASE_URL / NEXT_PUBLIC_API_BASE_URL | Existing API base URL, required for all features |
-| Mobile (Expo) | EXPO_PUBLIC_APP_SCHEME (optional) | Custom scheme used for deep links (defaults to fruitmate) |
+| Mobile (Expo) | EXPO_PUBLIC_APP_SCHEME (optional) | Custom scheme used for deep links (defaults to fruitext) |
 | Web + Mobile | EXPO_PUBLIC_FACEBOOK_APP_ID / NEXT_PUBLIC_FACEBOOK_APP_ID | Facebook App ID created in the Meta developer portal |
-| Mobile | EXPO_PUBLIC_FACEBOOK_REDIRECT_URI | URI configured in Meta for the Expo client (e.g. fruitmate://auth) |
+| Mobile | EXPO_PUBLIC_FACEBOOK_REDIRECT_URI | URI configured in Meta for the Expo client (e.g. fruitext://auth) |
 | Web + Mobile | EXPO_PUBLIC_TIKTOK_CLIENT_KEY / NEXT_PUBLIC_TIKTOK_CLIENT_KEY | TikTok client key from developer portal |
 | Web + Mobile | EXPO_PUBLIC_TIKTOK_CLIENT_SECRET / NEXT_PUBLIC_TIKTOK_CLIENT_SECRET | TikTok client secret (needed for exchanging OAuth codes) |
-| Mobile | EXPO_PUBLIC_TIKTOK_REDIRECT_URI | Deep link handled by the mobile client (e.g. fruitmate://tiktok-share) |
+| Mobile | EXPO_PUBLIC_TIKTOK_REDIRECT_URI | Deep link handled by the mobile client (e.g. fruitext://tiktok-share) |
 | Web | NEXT_PUBLIC_TIKTOK_REDIRECT_URI | Must point to `https://<your-host>/api/tiktok/callback` (dev default: `http://localhost:3000/api/tiktok/callback`) |
-| Web + Mobile | EXPO_PUBLIC_SHARE_FALLBACK_URL / NEXT_PUBLIC_SHARE_FALLBACK_URL | Public URL Facebook can crawl when the generated image is not reachable (defaults to https://fruitmate.app) |
+| Web + Mobile | EXPO_PUBLIC_SHARE_FALLBACK_URL / NEXT_PUBLIC_SHARE_FALLBACK_URL | Public URL Facebook can crawl when the generated image is not reachable (defaults to https://fruitext.ai) |
 
 After updating the .env files:
 

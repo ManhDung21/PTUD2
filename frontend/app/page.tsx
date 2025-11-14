@@ -120,7 +120,7 @@ const FACEBOOK_APP_ID = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID ?? "";
 const TIKTOK_CLIENT_KEY = process.env.NEXT_PUBLIC_TIKTOK_CLIENT_KEY ?? "";
 const TIKTOK_CLIENT_SECRET = process.env.NEXT_PUBLIC_TIKTOK_CLIENT_SECRET ?? "";
 const TIKTOK_REDIRECT_URI = process.env.NEXT_PUBLIC_TIKTOK_REDIRECT_URI ?? "";
-const SHARE_FALLBACK_URL = process.env.NEXT_PUBLIC_SHARE_FALLBACK_URL ?? "https://fruitmate.app";
+const SHARE_FALLBACK_URL = process.env.NEXT_PUBLIC_SHARE_FALLBACK_URL ?? "https://fruitext.ai";
 
 declare global {
   interface Window {
@@ -475,7 +475,7 @@ export default function HomePage() {
             method: "share",
             href,
             quote,
-            hashtag: "#FruitmateAI",
+            hashtag: "#FruiTextAI",
           },
           (response: Record<string, unknown>) => {
             if (response && "error_message" in response) {
@@ -513,7 +513,7 @@ export default function HomePage() {
       if (shareCaption && navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(shareCaption);
       }
-      const fileName = `fruitmate-${Date.now()}.jpg`;
+      const fileName = `fruitext-${Date.now()}.jpg`;
       await downloadImageForShare(resultImageSrc, fileName);
       if (typeof window !== "undefined") {
         window.open("https://www.tiktok.com/upload?lang=vi-VN", "_blank", "noopener");
@@ -1079,9 +1079,9 @@ export default function HomePage() {
     <main className="page-shell">
       <section className="hero-card">
         <div className="hero-info">
-          <h1 className="hero-title">AI Mô Tả Sản Phẩm Trái Cây</h1>
+          <h1 className="hero-title">FruiText AI - Mô Tả Sản Phẩm Trái Cây</h1>
           <p className="hero-subtitle">
-            Biến hình ảnh thành lời nói bán hàng. AI tự động viết mô tả trái cây hấp dẫn, giúp bạn chốt đơn nhanh hơn. Tải ảnh lên và trải nghiệm ngay!
+            FruiText AI biến mọi hình ảnh thành nội dung bán hàng hấp dẫn: mô tả chuẩn SEO, tự động, sẵn sàng đăng tải sau vài giây.
           </p>
           <div className="hero-actions">
             <button type="button" className="secondary-button" onClick={() => setGuideVisible(true)}>
@@ -1365,7 +1365,7 @@ export default function HomePage() {
               type="button"
               onClick={() => navigator.clipboard.writeText(result.description)}
             >
-              Sao chep
+              Sao Chép
             </button>
             <button
               className="secondary-button"
