@@ -29,6 +29,16 @@ const loadEnvIfExists = (relativePath: string) => {
 loadEnvIfExists('.env');
 loadEnvIfExists('../.env');
 
+const readEnvValue = (...keys: string[]): string | undefined => {
+  for (const key of keys) {
+    const value = process.env[key];
+    if (typeof value === 'string' && value.trim().length > 0) {
+      return value;
+    }
+  }
+  return undefined;
+};
+
 const resolveApiBaseUrl = () => {
   const envSources: EnvRecord = {
     EXPO_PUBLIC_API_BASE_URL: process.env.EXPO_PUBLIC_API_BASE_URL ?? '',
@@ -43,11 +53,30 @@ const resolveApiBaseUrl = () => {
 
 export default ({ config }: ConfigContext): ExpoConfig => {
   const apiBaseUrl = resolveApiBaseUrl();
+  const scheme = readEnvValue('EXPO_PUBLIC_APP_SCHEME', 'APP_SCHEME') ?? 'fruitmate';
+  const facebookAppId = readEnvValue('EXPO_PUBLIC_FACEBOOK_APP_ID', 'FACEBOOK_APP_ID');
+  const facebookRedirectUri = readEnvValue(
+    'EXPO_PUBLIC_FACEBOOK_REDIRECT_URI',
+    'FACEBOOK_REDIRECT_URI'
+  );
+  const tiktokClientKey = readEnvValue('EXPO_PUBLIC_TIKTOK_CLIENT_KEY', 'TIKTOK_CLIENT_KEY');
+  const tiktokClientSecret = readEnvValue(
+    'EXPO_PUBLIC_TIKTOK_CLIENT_SECRET',
+    'TIKTOK_CLIENT_SECRET'
+  );
+  const tiktokRedirectUri = readEnvValue(
+    'EXPO_PUBLIC_TIKTOK_REDIRECT_URI',
+    'TIKTOK_REDIRECT_URI'
+  );
+  const shareFallbackUrl =
+    readEnvValue('EXPO_PUBLIC_SHARE_FALLBACK_URL', 'SHARE_FALLBACK_URL') ??
+    'https://fruitmate.app';
 
   return {
     name: 'mobile',
     slug: 'mobile',
     version: '1.0.0',
+    scheme,
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'light',
@@ -67,14 +96,31 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       },
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
-      usesCleartextTraffic: apiBaseUrl.startsWith('http://'),
     },
     web: {
       favicon: './assets/favicon.png',
     },
     extra: {
       apiBaseUrl,
+      appScheme: scheme,
+      facebookAppId,
+      facebookRedirectUri,
+      tiktokClientKey,
+      tiktokClientSecret,
+      tiktokRedirectUri,
+      shareFallbackUrl,
     },
+    plugins: [
+      [
+        'expo-build-properties',
+        {
+          android: {
+            usesCleartextTraffic: apiBaseUrl.startsWith('http://'),
+          },
+        },
+      ],
+      'expo-web-browser',
+    ],
     experiments: {
       typedRoutes: true,
     },

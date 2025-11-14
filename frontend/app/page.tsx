@@ -108,6 +108,46 @@ const resolveImageUrl = (url?: string | null): string | null => {
   return url.startsWith("http://") || url.startsWith("https://") ? url : `${API_BASE_URL}${url}`;
 };
 
+const composeShareCaption = (style?: string, description?: string | null): string => {
+  const cleaned = cleanDescription(description ?? "");
+  if (!cleaned) {
+    return "";
+  }
+  return style ? `${style}\n\n${cleaned}` : cleaned;
+};
+
+const FACEBOOK_APP_ID = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID ?? "";
+const TIKTOK_CLIENT_KEY = process.env.NEXT_PUBLIC_TIKTOK_CLIENT_KEY ?? "";
+const TIKTOK_CLIENT_SECRET = process.env.NEXT_PUBLIC_TIKTOK_CLIENT_SECRET ?? "";
+const TIKTOK_REDIRECT_URI = process.env.NEXT_PUBLIC_TIKTOK_REDIRECT_URI ?? "";
+const SHARE_FALLBACK_URL = process.env.NEXT_PUBLIC_SHARE_FALLBACK_URL ?? "https://fruitmate.app";
+
+declare global {
+  interface Window {
+    FB?: {
+      init: (options: Record<string, unknown>) => void;
+      login: (
+        callback: (response: { status: string }) => void,
+        options?: Record<string, unknown>,
+      ) => void;
+      api: (
+        path: string,
+        method: "get" | "post" | "delete" | "GET" | "POST" | "DELETE",
+        params: Record<string, unknown>,
+        callback: (response: Record<string, unknown>) => void,
+      ) => void;
+      ui: (
+        params: Record<string, unknown>,
+        callback?: (response: Record<string, unknown>) => void,
+      ) => void;
+      getLoginStatus: (
+        callback: (response: { status: string }) => void,
+      ) => void;
+    };
+    fbAsyncInit?: () => void;
+  }
+}
+
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<TabKey>("image");
   const [styles, setStyles] = useState<string[]>(DEFAULT_STYLES);
@@ -122,12 +162,20 @@ export default function HomePage() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const previewsRef = useRef<string[]>([]);
+  const tiktokStateRef = useRef<string | null>(null);
+  const tiktokResolverRef = useRef<((value: string | null) => void) | null>(null);
   const [cameraActive, setCameraActive] = useState(false);
 
   const [productInfo, setProductInfo] = useState<string>("");
 
   const [result, setResult] = useState<DescriptionResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const resultImageSrc = useMemo(() => resolveImageUrl(result?.image_url), [result]);
+  const shareCaption = useMemo(
+    () => composeShareCaption(result?.style, result?.description),
+    [result],
+  );
+  const canShareToTikTok = Boolean(resultImageSrc);
 
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -143,6 +191,11 @@ export default function HomePage() {
   const [toast, setToast] = useState<ToastState | null>(null);
   const [authMessage, setAuthMessage] = useState<{ type: ToastKind; message: string } | null>(null);
   const [guideVisible, setGuideVisible] = useState(false);
+  const [shareLoading, setShareLoading] = useState({ facebook: false, tiktok: false });
+  const [facebookProfile, setFacebookProfile] = useState<{ name?: string } | null>(null);
+  const [facebookReady, setFacebookReady] = useState(false);
+  const [tiktokProfile, setTikTokProfile] = useState<{ display_name?: string } | null>(null);
+  const [tiktokToken, setTikTokToken] = useState<string | null>(null);
 
   const showToast = useCallback((type: ToastKind, message: string) => {
     const id = Date.now();
@@ -163,6 +216,34 @@ export default function HomePage() {
     }
   }, []);
 
+  useEffect(() => {
+    if (!FACEBOOK_APP_ID || typeof window === "undefined") {
+      return;
+    }
+    if (window.FB) {
+      setFacebookReady(true);
+      return;
+    }
+    window.fbAsyncInit = () => {
+      window.FB?.init({
+        appId: FACEBOOK_APP_ID,
+        cookie: true,
+        xfbml: false,
+        version: "v19.0",
+      });
+      setFacebookReady(true);
+    };
+    const existing = document.getElementById("facebook-jssdk");
+    if (existing) {
+      return;
+    }
+    const script = document.createElement("script");
+    script.id = "facebook-jssdk";
+    script.src = "https://connect.facebook.net/en_US/sdk.js";
+    script.async = true;
+    document.body.appendChild(script);
+  }, []);
+
   const fetchProtectedData = useCallback(async (jwt: string) => {
     try {
       axios.defaults.headers.common.Authorization = `Bearer ${jwt}`;
@@ -180,6 +261,274 @@ export default function HomePage() {
       }
     }
   }, [showToast]);
+
+  const exchangeTikTokCode = useCallback(
+    async (code: string) => {
+      if (!TIKTOK_CLIENT_KEY || !TIKTOK_CLIENT_SECRET || !TIKTOK_REDIRECT_URI) {
+        showToast("error", "Thiếu cấu hình TikTok (client key/secret/redirect).");
+        tiktokResolverRef.current?.(null);
+        tiktokResolverRef.current = null;
+        tiktokStateRef.current = null;
+        return;
+      }
+      try {
+        const params = new URLSearchParams({
+          client_key: TIKTOK_CLIENT_KEY,
+          client_secret: TIKTOK_CLIENT_SECRET,
+          code,
+          grant_type: "authorization_code",
+          redirect_uri: TIKTOK_REDIRECT_URI,
+        });
+        const response = await fetch("https://open.tiktokapis.com/v2/oauth/token/", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: params.toString(),
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload?.access_token) {
+          throw new Error(payload?.error_description || "TikTok token exchange failed");
+        }
+        const accessToken = payload.access_token as string;
+        setTikTokToken(accessToken);
+        try {
+          const profileResponse = await fetch(
+            "https://open.tiktokapis.com/v2/user/info/?fields=open_id,display_name,avatar_url",
+            {
+              headers: { Authorization: `Bearer ${accessToken}` },
+            },
+          );
+          const profilePayload = await profileResponse.json();
+          if (profileResponse.ok) {
+            const profile =
+              profilePayload?.data?.user ||
+              profilePayload?.data?.users?.[0] ||
+              null;z``
+            setTikTokProfile(profile);
+          }
+        } catch (profileError) {
+          console.warn("tiktok profile error", profileError);
+        }
+        tiktokResolverRef.current?.(accessToken);
+      } catch (error) {
+        console.error("tiktok token error", error);
+        showToast("error", "Không thể kết nối đăng nhập TikTok.");
+        tiktokResolverRef.current?.(null);
+      } finally {
+        tiktokResolverRef.current = null;
+        tiktokStateRef.current = null;
+      }
+    },
+    [showToast],
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const handler = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) {
+        return;
+      }
+      const data = event.data;
+      if (!data || data.source !== "tiktok-oauth") {
+        return;
+      }
+      if (tiktokStateRef.current && data.state && data.state !== tiktokStateRef.current) {
+        return;
+      }
+      if (data.error) {
+        showToast("error", data.error === "access_denied" ? "Đã huỷ đăng nhập TikTok." : `TikTok: ${data.error}`);
+        tiktokResolverRef.current?.(null);
+        tiktokResolverRef.current = null;
+        tiktokStateRef.current = null;
+        return;
+      }
+      if (data.code) {
+        void exchangeTikTokCode(data.code as string);
+      }
+    };
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
+  }, [exchangeTikTokCode, showToast]);
+
+  const startTikTokLogin = useCallback(() => {
+    if (!TIKTOK_CLIENT_KEY || !TIKTOK_REDIRECT_URI) {
+      showToast("error", "Chưa cấu hình TikTok Login.");
+      return null;
+    }
+    if (typeof window === "undefined") {
+      showToast("error", "TikTok Login chỉ hoạt động trong trình duyệt.");
+      return null;
+    }
+    const state = window.crypto?.randomUUID?.() ?? `${Date.now()}`;
+    tiktokStateRef.current = state;
+    const authUrl = new URL("https://www.tiktok.com/auth/authorize/");
+    authUrl.searchParams.set("client_key", TIKTOK_CLIENT_KEY);
+    authUrl.searchParams.set("scope", "user.info.basic");
+    authUrl.searchParams.set("response_type", "code");
+    authUrl.searchParams.set("redirect_uri", TIKTOK_REDIRECT_URI);
+    authUrl.searchParams.set("state", state);
+    const popup = window.open(authUrl.toString(), "tiktok-oauth", "width=460,height=720");
+    if (!popup) {
+      showToast("error", "Trình duyệt đã chặn cửa sổ đăng nhập TikTok.");
+      return null;
+    }
+    popup.focus();
+    return popup;
+  }, [showToast]);
+
+  const ensureTikTokToken = useCallback(async (): Promise<string | null> => {
+    if (tiktokToken) {
+      return tiktokToken;
+    }
+    if (!TIKTOK_CLIENT_KEY || !TIKTOK_CLIENT_SECRET || !TIKTOK_REDIRECT_URI) {
+      showToast("error", "Thiếu cấu hình TikTok (client key/secret/redirect).");
+      return null;
+    }
+    if (typeof window === "undefined") {
+      showToast("error", "TikTok Login chỉ hoạt động trong trình duyệt.");
+      return null;
+    }
+    return await new Promise<string | null>((resolve) => {
+      tiktokResolverRef.current = resolve;
+      const popup = startTikTokLogin();
+      if (!popup) {
+        resolve(null);
+      }
+    });
+  }, [showToast, startTikTokLogin, tiktokToken]);
+
+  const ensureFacebookProfile = useCallback(async () => {
+    if (!FACEBOOK_APP_ID) {
+      showToast("error", "Chưa cấu hình Facebook Login.");
+      return null;
+    }
+    if (typeof window === "undefined" || !window.FB) {
+      showToast("error", "Facebook SDK chưa sẵn sàng, vui lòng thử lại.");
+      return null;
+    }
+    if (!facebookReady) {
+      showToast("error", "Facebook SDK đang tải, thử lại sau vài giây.");
+      return null;
+    }
+    const loginResponse = await new Promise<{ status: string }>((resolve) => {
+      window.FB!.login((response) => resolve(response), { scope: "public_profile,email" });
+    });
+    if (loginResponse.status !== "connected") {
+      showToast("error", "Đã huỷ đăng nhập Facebook.");
+      return null;
+    }
+    const profile = await new Promise<{ id: string; name?: string; email?: string }>((resolve, reject) => {
+      window.FB!.api(
+        "/me",
+        "GET",
+        { fields: "id,name,email" },
+        (response: Record<string, unknown>) => {
+          if (!response) {
+            reject(new Error("Không nhận được phản hồi từ Facebook."));
+            return;
+          }
+          if ("error" in response) {
+            reject(new Error((response.error as { message?: string })?.message ?? "Facebook API error"));
+            return;
+          }
+          resolve(response as { id: string; name?: string; email?: string });
+        },
+      );
+    });
+    setFacebookProfile(profile);
+    return profile;
+  }, [facebookReady, showToast]);
+
+  const downloadImageForShare = useCallback(async (imageUrl: string, fileName: string) => {
+    const response = await fetch(imageUrl);
+    if (!response.ok) {
+      throw new Error("Không thể tải ảnh chia sẻ.");
+    }
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(objectUrl);
+  }, []);
+
+  const handleShareToFacebook = useCallback(async () => {
+    if (!result) {
+      showToast("error", "Hãy tạo mô tả trước khi chia sẻ.");
+      return;
+    }
+    setShareLoading((state) => ({ ...state, facebook: true }));
+    try {
+      const profile = await ensureFacebookProfile();
+      if (!profile) {
+        return;
+      }
+      const href = resultImageSrc ?? SHARE_FALLBACK_URL;
+      const quote = shareCaption || result.description;
+      await new Promise<void>((resolve, reject) => {
+        window.FB!.ui(
+          {
+            method: "share",
+            href,
+            quote,
+            hashtag: "#FruitmateAI",
+          },
+          (response: Record<string, unknown>) => {
+            if (response && "error_message" in response) {
+              reject(new Error((response.error_message as string) || "Facebook Share Dialog error"));
+              return;
+            }
+            resolve();
+          },
+        );
+      });
+      showToast("success", "Đã mở Facebook Share Dialog, hãy xác nhận để đăng.");
+    } catch (error) {
+      console.error("facebook share error", error);
+      showToast("error", "Không thể chia sẻ lên Facebook.");
+    } finally {
+      setShareLoading((state) => ({ ...state, facebook: false }));
+    }
+  }, [ensureFacebookProfile, result, resultImageSrc, shareCaption, showToast]);
+
+  const handleShareToTikTok = useCallback(async () => {
+    if (!result) {
+      showToast("error", "Hãy tạo mô tả trước khi chia sẻ.");
+      return;
+    }
+    if (!resultImageSrc) {
+      showToast("error", "TikTok cần mô tả có ảnh minh hoạ.");
+      return;
+    }
+    setShareLoading((state) => ({ ...state, tiktok: true }));
+    try {
+      const tokenValue = await ensureTikTokToken();
+      if (!tokenValue) {
+        return;
+      }
+      if (shareCaption && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareCaption);
+      }
+      const fileName = `fruitmate-${Date.now()}.jpg`;
+      await downloadImageForShare(resultImageSrc, fileName);
+      if (typeof window !== "undefined") {
+        window.open("https://www.tiktok.com/upload?lang=vi-VN", "_blank", "noopener");
+      }
+      showToast(
+        "success",
+        "Đã sao chép caption và tải ảnh. Mở TikTok để dán nội dung & đăng thủ công.",
+      );
+    } catch (error) {
+      console.error("tiktok share error", error);
+      showToast("error", "Không thể chuẩn bị nội dung TikTok.");
+    } finally {
+      setShareLoading((state) => ({ ...state, tiktok: false }));
+    }
+  }, [downloadImageForShare, ensureTikTokToken, result, resultImageSrc, shareCaption, showToast]);
 
   const stopCamera = useCallback(() => {
     const stream = streamRef.current;
@@ -714,7 +1063,6 @@ export default function HomePage() {
     return images[0];
   }, [images, selectedImageId]);
 
-    const resultImageSrc = useMemo(() => resolveImageUrl(result?.image_url), [result]);
   const resultTimestamp = result?.timestamp ? formatVietnamTime(result.timestamp) : null;
   const resultSourceLabel =
     result?.source === "image" ? "Hình ảnh" : result?.source === "text" ? "Văn bản" : null;
@@ -1017,8 +1365,41 @@ export default function HomePage() {
               type="button"
               onClick={() => navigator.clipboard.writeText(result.description)}
             >
-              Sao chép
+              Sao chep
             </button>
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={handleShareToFacebook}
+              disabled={shareLoading.facebook}
+            >
+              {shareLoading.facebook ? "Dang mo Facebook..." : "Chia se Facebook"}
+            </button>
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={handleShareToTikTok}
+              disabled={shareLoading.tiktok || !canShareToTikTok}
+            >
+              {shareLoading.tiktok ? "Chuan bi TikTok..." : "Chia se TikTok"}
+            </button>
+          </div>
+          <div className="share-status">
+            <p className="share-status__text">
+              Facebook: {" "}
+              {facebookProfile?.name ? `Da ket noi ${facebookProfile.name}` : "Chua dang nhap"}
+            </p>
+            <p className="share-status__text">
+              TikTok: {" "}
+              {tiktokProfile?.display_name
+                ? `Da xac thuc ${tiktokProfile.display_name}`
+                : "Chua dang nhap"}
+            </p>
+            {!canShareToTikTok && (
+              <p className="share-status__text share-status__text--warning">
+                TikTok can mot ket qua co anh minh hoa.
+              </p>
+            )}
           </div>
         </section>
       )}

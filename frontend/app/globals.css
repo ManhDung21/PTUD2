@@ -120,6 +120,23 @@ button {
   justify-content: flex-end;
 }
 
+.share-status {
+  margin-top: 12px;
+  display: grid;
+  gap: 4px;
+}
+
+.share-status__text {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.share-status__text--warning {
+  color: var(--accent-orange);
+  font-weight: 600;
+}
+
 .hero-card {
   background: var(--surface-base);
   box-shadow: var(--shadow-soft);

@@ -297,3 +297,27 @@ Nếu gặp lỗi:
 ## 📄 License
 
 MIT License - Tự do sử dụng cho mục đích cá nhân và thương mại.
+
+## Social sharing configuration
+
+Facebook Login + TikTok Login/Share now power both the Expo mobile app (`mobile/`) and the Next.js web client (`frontend/`). Define the environment values below before running either target:
+
+| Target | Variable | Description |
+| ------ | -------- | ----------- |
+| Web / Mobile | EXPO_PUBLIC_API_BASE_URL / NEXT_PUBLIC_API_BASE_URL | Existing API base URL, required for all features |
+| Mobile (Expo) | EXPO_PUBLIC_APP_SCHEME (optional) | Custom scheme used for deep links (defaults to fruitmate) |
+| Web + Mobile | EXPO_PUBLIC_FACEBOOK_APP_ID / NEXT_PUBLIC_FACEBOOK_APP_ID | Facebook App ID created in the Meta developer portal |
+| Mobile | EXPO_PUBLIC_FACEBOOK_REDIRECT_URI | URI configured in Meta for the Expo client (e.g. fruitmate://auth) |
+| Web + Mobile | EXPO_PUBLIC_TIKTOK_CLIENT_KEY / NEXT_PUBLIC_TIKTOK_CLIENT_KEY | TikTok client key from developer portal |
+| Web + Mobile | EXPO_PUBLIC_TIKTOK_CLIENT_SECRET / NEXT_PUBLIC_TIKTOK_CLIENT_SECRET | TikTok client secret (needed for exchanging OAuth codes) |
+| Mobile | EXPO_PUBLIC_TIKTOK_REDIRECT_URI | Deep link handled by the mobile client (e.g. fruitmate://tiktok-share) |
+| Web | NEXT_PUBLIC_TIKTOK_REDIRECT_URI | Must point to `https://<your-host>/api/tiktok/callback` (dev default: `http://localhost:3000/api/tiktok/callback`) |
+| Web + Mobile | EXPO_PUBLIC_SHARE_FALLBACK_URL / NEXT_PUBLIC_SHARE_FALLBACK_URL | Public URL Facebook can crawl when the generated image is not reachable (defaults to https://fruitmate.app) |
+
+After updating the .env files:
+
+1. Register the redirect URIs inside Facebook Login and TikTok developer consoles.
+2. For TikTok, enable the user.info.basic scope and add the redirect URI exactly as configured above (including protocol and path).
+3. Restart Expo (mobile/) and Next.js (frontend/) dev servers so the new public env values are picked up.
+4. On web, the TikTok OAuth popup uses /api/tiktok/callback; ensure that route stays reachable behind whatever proxy/hosting stack you deploy to.
+

@@ -5,6 +5,7 @@ import {
   GestureResponderEvent,
   Image,
   Modal,
+  Platform,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -22,18 +23,82 @@ import { StatusBar } from 'expo-status-bar';
 import Constants from 'expo-constants';
 import * as ImagePicker from 'expo-image-picker';
 import * as Clipboard from 'expo-clipboard';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import * as WebBrowser from 'expo-web-browser';
+import * as AuthSession from 'expo-auth-session';
+import * as FacebookAuth from 'expo-auth-session/providers/facebook';
+import * as Linking from 'expo-linking';
 import { Picker } from '@react-native-picker/picker';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 
+WebBrowser.maybeCompleteAuthSession();
+
 declare const process: { env?: Record<string, string | undefined> } | undefined;
 
-type ExpoExtra = { apiBaseUrl?: string };
+type ExpoExtra = {
+  apiBaseUrl?: string;
+  appScheme?: string;
+  facebookAppId?: string;
+  facebookRedirectUri?: string;
+  tiktokClientKey?: string;
+  tiktokClientSecret?: string;
+  tiktokRedirectUri?: string;
+  shareFallbackUrl?: string;
+};
 
 const extraSources: ExpoExtra[] = [
   (Constants.expoConfig?.extra ?? {}) as ExpoExtra,
   ((Constants.manifest2 as { extra?: ExpoExtra } | null)?.extra) ?? {},
   ((Constants.manifest as { extra?: ExpoExtra } | null)?.extra) ?? {},
 ];
+
+const getExtraValue = <K extends keyof ExpoExtra>(key: K): ExpoExtra[K] | undefined => {
+  for (const source of extraSources) {
+    const value = source?.[key];
+    if (value) {
+      return value;
+    }
+  }
+  return undefined;
+};
+
+const readEnvValue = (...keys: string[]): string | undefined => {
+  if (typeof process === 'undefined' || !process?.env) {
+    return undefined;
+  }
+  for (const key of keys) {
+    const value = process.env[key];
+    if (typeof value === 'string' && value.trim().length > 0) {
+      return value;
+    }
+  }
+  return undefined;
+};
+
+const APP_SCHEME =
+  getExtraValue('appScheme') ?? readEnvValue('EXPO_PUBLIC_APP_SCHEME', 'APP_SCHEME') ?? 'fruitmate';
+const DEFAULT_REDIRECT_URI = AuthSession.makeRedirectUri({ scheme: APP_SCHEME });
+const FACEBOOK_APP_ID =
+  getExtraValue('facebookAppId') ??
+  readEnvValue('EXPO_PUBLIC_FACEBOOK_APP_ID', 'FACEBOOK_APP_ID') ??
+  '';
+const FACEBOOK_REDIRECT_URI =
+  getExtraValue('facebookRedirectUri') ??
+  readEnvValue('EXPO_PUBLIC_FACEBOOK_REDIRECT_URI', 'FACEBOOK_REDIRECT_URI') ??
+  DEFAULT_REDIRECT_URI;
+const TIKTOK_CLIENT_KEY =
+  getExtraValue('tiktokClientKey') ??
+  readEnvValue('EXPO_PUBLIC_TIKTOK_CLIENT_KEY', 'TIKTOK_CLIENT_KEY') ??
+  '';
+const TIKTOK_CLIENT_SECRET =
+  getExtraValue('tiktokClientSecret') ??
+  readEnvValue('EXPO_PUBLIC_TIKTOK_CLIENT_SECRET', 'TIKTOK_CLIENT_SECRET') ??
+  '';
+const TIKTOK_REDIRECT_URI =
+  getExtraValue('tiktokRedirectUri') ??
+  readEnvValue('EXPO_PUBLIC_TIKTOK_REDIRECT_URI', 'TIKTOK_REDIRECT_URI') ??
+  AuthSession.makeRedirectUri({ scheme: APP_SCHEME, path: 'tiktok-share' });
 
 const envApiBaseUrl =
   (typeof process !== 'undefined' && process?.env?.EXPO_PUBLIC_API_BASE_URL) ||
@@ -62,6 +127,11 @@ const API_BASE_URL =
   envApiBaseUrl ||
   deriveLanApiBase() ||
   'http://localhost:8000';
+
+const SHARE_FALLBACK_URL =
+  getExtraValue('shareFallbackUrl') ??
+  readEnvValue('EXPO_PUBLIC_SHARE_FALLBACK_URL', 'SHARE_FALLBACK_URL') ??
+  API_BASE_URL;
 
 if (__DEV__) {
   // eslint-disable-next-line no-console
@@ -160,6 +230,19 @@ interface User {
   created_at: string;
 }
 
+interface FacebookProfile {
+  id: string;
+  name: string;
+  email?: string;
+  picture?: { data?: { url?: string } };
+}
+
+interface TikTokProfile {
+  open_id: string;
+  display_name?: string;
+  avatar_url?: string;
+}
+
 interface TokenResponse {
   access_token: string;
   token_type: string;
@@ -201,6 +284,14 @@ function resolveImageUrl(url?: string | null): string | null {
 
 function cleanDescription(value?: string | null): string {
   return value?.replace(/\s+/g, ' ').trim() ?? '';
+}
+
+function composeShareCaption(style?: string | null, description?: string | null): string {
+  const cleaned = cleanDescription(description);
+  if (!cleaned) {
+    return '';
+  }
+  return style ? `${style}\n\n${cleaned}` : cleaned;
 }
 
 const GRADIENT_COLORS = ['#fef3c7', '#e0f2fe', '#f8f5ff'] as const;
@@ -501,6 +592,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginTop: 20,
+  },
+  shareStatusRow: {
+    marginTop: 10,
+  },
+  shareStatusText: {
+    fontSize: 12,
+    color: '#64748b',
+    marginBottom: 4,
   },
   historyList: {
     marginTop: 16,
@@ -1006,6 +1105,24 @@ function HomeScreen(): ReactElement {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [historyDetail, setHistoryDetail] = useState<HistoryItem | null>(null);
 
+  const resultImageUrl = useMemo(() => resolveImageUrl(result?.image_url), [result]);
+  const sharePayload = useMemo(() => {
+    if (!result) {
+      return null;
+    }
+    return {
+      caption: composeShareCaption(result.style, result.description),
+      imageUrl: resultImageUrl,
+    };
+  }, [result, resultImageUrl]);
+  const canShareToTikTok = Boolean(sharePayload?.imageUrl);
+
+  const [facebookProfile, setFacebookProfile] = useState<FacebookProfile | null>(null);
+  const [facebookToken, setFacebookToken] = useState<string | null>(null);
+  const [tiktokProfile, setTikTokProfile] = useState<TikTokProfile | null>(null);
+  const [tiktokToken, setTikTokToken] = useState<string | null>(null);
+  const [shareLoading, setShareLoading] = useState({ facebook: false, tiktok: false });
+
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
 
@@ -1038,6 +1155,25 @@ function HomeScreen(): ReactElement {
 
   const [toast, setToast] = useState<ToastState | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [, , promptFacebookLogin] = FacebookAuth.useAuthRequest({
+    clientId: FACEBOOK_APP_ID || '000000000000000',
+    scopes: ['public_profile', 'email'],
+    redirectUri: FACEBOOK_REDIRECT_URI,
+    responseType: AuthSession.ResponseType.Token,
+  });
+
+  const [tikTokRequest, , promptTikTokLogin] = AuthSession.useAuthRequest(
+    {
+      clientId: TIKTOK_CLIENT_KEY || 'missing-client',
+      scopes: ['user.info.basic'],
+      redirectUri: TIKTOK_REDIRECT_URI,
+      responseType: AuthSession.ResponseType.Code,
+      usePKCE: true,
+      extraParams: { state: 'tiktok-share' },
+    },
+    { authorizationEndpoint: 'https://www.tiktok.com/auth/authorize/' }
+  );
 
   const isAuthenticated = Boolean(token && user);
 
@@ -1077,6 +1213,137 @@ function HomeScreen(): ReactElement {
     setToast(null);
   }, []);
 
+  const fetchFacebookProfile = useCallback(
+    async (accessToken: string): Promise<FacebookProfile | null> => {
+      try {
+        const response = await fetch(
+          `https://graph.facebook.com/v19.0/me?fields=id,name,email,picture&access_token=${accessToken}`
+        );
+        const payload = await response.json();
+        if (!response.ok) {
+          throw new Error(payload?.error?.message ?? 'Facebook profile error');
+        }
+        setFacebookProfile(payload as FacebookProfile);
+        return payload as FacebookProfile;
+      } catch (error) {
+        console.warn('facebook profile error', error);
+        showToast('error', 'Khong lay duoc thong tin Facebook.');
+        return null;
+      }
+    },
+    [showToast]
+  );
+
+  const fetchTikTokProfile = useCallback(
+    async (accessToken: string): Promise<TikTokProfile | null> => {
+      try {
+        const response = await fetch(
+          'https://open.tiktokapis.com/v2/user/info/?fields=open_id,display_name,avatar_url',
+          {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          }
+        );
+        const payload = await response.json();
+        if (!response.ok) {
+          throw new Error(payload?.error?.message ?? 'TikTok profile error');
+        }
+        const profile: TikTokProfile | null =
+          payload?.data?.user ?? payload?.data?.users?.[0] ?? payload?.user ?? null;
+        if (profile) {
+          setTikTokProfile(profile);
+        }
+        return profile;
+      } catch (error) {
+        console.warn('tiktok profile error', error);
+        showToast('error', 'Khong lay duoc thong tin TikTok.');
+        return null;
+      }
+    },
+    [showToast]
+  );
+
+  const ensureFacebookToken = useCallback(async (): Promise<string | null> => {
+    if (facebookToken) {
+      return facebookToken;
+    }
+    if (!FACEBOOK_APP_ID) {
+      showToast('error', 'Chua cau hinh Facebook App ID.');
+      return null;
+    }
+    try {
+      const result = await promptFacebookLogin();
+      if (!result || result.type !== 'success' || !result.authentication?.accessToken) {
+        showToast('error', 'Da huy dang nhap Facebook.');
+        return null;
+      }
+      const accessToken = result.authentication.accessToken;
+      setFacebookToken(accessToken);
+      void fetchFacebookProfile(accessToken);
+      return accessToken;
+    } catch (error) {
+      console.warn('facebook login error', error);
+      showToast('error', 'Khong ket noi Facebook Login.');
+      return null;
+    }
+  }, [facebookToken, fetchFacebookProfile, promptFacebookLogin, showToast]);
+
+  const ensureTikTokToken = useCallback(async (): Promise<string | null> => {
+    if (tiktokToken) {
+      return tiktokToken;
+    }
+    if (!TIKTOK_CLIENT_KEY || !TIKTOK_CLIENT_SECRET) {
+      showToast('error', 'Chua cau hinh TikTok client key/secret.');
+      return null;
+    }
+    if (!tikTokRequest) {
+      showToast('error', 'TikTok Login chua san sang, vui long thu lai.');
+      return null;
+    }
+    try {
+      const authResult = await promptTikTokLogin();
+      if (!authResult || authResult.type !== 'success') {
+        showToast('error', 'Da huy dang nhap TikTok.');
+        return null;
+      }
+      const code = authResult.params?.code;
+      if (!code) {
+        showToast('error', 'TikTok khong tra ve ma xac thuc.');
+        return null;
+      }
+      const params = new URLSearchParams({
+        client_key: TIKTOK_CLIENT_KEY,
+        client_secret: TIKTOK_CLIENT_SECRET,
+        code,
+        grant_type: 'authorization_code',
+      });
+      if (tikTokRequest.codeVerifier) {
+        params.append('code_verifier', tikTokRequest.codeVerifier);
+      }
+      const response = await fetch('https://open.tiktokapis.com/v2/oauth/token/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString(),
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload?.access_token) {
+        throw new Error(payload?.error_description ?? 'TikTok token exchange failed');
+      }
+      const accessToken = payload.access_token as string;
+      setTikTokToken(accessToken);
+      void fetchTikTokProfile(accessToken);
+      return accessToken;
+    } catch (error) {
+      console.warn('tiktok login error', error);
+      showToast('error', 'Khong ket noi dang nhap TikTok.');
+      return null;
+    }
+  }, [
+    fetchTikTokProfile,
+    promptTikTokLogin,
+    showToast,
+    tikTokRequest,
+    tiktokToken,
+  ]);
   const fetchStyles = useCallback(async () => {
     try {
       const response = await api.get<string[]>('/api/styles');
@@ -1229,6 +1496,11 @@ function HomeScreen(): ReactElement {
     setToken(null);
     setUser(null);
     setHistory([]);
+    setFacebookToken(null);
+    setFacebookProfile(null);
+    setTikTokToken(null);
+    setTikTokProfile(null);
+    setShareLoading({ facebook: false, tiktok: false });
     void AsyncStorage.removeItem(STORAGE_KEYS.token);
     showToast('success', 'Đã đăng xuất.');
   }, [showToast]);
@@ -1501,6 +1773,103 @@ function HomeScreen(): ReactElement {
     }
   }, [result, showToast]);
 
+  const handleShareToFacebook = useCallback(async () => {
+    if (!sharePayload) {
+      showToast('error', 'Chưa có nội dung để chia sẻ lên Facebook.');
+      return;
+    }
+    if (!FACEBOOK_APP_ID) {
+      showToast('error', 'Chưa cấu hình Facebook App ID.');
+      return;
+    }
+    setShareLoading((state) => ({ ...state, facebook: true }));
+    try {
+      const tokenValue = await ensureFacebookToken();
+      if (!tokenValue) {
+        return;
+      }
+      const href = sharePayload.imageUrl ?? SHARE_FALLBACK_URL;
+      const params = new URLSearchParams({
+        app_id: FACEBOOK_APP_ID,
+        display: Platform.OS === 'ios' ? 'touch' : 'popup',
+        href,
+        redirect_uri: FACEBOOK_REDIRECT_URI,
+      });
+      if (sharePayload.caption) {
+        params.set('quote', sharePayload.caption);
+      }
+      const dialogUrl = `https://www.facebook.com/dialog/share?${params.toString()}`;
+      await WebBrowser.openBrowserAsync(dialogUrl, {
+        controlsColor: PRIMARY_ACCENT,
+        dismissButtonStyle: 'done',
+      });
+      showToast('success', 'Đã mở Facebook Share Dialog. Hãy xác nhận trước khi đăng.');
+    } catch (error) {
+      console.warn('facebook share error', error);
+      showToast('error', 'Không thể mở Facebook Share Dialog.');
+    } finally {
+      setShareLoading((state) => ({ ...state, facebook: false }));
+    }
+  }, [ensureFacebookToken, sharePayload, showToast]);
+
+  const handleShareToTikTok = useCallback(async () => {
+    if (!sharePayload) {
+      showToast('error', 'Chưa có nội dung để chia sẻ lên TikTok.');
+      return;
+    }
+    if (!sharePayload.imageUrl) {
+      showToast('error', 'TikTok yêu cầu ít nhất một ảnh hoặc video.');
+      return;
+    }
+    setShareLoading((state) => ({ ...state, tiktok: true }));
+    try {
+      const tokenValue = await ensureTikTokToken();
+      if (!tokenValue) {
+        return;
+      }
+      const canShare = await Sharing.isAvailableAsync();
+      if (sharePayload.caption) {
+        await Clipboard.setStringAsync(sharePayload.caption);
+      }
+      if (canShare) {
+        const strippedName =
+          sharePayload.imageUrl.split('?')[0]?.split('/').pop() ?? 'tiktok-share.jpg';
+        const extension = strippedName.includes('.') ? strippedName.split('.').pop() : 'jpg';
+        const downloadDirectory = FileSystem.Paths.cache ?? FileSystem.Paths.document;
+        const tempFile = new FileSystem.File(
+          downloadDirectory,
+          `tiktok-share-${Date.now()}.${extension}`
+        );
+        const downloadResult = await FileSystem.downloadAsync(sharePayload.imageUrl, tempFile.uri);
+        try {
+          await Sharing.shareAsync(downloadResult.uri, {
+            mimeType: 'image/jpeg',
+            dialogTitle: 'Chia sẻ sang TikTok',
+          });
+        } finally {
+          await FileSystem.deleteAsync(tempFile.uri, { idempotent: true }).catch(() => undefined);
+        }
+      } else {
+        const deepLink = 'snssdk1128://main?tab=CREATE';
+        const canOpenTikTok = await Linking.canOpenURL(deepLink);
+        if (canOpenTikTok) {
+          await Linking.openURL(deepLink);
+        } else {
+          await WebBrowser.openBrowserAsync('https://www.tiktok.com/upload?lang=vi-VN');
+        }
+      }
+      showToast(
+        'success',
+        'Đã sao chép caption. Hãy dán nội dung trong TikTok trước khi đăng thủ công.'
+      );
+    } catch (error) {
+      console.warn('tiktok share error', error);
+      showToast('error', 'Không thể mở TikTok Share Kit.');
+    } finally {
+      setShareLoading((state) => ({ ...state, tiktok: false }));
+    }
+  }, [ensureTikTokToken, sharePayload, showToast]);
+
   const handleApplyHistory = useCallback(() => {
     if (!historyDetail) {
       return;
@@ -1541,7 +1910,6 @@ function HomeScreen(): ReactElement {
   }, []);
 
   const accountIdentifier = user?.email || user?.phone_number || '';
-  const resultImageUrl = resolveImageUrl(result?.image_url);
   const authTitle =
     authMode === 'login'
       ? 'Đăng nhập'
@@ -1999,6 +2367,47 @@ function HomeScreen(): ReactElement {
                         onPress={handleCopyResult}
                         style={{ marginBottom: 10 }}
                       />
+                      <SecondaryButton
+                        title={shareLoading.facebook ? 'Đang mở Facebook...' : 'Chia sẻ Facebook'}
+                        icon={
+                          <MaterialCommunityIcons name="facebook" size={18} color={PRIMARY_ACCENT} />
+                        }
+                        onPress={() => {
+                          void handleShareToFacebook();
+                        }}
+                        disabled={shareLoading.facebook}
+                      />
+                      <SecondaryButton
+                        title={shareLoading.tiktok ? 'Chuẩn bị TikTok...' : 'Chia sẻ TikTok'}
+                        icon={
+                          <MaterialCommunityIcons
+                            name="music-circle"
+                            size={18}
+                            color={PRIMARY_ACCENT}
+                          />
+                        }
+                        onPress={() => {
+                          void handleShareToTikTok();
+                        }}
+                        disabled={shareLoading.tiktok || !canShareToTikTok}
+                      />
+                    </View>
+                    <View style={styles.shareStatusRow}>
+                      <Text style={styles.shareStatusText}>
+                        Facebook:{' '}
+                        {facebookProfile?.name ? `Đăng với ${facebookProfile.name}` : 'Chưa đăng nhập'}
+                      </Text>
+                      <Text style={styles.shareStatusText}>
+                        TikTok:{' '}
+                        {tiktokProfile?.display_name
+                          ? `Đã xác thực ${tiktokProfile.display_name}`
+                          : 'Chưa đăng nhập'}
+                      </Text>
+                      {canShareToTikTok ? null : (
+                        <Text style={styles.shareStatusText}>
+                          TikTok cần kết quả có ảnh để dựng bài.
+                        </Text>
+                      )}
                     </View>
                   </>
                 ) : (
