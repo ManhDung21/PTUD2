@@ -14,10 +14,20 @@ async def generate_speech(text: str, voice: str = "vi-VN-HoaiMyNeural") -> io.By
     Returns:
         io.BytesIO: Buffer containing the audio data (mp3).
     """
-    communicate = edge_tts.Communicate(text, voice)
-    audio_data = b""
-    async for chunk in communicate.stream():
-        if chunk["type"] == "audio":
-            audio_data += chunk["data"]
-            
-    return io.BytesIO(audio_data)
+    try:
+        communicate = edge_tts.Communicate(text, voice)
+        audio_data = b""
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio":
+                audio_data += chunk["data"]
+        return io.BytesIO(audio_data)
+    except Exception as e:
+        print(f"Edge-TTS failed: {e}. Falling back to gTTS.")
+        from gtts import gTTS
+        
+        # Fallback to gTTS
+        tts = gTTS(text=text, lang='vi')
+        fp = io.BytesIO()
+        tts.write_to_fp(fp)
+        fp.seek(0)
+        return fp
