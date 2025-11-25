@@ -276,9 +276,10 @@ export default function HomePage() {
         // Store audio instance to stop it later if needed
         (window as any).currentAudio = audio;
 
-      } catch (error) {
+      } catch (error: any) {
         console.error("TTS error:", error);
-        showToast("error", "Không thể tạo giọng đọc. Vui lòng thử lại.");
+        const errorMessage = error?.response?.data?.detail || "Không thể tạo giọng đọc. Vui lòng thử lại.";
+        showToast("error", errorMessage);
         setIsReading(false);
         setSpeakingSource(null);
         speakingSourceRef.current = null;

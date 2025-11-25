@@ -522,7 +522,11 @@ async def text_to_speech(
     if not text:
         raise HTTPException(status_code=400, detail="Vui lòng cung cấp văn bản")
         
-    audio_buffer = await tts.generate_speech(text)
+    try:
+        audio_buffer = await tts.generate_speech(text)
+    except Exception as e:
+        print(f"TTS Generation Error: {e}")
+        raise HTTPException(status_code=500, detail=f"Lỗi tạo giọng đọc: {str(e)}")
     
     return StreamingResponse(
         audio_buffer,
