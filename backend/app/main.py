@@ -419,7 +419,12 @@ async def generate_description_from_image(
         except Exception:  # noqa: BLE001
             pass
 
-    description_text = content.generate_from_image(settings.gemini_api_key, image, style)
+    try:
+        description_text = content.generate_from_image(settings.gemini_api_key, image, style)
+    except Exception as e:
+        print(f"Gemini Image Generation Error: {e}")
+        raise HTTPException(status_code=500, detail=f"Lỗi tạo mô tả từ ảnh: {str(e)}")
+
     if not description_text:
         raise HTTPException(status_code=502, detail="Không tạo được mô tả từ hình ảnh")
 
@@ -454,7 +459,12 @@ async def generate_description_from_text(
 ) -> DescriptionResponse:
     settings = get_settings()
 
-    description_text = content.generate_from_text(settings.gemini_api_key, payload.product_info, payload.style)
+    try:
+        description_text = content.generate_from_text(settings.gemini_api_key, payload.product_info, payload.style)
+    except Exception as e:
+        print(f"Gemini Text Generation Error: {e}")
+        raise HTTPException(status_code=500, detail=f"Lỗi tạo mô tả từ văn bản: {str(e)}")
+
     if not description_text:
         raise HTTPException(status_code=502, detail="Không tạo được mô tả từ văn bản")
 
