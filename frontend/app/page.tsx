@@ -827,6 +827,32 @@ export default function HomePage() {
     const imageToSubmit = activeImage;
     if (!imageToSubmit) {
       showToast("error", "Vui lòng thêm ít nhất một hình ảnh hợp lệ.");
+      return;
+    }
+    setLoading(true);
+    clearToast();
+    try {
+      const formData = new FormData();
+      formData.append("file", imageToSubmit.file);
+      formData.append("style", selectedStyle);
+
+      const { data } = await axios.post<DescriptionResponse>(
+        `${API_BASE_URL}/api/descriptions/image`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+
+      setResult(data);
+      if (token) {
+        await refreshHistory();
+        showToast("success", "Đã tạo mô tả từ hình ảnh và lưu vào lịch sử");
+      } else {
+        showToast("success", "Đã tạo mô tả từ hình ảnh. Đăng nhập để lưu lịch sử!");
+      }
+    } catch (err: any) {
+      if (handleUnauthorized(err)) {
+        return;
+      }
       const detail = err?.response?.data?.detail ?? "Không thể tạo mô tả";
       showToast("error", detail);
     } finally {
