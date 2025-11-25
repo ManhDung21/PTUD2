@@ -1,0 +1,64 @@
+  const handleToggleSpeech = useCallback(
+    async (text: string, source: "result" | "history") => {
+      const cleaned = cleanDescription(text);
+      if (!cleaned) {
+        showToast("error", "Không có mô tả để đọc.");
+        return;
+      }
+
+      // Stop any current reading
+      if (isReading) {
+        stopSpeech();
+        if (speakingSource === source && speechTextRef.current === cleaned) {
+          return;
+        }
+      }
+
+      setIsReading(true);
+      setSpeakingSource(source);
+      speakingSourceRef.current = source;
+      speechTextRef.current = cleaned;
+
+      try {
+        const response = await axios.post(
+          `${API_BASE_URL}/api/tts`,
+          { product_info: cleaned, style: "" }, // Reuse GenerateTextRequest schema
+          { responseType: "blob" }
+        );
+
+        const audioUrl = URL.createObjectURL(response.data);
+        const audio = new Audio(audioUrl);
+        
+        audio.onended = () => {
+          setIsReading(false);
+          setSpeakingSource(null);
+          speakingSourceRef.current = null;
+          speechTextRef.current = null;
+          URL.revokeObjectURL(audioUrl);
+        };
+
+        audio.onerror = () => {
+          showToast("error", "Lỗi khi phát âm thanh.");
+          setIsReading(false);
+          setSpeakingSource(null);
+          speakingSourceRef.current = null;
+          speechTextRef.current = null;
+          URL.revokeObjectURL(audioUrl);
+        };
+
+        await audio.play();
+        
+        // Store audio instance to stop it later if needed
+        (window as any).currentAudio = audio;
+
+      } catch (error) {
+        console.error("TTS error:", error);
+        showToast("error", "Không thể tạo giọng đọc. Vui lòng thử lại.");
+        setIsReading(false);
+        setSpeakingSource(null);
+        speakingSourceRef.current = null;
+        speechTextRef.current = null;
+      }
+    },
+    [isReading, speakingSource, showToast, stopSpeech],
+  );

@@ -213,14 +213,80 @@ export default function HomePage() {
   }, []);
 
   const stopSpeech = useCallback(() => {
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
+    if ((window as any).currentAudio) {
+      (window as any).currentAudio.pause();
+      (window as any).currentAudio = null;
     }
     speechTextRef.current = null;
     setIsReading(false);
     setSpeakingSource(null);
     speakingSourceRef.current = null;
   }, []);
+
+  const handleToggleSpeech = useCallback(
+    async (text: string, source: "result" | "history") => {
+      const cleaned = cleanDescription(text);
+      if (!cleaned) {
+        showToast("error", "Không có mô tả để đọc.");
+        return;
+      }
+
+      // Stop any current reading
+      if (isReading) {
+        stopSpeech();
+        if (speakingSource === source && speechTextRef.current === cleaned) {
+          return;
+        }
+      }
+
+      setIsReading(true);
+      setSpeakingSource(source);
+      speakingSourceRef.current = source;
+      speechTextRef.current = cleaned;
+
+      try {
+        const response = await axios.post(
+          `${API_BASE_URL}/api/tts`,
+          { product_info: cleaned, style: "" }, // Reuse GenerateTextRequest schema
+          { responseType: "blob" }
+        );
+
+        const audioUrl = URL.createObjectURL(response.data);
+        const audio = new Audio(audioUrl);
+
+        audio.onended = () => {
+          setIsReading(false);
+          setSpeakingSource(null);
+          speakingSourceRef.current = null;
+          speechTextRef.current = null;
+          URL.revokeObjectURL(audioUrl);
+        };
+
+        audio.onerror = () => {
+          showToast("error", "Lỗi khi phát âm thanh.");
+          setIsReading(false);
+          setSpeakingSource(null);
+          speakingSourceRef.current = null;
+          speechTextRef.current = null;
+          URL.revokeObjectURL(audioUrl);
+        };
+
+        await audio.play();
+
+        // Store audio instance to stop it later if needed
+        (window as any).currentAudio = audio;
+
+      } catch (error) {
+        console.error("TTS error:", error);
+        showToast("error", "Không thể tạo giọng đọc. Vui lòng thử lại.");
+        setIsReading(false);
+        setSpeakingSource(null);
+        speakingSourceRef.current = null;
+        speechTextRef.current = null;
+      }
+    },
+    [isReading, speakingSource, showToast, stopSpeech],
+  );
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -232,99 +298,6 @@ export default function HomePage() {
       setSpeechSupported(false);
     }
     return () => {
-      stopSpeech();
-    };
-  }, [stopSpeech]);
-
-  const handleToggleSpeech = useCallback(
-    (text: string, source: "result" | "history") => {
-      const cleaned = cleanDescription(text);
-      if (!cleaned) {
-        showToast("error", "Không có mô tả để đọc.");
-        return;
-      }
-      if (
-        !speechSupported ||
-        typeof window === "undefined" ||
-        !("speechSynthesis" in window)
-      ) {
-        showToast("error", "Trình duyệt của bạn chưa hỗ trợ đọc mô tả.");
-        return;
-      }
-      if (
-        isReading &&
-        speakingSource === source &&
-        speechTextRef.current === cleaned
-      ) {
-        stopSpeech();
-        return;
-      }
-
-      const synth = window.speechSynthesis;
-
-      // Cancel any ongoing speech
-      synth.cancel();
-
-      const speak = () => {
-        const utterance = new SpeechSynthesisUtterance(cleaned);
-        utterance.lang = "vi-VN";
-        utterance.rate = 1;
-        utterance.pitch = 1;
-
-        // Try to find a Vietnamese voice
-        const voices = synth.getVoices();
-        const vietnameseVoice = voices.find(
-          (v) => v.lang.includes("vi") || v.lang === "vi-VN"
-        );
-
-        if (vietnameseVoice) {
-          utterance.voice = vietnameseVoice;
-        } else {
-          console.warn("No Vietnamese voice found, falling back to default.");
-        }
-
-        utterance.onend = () => {
-          speechTextRef.current = null;
-          setIsReading(false);
-          setSpeakingSource(null);
-          speakingSourceRef.current = null;
-        };
-
-        utterance.onerror = (e) => {
-          console.error("Speech error:", e);
-          speechTextRef.current = null;
-          setIsReading(false);
-          setSpeakingSource(null);
-          speakingSourceRef.current = null;
-          if (e.error !== 'interrupted' && e.error !== 'canceled') {
-            showToast("error", "Không thể đọc mô tả, vui lòng thử lại.");
-          }
-        };
-
-        setIsReading(true);
-        setSpeakingSource(source);
-        speakingSourceRef.current = source;
-        speechTextRef.current = cleaned;
-
-        synth.speak(utterance);
-      };
-
-      // Ensure voices are loaded
-      if (synth.getVoices().length === 0) {
-        synth.onvoiceschanged = () => {
-          synth.onvoiceschanged = null;
-          speak();
-        };
-      } else {
-        speak();
-      }
-    },
-    [isReading, showToast, speechSupported, speakingSource, stopSpeech],
-  );
-
-  useEffect(() => {
-    if (speakingSourceRef.current === "result") {
-      stopSpeech();
     }
   }, [result?.description, stopSpeech]);
 

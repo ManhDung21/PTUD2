@@ -9,7 +9,7 @@ from uuid import uuid4
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from PIL import Image, UnidentifiedImageError
 from pymongo.collection import Collection
@@ -30,7 +30,7 @@ from .schemas import (
     UserCreate,
     UserOut,
 )
-from .services import auth, content, email as email_service, history as history_service
+from .services import auth, content, email as email_service, history as history_service, tts
 from .services import cloudinary_service
 
 
@@ -509,3 +509,23 @@ def get_all_users(
     """Get all users (no authentication required)."""
     users = _users_collection(db).find()
     return [_user_out(user) for user in users]
+
+
+@app.post("/api/tts")
+async def text_to_speech(
+    payload: GenerateTextRequest,
+    current_user: Optional[UserDocument] = Depends(get_current_user_optional),
+) -> StreamingResponse:
+    """Generate speech from text using Edge-TTS."""
+    # Use product_info as the text to speak
+    text = payload.product_info
+    if not text:
+        raise HTTPException(status_code=400, detail="Vui lòng cung cấp văn bản")
+        
+    audio_buffer = await tts.generate_speech(text)
+    
+    return StreamingResponse(
+        audio_buffer,
+        media_type="audio/mpeg",
+        headers={"Content-Disposition": "attachment; filename=speech.mp3"}
+    )
