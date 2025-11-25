@@ -196,6 +196,13 @@ export default function HomePage() {
   const [facebookReady, setFacebookReady] = useState(false);
   const [tiktokProfile, setTikTokProfile] = useState<{ display_name?: string } | null>(null);
   const [tiktokToken, setTikTokToken] = useState<string | null>(null);
+  const [speechSupported, setSpeechSupported] = useState(
+    () => typeof window !== "undefined" && "speechSynthesis" in window,
+  );
+  const [isReading, setIsReading] = useState(false);
+  const [speakingSource, setSpeakingSource] = useState<"result" | "history" | null>(null);
+  const speechTextRef = useRef<string | null>(null);
+  const speakingSourceRef = useRef<"result" | "history" | null>(null);
 
   const showToast = useCallback((type: ToastKind, message: string) => {
     const id = Date.now();
@@ -204,6 +211,93 @@ export default function HomePage() {
       setToast((current) => (current && current.id === id ? null : current));
     }, 4000);
   }, []);
+
+  const stopSpeech = useCallback(() => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+    speechTextRef.current = null;
+    setIsReading(false);
+    setSpeakingSource(null);
+    speakingSourceRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    if ("speechSynthesis" in window) {
+      setSpeechSupported(true);
+    } else {
+      setSpeechSupported(false);
+    }
+    return () => {
+      stopSpeech();
+    };
+  }, [stopSpeech]);
+
+  const handleToggleSpeech = useCallback(
+    (text: string, source: "result" | "history") => {
+      const cleaned = cleanDescription(text);
+      if (!cleaned) {
+        showToast("error", "Không có mô tả để đọc.");
+        return;
+      }
+      if (
+        !speechSupported ||
+        typeof window === "undefined" ||
+        !("speechSynthesis" in window)
+      ) {
+        showToast("error", "Trình duyệt của bạn chưa hỗ trợ đọc mô tả.");
+        return;
+      }
+      if (
+        isReading &&
+        speakingSource === source &&
+        speechTextRef.current === cleaned
+      ) {
+        stopSpeech();
+        return;
+      }
+      const synth = window.speechSynthesis;
+      speechTextRef.current = cleaned;
+      synth.cancel();
+      const utterance = new SpeechSynthesisUtterance(cleaned);
+      utterance.lang = "vi-VN";
+      utterance.rate = 1;
+      utterance.pitch = 1;
+      utterance.onend = () => {
+        speechTextRef.current = null;
+        setIsReading(false);
+        setSpeakingSource(null);
+        speakingSourceRef.current = null;
+      };
+      utterance.onerror = () => {
+        speechTextRef.current = null;
+        setIsReading(false);
+        setSpeakingSource(null);
+        speakingSourceRef.current = null;
+        showToast("error", "Không thể đọc mô tả, vui lòng thử lại.");
+      };
+      setIsReading(true);
+      setSpeakingSource(source);
+      speakingSourceRef.current = source;
+      synth.speak(utterance);
+    },
+    [isReading, showToast, speechSupported, speakingSource, stopSpeech],
+  );
+
+  useEffect(() => {
+    if (speakingSourceRef.current === "result") {
+      stopSpeech();
+    }
+  }, [result?.description, stopSpeech]);
+
+  useEffect(() => {
+    if (speakingSourceRef.current === "history") {
+      stopSpeech();
+    }
+  }, [historyDetail?.id, stopSpeech]);
 
   
 
@@ -1370,6 +1464,13 @@ export default function HomePage() {
             <button
               className="secondary-button"
               type="button"
+              onClick={() => handleToggleSpeech(result.description, "result")}
+            >
+              {isReading && speakingSource === "result" ? "Dừng đọc" : "Đọc mô tả"}
+            </button>
+            <button
+              className="secondary-button"
+              type="button"
               onClick={handleShareToFacebook}
               disabled={shareLoading.facebook}
             >
@@ -1560,6 +1661,13 @@ export default function HomePage() {
                   {historyDetail.full_description}
                 </p>
                 <div className="modal-actions history-detail-actions">
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={() => handleToggleSpeech(historyDetail.full_description, "history")}
+                  >
+                    {isReading && speakingSource === "history" ? "Dừng đọc" : "Đọc mô tả"}
+                  </button>
                   <button
                     className="secondary-button"
                     type="button"
