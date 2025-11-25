@@ -259,30 +259,65 @@ export default function HomePage() {
         stopSpeech();
         return;
       }
+
       const synth = window.speechSynthesis;
-      speechTextRef.current = cleaned;
+
+      // Cancel any ongoing speech
       synth.cancel();
-      const utterance = new SpeechSynthesisUtterance(cleaned);
-      utterance.lang = "vi-VN";
-      utterance.rate = 1;
-      utterance.pitch = 1;
-      utterance.onend = () => {
-        speechTextRef.current = null;
-        setIsReading(false);
-        setSpeakingSource(null);
-        speakingSourceRef.current = null;
+
+      const speak = () => {
+        const utterance = new SpeechSynthesisUtterance(cleaned);
+        utterance.lang = "vi-VN";
+        utterance.rate = 1;
+        utterance.pitch = 1;
+
+        // Try to find a Vietnamese voice
+        const voices = synth.getVoices();
+        const vietnameseVoice = voices.find(
+          (v) => v.lang.includes("vi") || v.lang === "vi-VN"
+        );
+
+        if (vietnameseVoice) {
+          utterance.voice = vietnameseVoice;
+        } else {
+          console.warn("No Vietnamese voice found, falling back to default.");
+        }
+
+        utterance.onend = () => {
+          speechTextRef.current = null;
+          setIsReading(false);
+          setSpeakingSource(null);
+          speakingSourceRef.current = null;
+        };
+
+        utterance.onerror = (e) => {
+          console.error("Speech error:", e);
+          speechTextRef.current = null;
+          setIsReading(false);
+          setSpeakingSource(null);
+          speakingSourceRef.current = null;
+          if (e.error !== 'interrupted' && e.error !== 'canceled') {
+            showToast("error", "Không thể đọc mô tả, vui lòng thử lại.");
+          }
+        };
+
+        setIsReading(true);
+        setSpeakingSource(source);
+        speakingSourceRef.current = source;
+        speechTextRef.current = cleaned;
+
+        synth.speak(utterance);
       };
-      utterance.onerror = () => {
-        speechTextRef.current = null;
-        setIsReading(false);
-        setSpeakingSource(null);
-        speakingSourceRef.current = null;
-        showToast("error", "Không thể đọc mô tả, vui lòng thử lại.");
-      };
-      setIsReading(true);
-      setSpeakingSource(source);
-      speakingSourceRef.current = source;
-      synth.speak(utterance);
+
+      // Ensure voices are loaded
+      if (synth.getVoices().length === 0) {
+        synth.onvoiceschanged = () => {
+          synth.onvoiceschanged = null;
+          speak();
+        };
+      } else {
+        speak();
+      }
     },
     [isReading, showToast, speechSupported, speakingSource, stopSpeech],
   );
@@ -299,7 +334,7 @@ export default function HomePage() {
     }
   }, [historyDetail?.id, stopSpeech]);
 
-  
+
 
   const clearToast = useCallback(() => setToast(null), []);
 
@@ -926,16 +961,16 @@ export default function HomePage() {
       }, 1200);
     } catch (err: any) {
       let detail = "Không thể xác thực";
-      
- 
+
+
       // Xử lý các loại error response khác nhau
       if (err?.response?.data?.detail) {
         const errorDetail = err.response.data.detail;
-        
+
         // Nếu detail là array (validation errors từ Pydantic)
         if (Array.isArray(errorDetail)) {
           detail = errorDetail.map((e: any) => e.msg || e.message).join(", ");
-        } 
+        }
         // Nếu detail là string
         else if (typeof errorDetail === "string") {
           detail = errorDetail;
@@ -946,7 +981,7 @@ export default function HomePage() {
           detail = errorDetail.msg || errorDetail.message || JSON.stringify(errorDetail);
         }
       }
-      
+
       setAuthMessage({ type: "error", message: detail });
       showToast("error", detail);
     } finally {
@@ -1034,7 +1069,7 @@ export default function HomePage() {
         setAuthLoading(false);
         return;
       }
-      if (password !== confirm) { 
+      if (password !== confirm) {
         const message = "Mật khẩu xác nhận không khớp.";
         setAuthMessage({ type: "error", message });
         showToast("error", message);
@@ -1053,7 +1088,7 @@ export default function HomePage() {
       setAuthForm({ identifier, password: "" });
     } catch (err: any) {
       let detail = "Không thể đặt lại mật khẩu";
-      
+
       if (err?.response?.data?.detail) {
         const errorDetail = err.response.data.detail;
         if (Array.isArray(errorDetail)) {
@@ -1064,7 +1099,7 @@ export default function HomePage() {
           detail = errorDetail.msg || errorDetail.message || JSON.stringify(errorDetail);
         }
       }
-      
+
       setAuthMessage({ type: "error", message: detail });
       showToast("error", detail);
     } finally {
@@ -1164,10 +1199,10 @@ export default function HomePage() {
     authMode === "login"
       ? "Đăng nhập tài khoản"
       : authMode === "register"
-      ? "Đăng ký tài khoản mới"
-      : authMode === "forgot"
-      ? "Quên mật khẩu"
-      : "Đặt lại mật khẩu";
+        ? "Đăng ký tài khoản mới"
+        : authMode === "forgot"
+          ? "Quên mật khẩu"
+          : "Đặt lại mật khẩu";
 
   return (
     <main className="page-shell">
@@ -1182,7 +1217,7 @@ export default function HomePage() {
               Hướng dẫn sử dụng
             </button>
           </div>
-        </div>  
+        </div>
         <div className="hero-auth">
           {isAuthenticated ? (
             <div className="stack stack--sm align-end">
@@ -1361,7 +1396,7 @@ export default function HomePage() {
                     >
                       X
                     </button>
-                                        <Image
+                    <Image
                       src={activeImage.previewUrl}
                       alt="Ảnh xem trước"
                       fill
@@ -1703,9 +1738,8 @@ export default function HomePage() {
             </div>
             {authMessage && (
               <div
-                className={`alert-box ${
-                  authMessage.type === "success" ? "alert-box--success" : "alert-box--error"
-                }`}
+                className={`alert-box ${authMessage.type === "success" ? "alert-box--success" : "alert-box--error"
+                  }`}
               >
                 {authMessage.message}
               </div>
