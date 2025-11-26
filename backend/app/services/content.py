@@ -54,18 +54,16 @@ Trả về theo định dạng:
 ✨ [Slogan 1 câu ấn tượng]
 📝 Mô tả:
 [20-30 từ sinh động về trải nghiệm, nguồn gốc, hương vị và lợi ích]
-💎 Điểm nổi bật(ngắn gọn 15-20 từ):
-• [Chất lượng/quy trình]
+💎 Điểm nổi bật:
+• [Chất lượng/quy trình - ngắn gọn 15-20 từ]
 • [Hương vị đặc trưng]
 • [Giá trị dinh dưỡng]
 🌟 Lợi ích:
-(Ngắn gọn súc tích khoảng 10-15 từ)
-[1-2 lợi ích thực tế]
-🎁 Cam kết :
-(ngắn gọn 10-15 từ khoá)
-[Chất lượng, giao hàng, hỗ trợ]
-🍽️ Gợi ý(ngắn gọn 10-15 từ):
-[1-2 cách sử dụng]
+[1-2 lợi ích thực tế - ngắn gọn súc tích khoảng 10-15 từ]
+🎁 Cam kết:
+[Chất lượng, giao hàng, hỗ trợ - ngắn gọn 10-15 từ khoá]
+🍽️ Gợi ý:
+[1-2 cách sử dụng - ngắn gọn 10-15 từ]
 #️⃣ Từ khóa:
 [1-2 hashtag/từ khóa]
 Viết TIẾNG VIỆT tự nhiên, giàu cảm xúc. Không dùng dấu *.
@@ -83,18 +81,16 @@ Trả về theo định dạng:
 ✨ [Slogan 1 câu sáng tạo]
 📝 Mô tả:
 [20-30 từ khơi gợi cảm xúc về nguồn gốc, hương vị, giá trị và lợi ích]
-💎 Điểm nổi bật(ngắn gọn 15-20 từ):
-• [Chất lượng/quy trình]
+💎 Điểm nổi bật:
+• [Chất lượng/quy trình - ngắn gọn 15-20 từ]
 • [Hương vị đặc trưng]
 • [Giá trị dinh dưỡng]
 🌟 Lợi ích:
-(Ngắn gọn súc tích khoảng 10-15 từ)
-[1-2 lợi ích thực tế]
-🎁 Cam kết :
-(ngắn gọn 10-15 từ khoá)
-[Chất lượng, giao hàng, hỗ trợ]
-🍽️ Gợi ý(ngắn gọn 10-15 từ):
-[1-2 cách sử dụng]
+[1-2 lợi ích thực tế - ngắn gọn súc tích khoảng 10-15 từ]
+🎁 Cam kết:
+[Chất lượng, giao hàng, hỗ trợ - ngắn gọn 10-15 từ khoá]
+🍽️ Gợi ý:
+[1-2 cách sử dụng - ngắn gọn 10-15 từ]
 #️⃣ Từ khóa:
 [1-2 hashtag/từ khóa]
 Viết TIẾNG VIỆT tự nhiên, giàu cảm xúc. Không dùng dấu *.
