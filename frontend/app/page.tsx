@@ -1186,9 +1186,9 @@ export default function HomePage() {
     <main className="page-shell">
       <section className="hero-card">
         <div className="hero-info">
-          <h1 className="hero-title">FruiText AI - Mô Tả Sản Phẩm Trái Cây</h1>
+          <h1 className="hero-title">FruitText AI</h1>
           <p className="hero-subtitle">
-            FruiText AI biến mọi hình ảnh thành nội dung bán hàng hấp dẫn: mô tả chuẩn SEO, tự động, sẵn sàng đăng tải sau vài giây.
+            FruitText AI biến mọi hình ảnh thành nội dung bán hàng hấp dẫn: mô tả chuẩn SEO, tự động, sẵn sàng đăng tải sau vài giây.
           </p>
           <div className="hero-actions">
             <button type="button" className="secondary-button" onClick={() => setGuideVisible(true)}>
