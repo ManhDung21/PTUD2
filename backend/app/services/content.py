@@ -69,6 +69,7 @@ Trả về theo định dạng:
 #️⃣ Từ khóa:
 [1-2 hashtag/từ khóa]
 Viết TIẾNG VIỆT tự nhiên, giàu cảm xúc. Không dùng dấu *.
+TUYỆT ĐỐI KHÔNG có câu dẫn dắt (ví dụ: "Chắc chắn rồi...", "Dưới đây là..."). Chỉ trả về kết quả đúng định dạng.
 """
 
 
@@ -97,6 +98,7 @@ Trả về theo định dạng:
 #️⃣ Từ khóa:
 [1-2 hashtag/từ khóa]
 Viết TIẾNG VIỆT tự nhiên, giàu cảm xúc. Không dùng dấu *.
+TUYỆT ĐỐI KHÔNG có câu dẫn dắt (ví dụ: "Chắc chắn rồi...", "Dưới đây là..."). Chỉ trả về kết quả đúng định dạng.
 """
 
 
