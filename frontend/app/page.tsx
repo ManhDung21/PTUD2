@@ -202,6 +202,7 @@ export default function HomePage() {
   const [isReading, setIsReading] = useState(false);
   const [speakingSource, setSpeakingSource] = useState<"result" | "history" | null>(null);
   const [isPaused, setIsPaused] = useState(false);
+  const [historyLimit, setHistoryLimit] = useState(2);
   const speechTextRef = useRef<string | null>(null);
   const speakingSourceRef = useRef<"result" | "history" | null>(null);
 
@@ -1578,7 +1579,7 @@ export default function HomePage() {
           <p className="muted-text">Chưa có lịch sử nào. Bắt đầu tạo mô tả ngay hôm nay.</p>
         ) : (
           <div className="history-grid">
-            {history.map((item) => {
+            {history.slice(0, historyLimit).map((item) => {
               const imageSrc = resolveImageUrl(item.image_url);
               const sourceLabel = item.source === "image" ? "Hình ảnh" : "Văn bản";
               return (
@@ -1621,6 +1622,28 @@ export default function HomePage() {
                 </article>
               );
             })}
+          </div>
+        )}
+        {history.length > historyLimit && (
+          <div style={{ textAlign: "center", marginTop: "24px" }}>
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={() => setHistoryLimit(history.length)}
+            >
+              Xem thêm ({history.length - historyLimit})
+            </button>
+          </div>
+        )}
+        {history.length > 2 && historyLimit >= history.length && (
+          <div style={{ textAlign: "center", marginTop: "24px" }}>
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={() => setHistoryLimit(2)}
+            >
+              Thu gọn
+            </button>
           </div>
         )}
       </section>
