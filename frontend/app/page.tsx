@@ -201,6 +201,7 @@ export default function HomePage() {
   );
   const [isReading, setIsReading] = useState(false);
   const [speakingSource, setSpeakingSource] = useState<"result" | "history" | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
   const speechTextRef = useRef<string | null>(null);
   const speakingSourceRef = useRef<"result" | "history" | null>(null);
 
@@ -221,6 +222,21 @@ export default function HomePage() {
     setIsReading(false);
     setSpeakingSource(null);
     speakingSourceRef.current = null;
+    setIsPaused(false);
+  }, []);
+
+  const pauseSpeech = useCallback(() => {
+    if ((window as any).currentAudio) {
+      (window as any).currentAudio.pause();
+      setIsPaused(true);
+    }
+  }, []);
+
+  const resumeSpeech = useCallback(() => {
+    if ((window as any).currentAudio) {
+      (window as any).currentAudio.play();
+      setIsPaused(false);
+    }
   }, []);
 
   const handleToggleSpeech = useCallback(
@@ -243,6 +259,7 @@ export default function HomePage() {
       setSpeakingSource(source);
       speakingSourceRef.current = source;
       speechTextRef.current = cleaned;
+      setIsPaused(false);
 
       try {
         const response = await axios.post(
@@ -263,6 +280,7 @@ export default function HomePage() {
           setSpeakingSource(null);
           speakingSourceRef.current = null;
           speechTextRef.current = null;
+          setIsPaused(false);
           URL.revokeObjectURL(audioUrl);
         };
 
@@ -272,6 +290,7 @@ export default function HomePage() {
           setSpeakingSource(null);
           speakingSourceRef.current = null;
           speechTextRef.current = null;
+          setIsPaused(false);
           URL.revokeObjectURL(audioUrl);
         };
 
@@ -287,7 +306,9 @@ export default function HomePage() {
         setIsReading(false);
         setSpeakingSource(null);
         speakingSourceRef.current = null;
+        speakingSourceRef.current = null;
         speechTextRef.current = null;
+        setIsPaused(false);
       }
     },
     [isReading, speakingSource, showToast, stopSpeech],
@@ -1474,13 +1495,26 @@ export default function HomePage() {
             >
               Sao Chép
             </button>
-            <button
-              className="secondary-button"
-              type="button"
-              onClick={() => handleToggleSpeech(result.description, "result")}
-            >
-              {isReading && speakingSource === "result" ? "Dừng đọc" : "Đọc mô tả"}
-            </button>
+            {isReading && speakingSource === "result" ? (
+              <>
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={isPaused ? resumeSpeech : pauseSpeech}
+                >
+                  {isPaused ? "Tiếp tục" : "Tạm dừng"}
+                </button>
+
+              </>
+            ) : (
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={() => handleToggleSpeech(result.description, "result")}
+              >
+                Đọc mô tả
+              </button>
+            )}
             <button
               className="secondary-button"
               type="button"
@@ -1516,7 +1550,8 @@ export default function HomePage() {
             )}
           </div>
         </section>
-      )}
+      )
+      }
 
       <section className="section-card">
         <div className="section-header">
@@ -1592,299 +1627,309 @@ export default function HomePage() {
 
 
 
-      {toast && (
-        <div className={`app-toast app-toast--${toast.type}`} role="status">
-          {toast.message}
-        </div>
-      )}
+      {
+        toast && (
+          <div className={`app-toast app-toast--${toast.type}`} role="status">
+            {toast.message}
+          </div>
+        )
+      }
 
-      {guideVisible && (
-        <div
-          className="modal-overlay"
-          role="dialog"
-          aria-modal="true"
-          onClick={() => setGuideVisible(false)}
-        >
+      {
+        guideVisible && (
           <div
-            className="modal-card modal-card--guide"
-            onClick={(event) => event.stopPropagation()}
+            className="modal-overlay"
+            role="dialog"
+            aria-modal="true"
+            onClick={() => setGuideVisible(false)}
           >
-            <UsageGuideContent
-              actionSlot={
+            <div
+              className="modal-card modal-card--guide"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <UsageGuideContent
+                actionSlot={
+                  <button
+                    type="button"
+                    className="ghost-button"
+                    onClick={() => setGuideVisible(false)}
+                  >
+                    Đóng
+                  </button>
+                }
+                description="Xem nhanh quy trình sử dụng trên web và mobile mà không cần rời trang hiện tại."
+                onBackToHome={() => setGuideVisible(false)}
+              />
+            </div>
+          </div>
+        )
+      }
+
+      {
+        historyDetail && (
+          <div
+            className="modal-overlay"
+            role="dialog"
+            aria-modal="true"
+            onClick={() => setHistoryDetail(null)}
+          >
+            <div
+              className="modal-card modal-card--history"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="modal-header">
+                <div>
+                  <h2 className="modal-title">Chi tiết mô tả</h2>
+                  <p className="muted-text">
+                    {formatVietnamTime(historyDetail.timestamp)} | Nguồn: {" "}
+                    {historyDetail.source === "image" ? "Hình ảnh" : "Văn bản"}
+                  </p>
+                  <p className="muted-text">Phong cách: {historyDetail.style}</p>
+                </div>
                 <button
                   type="button"
-                  className="ghost-button"
-                  onClick={() => setGuideVisible(false)}
+                  className="icon-button"
+                  onClick={() => setHistoryDetail(null)}
+                  aria-label="Đóng"
                 >
-                  Đóng
+                  ×
                 </button>
-              }
-              description="Xem nhanh quy trình sử dụng trên web và mobile mà không cần rời trang hiện tại."
-              onBackToHome={() => setGuideVisible(false)}
-            />
-          </div>
-        </div>
-      )}
-
-      {historyDetail && (
-        <div
-          className="modal-overlay"
-          role="dialog"
-          aria-modal="true"
-          onClick={() => setHistoryDetail(null)}
-        >
-          <div
-            className="modal-card modal-card--history"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="modal-header">
-              <div>
-                <h2 className="modal-title">Chi tiết mô tả</h2>
-                <p className="muted-text">
-                  {formatVietnamTime(historyDetail.timestamp)} | Nguồn: {" "}
-                  {historyDetail.source === "image" ? "Hình ảnh" : "Văn bản"}
-                </p>
-                <p className="muted-text">Phong cách: {historyDetail.style}</p>
               </div>
-              <button
-                type="button"
-                className="icon-button"
-                onClick={() => setHistoryDetail(null)}
-                aria-label="Đóng"
-              >
-                ×
-              </button>
-            </div>
-            <div className="history-detail-grid">
-              {detailImageSrc && (
-                <div className="preview-surface history-detail-image">
-                  <div className="preview-frame-wrapper">
-                    <Image
-                      src={detailImageSrc}
-                      alt="Ảnh dùng để tạo mô tả"
-                      fill
-                      className="preview-frame"
-                      sizes="(max-width: 768px) 90vw, 420px"
-                    />
+              <div className="history-detail-grid">
+                {detailImageSrc && (
+                  <div className="preview-surface history-detail-image">
+                    <div className="preview-frame-wrapper">
+                      <Image
+                        src={detailImageSrc}
+                        alt="Ảnh dùng để tạo mô tả"
+                        fill
+                        className="preview-frame"
+                        sizes="(max-width: 768px) 90vw, 420px"
+                      />
+                    </div>
+                  </div>
+                )}
+                <div className="history-detail-content">
+                  <p className="result-description history-detail-description">
+                    {historyDetail.full_description}
+                  </p>
+                  <div className="modal-actions history-detail-actions">
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      onClick={() => handleToggleSpeech(historyDetail.full_description, "history")}
+                    >
+                      {isReading && speakingSource === "history" ? "Dừng đọc" : "Đọc mô tả"}
+                    </button>
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      onClick={() => navigator.clipboard.writeText(historyDetail.full_description)}
+                    >
+                      Sao chép
+                    </button>
                   </div>
                 </div>
-              )}
-              <div className="history-detail-content">
-                <p className="result-description history-detail-description">
-                  {historyDetail.full_description}
-                </p>
-                <div className="modal-actions history-detail-actions">
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    onClick={() => handleToggleSpeech(historyDetail.full_description, "history")}
-                  >
-                    {isReading && speakingSource === "history" ? "Dừng đọc" : "Đọc mô tả"}
-                  </button>
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    onClick={() => navigator.clipboard.writeText(historyDetail.full_description)}
-                  >
-                    Sao chép
-                  </button>
-                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
-      {authVisible && (
-        <div className="modal-overlay" role="dialog" aria-modal="true">
-          <div className="modal-card modal-card--auth">
-            <div className="modal-header">
-              <h2 className="modal-title">{authTitle}</h2>
-              <button
-                type="button"
-                className="icon-button"
-                onClick={() => {
-                  setAuthVisible(false);
-                  changeAuthMode("login");
-                  setAuthForm({ identifier: "", password: "" });
-                  setAuthMessage(null);
-                }}
-                aria-label="Đóng"
-              >
-                ×
-              </button>
-            </div>
-            {authMessage && (
-              <div
-                className={`alert-box ${authMessage.type === "success" ? "alert-box--success" : "alert-box--error"
-                  }`}
-              >
-                {authMessage.message}
+      {
+        authVisible && (
+          <div className="modal-overlay" role="dialog" aria-modal="true">
+            <div className="modal-card modal-card--auth">
+              <div className="modal-header">
+                <h2 className="modal-title">{authTitle}</h2>
+                <button
+                  type="button"
+                  className="icon-button"
+                  onClick={() => {
+                    setAuthVisible(false);
+                    changeAuthMode("login");
+                    setAuthForm({ identifier: "", password: "" });
+                    setAuthMessage(null);
+                  }}
+                  aria-label="Đóng"
+                >
+                  ×
+                </button>
               </div>
-            )}
-            {(authMode === "login" || authMode === "register") && (
-              <form className="stack" onSubmit={handleAuthSubmit}>
-                <input
-                  type="text"
-                  placeholder="Email hoặc số điện thoại"
-                  value={authForm.identifier}
-                  onChange={(event) => setAuthForm((prev) => ({ ...prev, identifier: event.target.value }))}
-                  required
-                />
+              {authMessage && (
+                <div
+                  className={`alert-box ${authMessage.type === "success" ? "alert-box--success" : "alert-box--error"
+                    }`}
+                >
+                  {authMessage.message}
+                </div>
+              )}
+              {(authMode === "login" || authMode === "register") && (
+                <form className="stack" onSubmit={handleAuthSubmit}>
+                  <input
+                    type="text"
+                    placeholder="Email hoặc số điện thoại"
+                    value={authForm.identifier}
+                    onChange={(event) => setAuthForm((prev) => ({ ...prev, identifier: event.target.value }))}
+                    required
+                  />
+                  <input
+                    type="password"
+                    placeholder="Mật khẩu"
+                    value={authForm.password}
+                    onChange={(event) => setAuthForm((prev) => ({ ...prev, password: event.target.value }))}
+                    required
+                    minLength={6}
+                  />
+                  <button className="primary-button primary-button--full" type="submit" disabled={authLoading}>
+                    {authLoading ? "Đang xử lý..." : authMode === "login" ? "Đăng nhập" : "Đăng ký"}
+                  </button>
+                </form>
+              )}
+              {authMode === "forgot" && (
+                <form className="stack" onSubmit={handleForgotSubmit}>
+                  <input
+                    type="email"
+                    placeholder="Nhập email đã đăng ký"
+                    value={forgotEmail}
+                    onChange={(event) => setForgotEmail(event.target.value)}
+                    required
+                  />
+                  <button className="primary-button primary-button--full" type="submit" disabled={authLoading}>
+                    {authLoading ? "Đang xử lý..." : "Gửi mã xác thực"}
+                  </button>
+                </form>
+              )}
+              {authMode === "reset" && (
+                <form className="stack" onSubmit={handleResetSubmit}>
+                  <input
+                    type="email"
+                    placeholder="Email đã đăng ký"
+                    value={resetForm.identifier}
+                    onChange={(event) => setResetForm((prev) => ({ ...prev, identifier: event.target.value }))}
+                    required
+                  />
+                  <input
+                    type="text"
+                    placeholder="Mã xác thực (6 chữ số)"
+                    value={resetForm.token}
+                    onChange={(event) => {
+                      const value = event.target.value.replace(/\D/g, "");
+                      setResetForm((prev) => ({ ...prev, token: value }));
+                    }}
+                    inputMode="numeric"
+                    maxLength={6}
+                    required
+                  />
+                  <input
+                    type="password"
+                    placeholder="Mật khẩu mới"
+                    value={resetForm.password}
+                    onChange={(event) => setResetForm((prev) => ({ ...prev, password: event.target.value }))}
+                    required
+                    minLength={6}
+                  />
+                  <input
+                    type="password"
+                    placeholder="Nhập lại mật khẩu mới"
+                    value={resetForm.confirmPassword}
+                    onChange={(event) => setResetForm((prev) => ({ ...prev, confirmPassword: event.target.value }))}
+                    required
+                    minLength={6}
+                  />
+                  <button className="primary-button primary-button--full" type="submit" disabled={authLoading}>
+                    {authLoading ? "Đang xử lý..." : "Đặt lại mật khẩu"}
+                  </button>
+                </form>
+              )}
+              <div className="modal-actions">
+                {authMode === "login" && (
+                  <>
+                    <button className="ghost-button" type="button" onClick={() => changeAuthMode("register")}>
+                      Đăng ký tài khoản
+                    </button>
+                    <button className="ghost-button" type="button" onClick={() => changeAuthMode("forgot")}>
+                      Quên mật khẩu
+                    </button>
+                  </>
+                )}
+                {authMode === "register" && (
+                  <button className="ghost-button" type="button" onClick={() => changeAuthMode("login")}>
+                    Đã có tài khoản? Đăng nhập
+                  </button>
+                )}
+                {(authMode === "reset" || authMode === "forgot") && (
+                  <button className="ghost-button" type="button" onClick={() => changeAuthMode("login")}>
+                    Quay lại đăng nhập
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      {
+        changePasswordVisible && (
+          <div className="modal-overlay" role="dialog" aria-modal="true">
+            <div className="modal-card modal-card--auth">
+              <div className="modal-header">
+                <h2 className="modal-title">Đổi mật khẩu</h2>
+                <button
+                  type="button"
+                  className="icon-button"
+                  onClick={() => {
+                    setChangePasswordVisible(false);
+                    setChangePasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+                  }}
+                  aria-label="Đóng"
+                >
+                  ×
+                </button>
+              </div>
+              <form className="stack" onSubmit={handleChangePasswordSubmit}>
                 <input
                   type="password"
-                  placeholder="Mật khẩu"
-                  value={authForm.password}
-                  onChange={(event) => setAuthForm((prev) => ({ ...prev, password: event.target.value }))}
+                  placeholder="Mật khẩu hiện tại"
+                  value={changePasswordForm.currentPassword}
+                  onChange={(event) =>
+                    setChangePasswordForm((prev) => ({ ...prev, currentPassword: event.target.value }))
+                  }
                   required
                   minLength={6}
-                />
-                <button className="primary-button primary-button--full" type="submit" disabled={authLoading}>
-                  {authLoading ? "Đang xử lý..." : authMode === "login" ? "Đăng nhập" : "Đăng ký"}
-                </button>
-              </form>
-            )}
-            {authMode === "forgot" && (
-              <form className="stack" onSubmit={handleForgotSubmit}>
-                <input
-                  type="email"
-                  placeholder="Nhập email đã đăng ký"
-                  value={forgotEmail}
-                  onChange={(event) => setForgotEmail(event.target.value)}
-                  required
-                />
-                <button className="primary-button primary-button--full" type="submit" disabled={authLoading}>
-                  {authLoading ? "Đang xử lý..." : "Gửi mã xác thực"}
-                </button>
-              </form>
-            )}
-            {authMode === "reset" && (
-              <form className="stack" onSubmit={handleResetSubmit}>
-                <input
-                  type="email"
-                  placeholder="Email đã đăng ký"
-                  value={resetForm.identifier}
-                  onChange={(event) => setResetForm((prev) => ({ ...prev, identifier: event.target.value }))}
-                  required
-                />
-                <input
-                  type="text"
-                  placeholder="Mã xác thực (6 chữ số)"
-                  value={resetForm.token}
-                  onChange={(event) => {
-                    const value = event.target.value.replace(/\D/g, "");
-                    setResetForm((prev) => ({ ...prev, token: value }));
-                  }}
-                  inputMode="numeric"
-                  maxLength={6}
-                  required
                 />
                 <input
                   type="password"
                   placeholder="Mật khẩu mới"
-                  value={resetForm.password}
-                  onChange={(event) => setResetForm((prev) => ({ ...prev, password: event.target.value }))}
+                  value={changePasswordForm.newPassword}
+                  onChange={(event) =>
+                    setChangePasswordForm((prev) => ({ ...prev, newPassword: event.target.value }))
+                  }
                   required
                   minLength={6}
                 />
                 <input
                   type="password"
                   placeholder="Nhập lại mật khẩu mới"
-                  value={resetForm.confirmPassword}
-                  onChange={(event) => setResetForm((prev) => ({ ...prev, confirmPassword: event.target.value }))}
+                  value={changePasswordForm.confirmPassword}
+                  onChange={(event) =>
+                    setChangePasswordForm((prev) => ({ ...prev, confirmPassword: event.target.value }))
+                  }
                   required
                   minLength={6}
                 />
-                <button className="primary-button primary-button--full" type="submit" disabled={authLoading}>
-                  {authLoading ? "Đang xử lý..." : "Đặt lại mật khẩu"}
+                <button
+                  className="primary-button primary-button--full"
+                  type="submit"
+                  disabled={changePasswordLoading}
+                >
+                  {changePasswordLoading ? "Đang xử lý..." : "Cập nhật mật khẩu"}
                 </button>
               </form>
-            )}
-            <div className="modal-actions">
-              {authMode === "login" && (
-                <>
-                  <button className="ghost-button" type="button" onClick={() => changeAuthMode("register")}>
-                    Đăng ký tài khoản
-                  </button>
-                  <button className="ghost-button" type="button" onClick={() => changeAuthMode("forgot")}>
-                    Quên mật khẩu
-                  </button>
-                </>
-              )}
-              {authMode === "register" && (
-                <button className="ghost-button" type="button" onClick={() => changeAuthMode("login")}>
-                  Đã có tài khoản? Đăng nhập
-                </button>
-              )}
-              {(authMode === "reset" || authMode === "forgot") && (
-                <button className="ghost-button" type="button" onClick={() => changeAuthMode("login")}>
-                  Quay lại đăng nhập
-                </button>
-              )}
             </div>
           </div>
-        </div>
-      )}
-
-      {changePasswordVisible && (
-        <div className="modal-overlay" role="dialog" aria-modal="true">
-          <div className="modal-card modal-card--auth">
-            <div className="modal-header">
-              <h2 className="modal-title">Đổi mật khẩu</h2>
-              <button
-                type="button"
-                className="icon-button"
-                onClick={() => {
-                  setChangePasswordVisible(false);
-                  setChangePasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
-                }}
-                aria-label="Đóng"
-              >
-                ×
-              </button>
-            </div>
-            <form className="stack" onSubmit={handleChangePasswordSubmit}>
-              <input
-                type="password"
-                placeholder="Mật khẩu hiện tại"
-                value={changePasswordForm.currentPassword}
-                onChange={(event) =>
-                  setChangePasswordForm((prev) => ({ ...prev, currentPassword: event.target.value }))
-                }
-                required
-                minLength={6}
-              />
-              <input
-                type="password"
-                placeholder="Mật khẩu mới"
-                value={changePasswordForm.newPassword}
-                onChange={(event) =>
-                  setChangePasswordForm((prev) => ({ ...prev, newPassword: event.target.value }))
-                }
-                required
-                minLength={6}
-              />
-              <input
-                type="password"
-                placeholder="Nhập lại mật khẩu mới"
-                value={changePasswordForm.confirmPassword}
-                onChange={(event) =>
-                  setChangePasswordForm((prev) => ({ ...prev, confirmPassword: event.target.value }))
-                }
-                required
-                minLength={6}
-              />
-              <button
-                className="primary-button primary-button--full"
-                type="submit"
-                disabled={changePasswordLoading}
-              >
-                {changePasswordLoading ? "Đang xử lý..." : "Cập nhật mật khẩu"}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-    </main>
+        )
+      }
+    </main >
   );
 }
