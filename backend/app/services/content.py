@@ -45,7 +45,7 @@ def get_style_prompt(style: str) -> str:
 
 
 def _image_prompt(style: str) -> str:
-    return f"""Viết mô tả bán hàng cho sản phẩm TRÁI CÂY trong hình ảnh.(nhận diện hình ảnh nếu không phải hình ảnh hãy trả lại cho tôi câu nói"Ảnh bạn cung cấp không phải là trái cây tôi không thể tạo mô tả!!") ( nằm trong khoảng 10-150 chữ cho 1 bài mô tả)
+    return f"""Viết mô tả bán hàng cho sản phẩm TRÁI CÂY trong hình ảnh.(nhận diện hình ảnh nếu không phải hình ảnh hãy trả lại cho tôi câu nói"Ảnh bạn cung cấp không phải là trái cây tôi không thể tạo mô tả!!") ( nằm trong khoảng 10-100 chữ cho 1 bài mô tả)
 {get_style_prompt(style)}
 
 Trả về theo định dạng:
@@ -53,18 +53,18 @@ Trả về theo định dạng:
 🎯 [Tiêu đề ngắn gọn, có từ khóa SEO]
 ✨ [Slogan 1 câu ấn tượng]
 📝 Mô tả:
-[20-40 từ sinh động về trải nghiệm, nguồn gốc, hương vị và lợi ích]
-💎 Điểm nổi bật(ngắn gọn 20-25 từ):
+[20-30 từ sinh động về trải nghiệm, nguồn gốc, hương vị và lợi ích]
+💎 Điểm nổi bật(ngắn gọn 15-20 từ):
 • [Chất lượng/quy trình]
 • [Hương vị đặc trưng]
 • [Giá trị dinh dưỡng]
 🌟 Lợi ích:
-(Ngắn gọn súc tích khoảng 10-20 từ)
+(Ngắn gọn súc tích khoảng 10-15 từ)
 [1-2 lợi ích thực tế]
 🎁 Cam kết :
-(ngắn gọn 10- 20 từ khoá)
+(ngắn gọn 10-15 từ khoá)
 [Chất lượng, giao hàng, hỗ trợ]
-🍽️ Gợi ý(ngắn gọn 10-20 từ):
+🍽️ Gợi ý(ngắn gọn 10-15 từ):
 [1-2 cách sử dụng]
 #️⃣ Từ khóa:
 [1-2 hashtag/từ khóa]
@@ -82,18 +82,18 @@ Trả về theo định dạng:
 🎯 [Tiêu đề ngắn gọn, có từ khóa SEO]
 ✨ [Slogan 1 câu sáng tạo]
 📝 Mô tả:
-[30-40 từ khơi gợi cảm xúc về nguồn gốc, hương vị, giá trị và lợi ích]
-💎 Điểm nổi bật(ngắn gọn 20-25 từ):
+[20-30 từ khơi gợi cảm xúc về nguồn gốc, hương vị, giá trị và lợi ích]
+💎 Điểm nổi bật(ngắn gọn 15-20 từ):
 • [Chất lượng/quy trình]
 • [Hương vị đặc trưng]
 • [Giá trị dinh dưỡng]
 🌟 Lợi ích:
-(Ngắn gọn súc tích)
+(Ngắn gọn súc tích khoảng 10-15 từ)
 [1-2 lợi ích thực tế]
 🎁 Cam kết :
-(ngắn gọn 10- 20 từ khoá)
+(ngắn gọn 10-15 từ khoá)
 [Chất lượng, giao hàng, hỗ trợ]
-🍽️ Gợi ý(ngắn gọn 10-20 từ):
+🍽️ Gợi ý(ngắn gọn 10-15 từ):
 [1-2 cách sử dụng]
 #️⃣ Từ khóa:
 [1-2 hashtag/từ khóa]
