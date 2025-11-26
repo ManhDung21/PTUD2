@@ -251,6 +251,10 @@ export default function HomePage() {
           { responseType: "blob" }
         );
 
+        if (speakingSourceRef.current !== source || speechTextRef.current !== cleaned) {
+          return;
+        }
+
         const audioUrl = URL.createObjectURL(response.data);
         const audio = new Audio(audioUrl);
 
