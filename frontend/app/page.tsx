@@ -203,6 +203,8 @@ export default function HomePage() {
   const [speakingSource, setSpeakingSource] = useState<"result" | "history" | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [historyLimit, setHistoryLimit] = useState(2);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   const speechTextRef = useRef<string | null>(null);
   const speakingSourceRef = useRef<"result" | "history" | null>(null);
 
@@ -1167,6 +1169,36 @@ export default function HomePage() {
     }
   };
 
+  const handleDeleteHistoryItem = useCallback(
+    async (itemId: string) => {
+      try {
+        await axios.delete(`${API_BASE_URL}/api/history/${itemId}`, {
+          withCredentials: true,
+        });
+        setHistory((prev) => prev.filter((item) => item.id !== itemId));
+        showToast("success", "Đã xóa mục lịch sử.");
+      } catch (error) {
+        console.error("Failed to delete history item:", error);
+        showToast("error", "Không thể xóa mục lịch sử.");
+      }
+    },
+    [showToast],
+  );
+
+  const handleDeleteAllHistory = useCallback(async () => {
+    try {
+      await axios.delete(`${API_BASE_URL}/api/history`, {
+        withCredentials: true,
+      });
+      setHistory([]);
+      setShowDeleteConfirm(false);
+      showToast("success", "Đã xóa toàn bộ lịch sử.");
+    } catch (error) {
+      console.error("Failed to delete all history:", error);
+      showToast("error", "Không thể xóa toàn bộ lịch sử.");
+    }
+  }, [showToast]);
+
   const handleLogout = () => {
     setToken(null);
     if (typeof window !== "undefined") {
@@ -1459,6 +1491,7 @@ export default function HomePage() {
         )}
       </section>
 
+
       {result && (
         <section className="section-card">
           <div className="section-header">
@@ -1560,6 +1593,16 @@ export default function HomePage() {
             <p className="section-subtitle">Quản lý mô tả</p>
             <h2 className="section-title">Lịch sử mô tả</h2>
           </div>
+          {history.length > 0 && (
+            <button
+              className="text-button text-button--danger"
+              type="button"
+              onClick={() => setShowDeleteConfirm(true)}
+              style={{ fontSize: "14px" }}
+            >
+              Xóa tất cả
+            </button>
+          )}
         </div>
         {!isAuthenticated ? (
           <div className="empty-state">
@@ -1589,6 +1632,30 @@ export default function HomePage() {
                     <span className="history-style">Nguồn: {sourceLabel}</span>
                     <span className="history-style">Phong cách: {item.style}</span>
                   </div>
+                  <button
+                    className="history-delete"
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteHistoryItem(item.id);
+                    }}
+                    aria-label="Xóa mục này"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                  </button>
                   {imageSrc && (
                     <div className="history-thumb">
                       <Image
@@ -1949,6 +2016,34 @@ export default function HomePage() {
                   {changePasswordLoading ? "Đang xử lý..." : "Cập nhật mật khẩu"}
                 </button>
               </form>
+            </div>
+          </div>
+        )}
+
+      {
+        showDeleteConfirm && (
+          <div className="modal-overlay">
+            <div className="modal-card">
+              <h3 className="modal-title">Xóa toàn bộ lịch sử?</h3>
+              <div className="alert-box alert-box--error">
+                Hành động này không thể hoàn tác. Bạn có chắc chắn muốn xóa tất cả lịch sử mô tả không?
+              </div>
+              <div className="modal-actions">
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(false)}
+                >
+                  Hủy
+                </button>
+                <button
+                  className="primary-button primary-button--danger"
+                  type="button"
+                  onClick={handleDeleteAllHistory}
+                >
+                  Xóa tất cả
+                </button>
+              </div>
             </div>
           </div>
         )

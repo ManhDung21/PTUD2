@@ -543,3 +543,33 @@ async def text_to_speech(
         media_type="audio/mpeg",
         headers={"Content-Disposition": "attachment; filename=speech.mp3"}
     )
+
+
+@app.delete("/api/history/{item_id}")
+def delete_history_item(
+    item_id: str,
+    current_user: UserDocument = Depends(get_current_user),
+    db: Database = Depends(get_database),
+) -> JSONResponse:
+    """Delete a specific history item."""
+    success = history_service.delete_history_item(
+        _descriptions_collection(db),
+        current_user["_id"],
+        item_id,
+    )
+    if not success:
+        raise HTTPException(status_code=404, detail="Không tìm thấy mục lịch sử hoặc lỗi khi xóa")
+    return JSONResponse({"status": "ok", "message": "Đã xóa mục lịch sử"})
+
+
+@app.delete("/api/history")
+def delete_all_history(
+    current_user: UserDocument = Depends(get_current_user),
+    db: Database = Depends(get_database),
+) -> JSONResponse:
+    """Delete all history items for the current user."""
+    count = history_service.delete_all_history(
+        _descriptions_collection(db),
+        current_user["_id"],
+    )
+    return JSONResponse({"status": "ok", "message": f"Đã xóa {count} mục lịch sử"})

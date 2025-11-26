@@ -578,6 +578,30 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  position: relative;
+}
+
+.history-delete {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.history-delete:hover {
+  background: #fee2e2;
+  color: #dc2626;
 }
 
 .history-meta {
@@ -831,6 +855,7 @@ textarea {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {

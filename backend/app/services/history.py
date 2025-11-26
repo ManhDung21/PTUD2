@@ -74,3 +74,18 @@ def get_history_for_user(collection: Collection, user_id: ObjectId, limit: int =
         .limit(limit)
     )
     return [history_item_from_doc(doc) for doc in cursor]
+
+
+def delete_history_item(collection: Collection, user_id: ObjectId, item_id: str) -> bool:
+    """Delete a specific history item for a user."""
+    try:
+        result = collection.delete_one({"_id": ObjectId(item_id), "user_id": user_id})
+        return result.deleted_count > 0
+    except Exception:
+        return False
+
+
+def delete_all_history(collection: Collection, user_id: ObjectId) -> int:
+    """Delete all history items for a user."""
+    result = collection.delete_many({"user_id": user_id})
+    return result.deleted_count
