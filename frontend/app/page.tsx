@@ -1529,26 +1529,23 @@ export default function HomePage() {
             >
               Sao Chép
             </button>
-            {isReading && speakingSource === "result" ? (
-              <>
-                <button
-                  className="secondary-button"
-                  type="button"
-                  onClick={isPaused ? resumeSpeech : pauseSpeech}
-                >
-                  {isPaused ? "Tiếp tục" : "Tạm dừng"}
-                </button>
-
-              </>
-            ) : (
-              <button
-                className="secondary-button"
-                type="button"
-                onClick={() => handleToggleSpeech(result.description, "result")}
-              >
-                Đọc mô tả
-              </button>
-            )}
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={() => {
+                if (isReading && speakingSource === "result") {
+                  isPaused ? resumeSpeech() : pauseSpeech();
+                } else {
+                  handleToggleSpeech(result.description, "result");
+                }
+              }}
+            >
+              {isReading && speakingSource === "result"
+                ? isPaused
+                  ? "Tiếp tục"
+                  : "Tạm dừng"
+                : "Đọc mô tả"}
+            </button>
             <button
               className="secondary-button"
               type="button"
@@ -1807,9 +1804,19 @@ export default function HomePage() {
                     <button
                       className="secondary-button"
                       type="button"
-                      onClick={() => handleToggleSpeech(historyDetail.full_description, "history")}
+                      onClick={() => {
+                        if (isReading && speakingSource === "history") {
+                          isPaused ? resumeSpeech() : pauseSpeech();
+                        } else {
+                          handleToggleSpeech(historyDetail.full_description, "history");
+                        }
+                      }}
                     >
-                      {isReading && speakingSource === "history" ? "Dừng đọc" : "Đọc mô tả"}
+                      {isReading && speakingSource === "history"
+                        ? isPaused
+                          ? "Tiếp tục"
+                          : "Tạm dừng"
+                        : "Đọc mô tả"}
                     </button>
                     <button
                       className="secondary-button"
