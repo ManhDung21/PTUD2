@@ -336,6 +336,10 @@ export default function HomePage() {
     }
   }, [historyDetail?.id, stopSpeech]);
 
+  useEffect(() => {
+    stopSpeech();
+  }, [result?.description, stopSpeech]);
+
 
 
   const clearToast = useCallback(() => setToast(null), []);
