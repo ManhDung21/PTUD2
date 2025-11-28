@@ -856,6 +856,7 @@ export default function HomePage() {
   };
 
   const handleImageSubmit = async () => {
+    stopSpeech();
     const imageToSubmit = activeImage;
     if (!imageToSubmit) {
       showToast("error", "Vui lòng thêm ít nhất một hình ảnh hợp lệ.");
@@ -893,6 +894,7 @@ export default function HomePage() {
   };
 
   const handleTextSubmit = async () => {
+    stopSpeech();
     if (!productInfo.trim()) {
       showToast("error", "Vui lòng nhập thông tin sản phẩm");
       return;
