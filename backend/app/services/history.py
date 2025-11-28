@@ -79,13 +79,18 @@ def get_history_for_user(collection: Collection, user_id: ObjectId, limit: int =
 def delete_history_item(collection: Collection, user_id: ObjectId, item_id: str) -> bool:
     """Delete a specific history item for a user."""
     try:
+        print(f"DEBUG: Attempting to delete item {item_id} for user {user_id}")
         result = collection.delete_one({"_id": ObjectId(item_id), "user_id": user_id})
+        print(f"DEBUG: Delete result count: {result.deleted_count}")
         return result.deleted_count > 0
-    except Exception:
+    except Exception as e:
+        print(f"DEBUG: Error deleting history item: {e}")
         return False
 
 
 def delete_all_history(collection: Collection, user_id: ObjectId) -> int:
     """Delete all history items for a user."""
+    print(f"DEBUG: Attempting to delete ALL history for user {user_id}")
     result = collection.delete_many({"user_id": user_id})
+    print(f"DEBUG: Deleted {result.deleted_count} items")
     return result.deleted_count

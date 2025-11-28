@@ -1171,6 +1171,7 @@ export default function HomePage() {
 
   const handleDeleteHistoryItem = useCallback(
     async (itemId: string) => {
+      console.log("DEBUG: Frontend deleting item:", itemId);
       try {
         await axios.delete(`${API_BASE_URL}/api/history/${itemId}`, {
           withCredentials: true,
@@ -1186,6 +1187,7 @@ export default function HomePage() {
   );
 
   const handleDeleteAllHistory = useCallback(async () => {
+    console.log("DEBUG: Frontend deleting ALL history");
     try {
       await axios.delete(`${API_BASE_URL}/api/history`, {
         withCredentials: true,

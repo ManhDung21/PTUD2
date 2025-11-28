@@ -552,6 +552,7 @@ def delete_history_item(
     db: Database = Depends(get_database),
 ) -> JSONResponse:
     """Delete a specific history item."""
+    print(f"DEBUG: API received delete request for item_id: {item_id}")
     success = history_service.delete_history_item(
         _descriptions_collection(db),
         current_user["_id"],
@@ -568,6 +569,7 @@ def delete_all_history(
     db: Database = Depends(get_database),
 ) -> JSONResponse:
     """Delete all history items for the current user."""
+    print(f"DEBUG: API received delete ALL request for user {current_user['_id']}")
     count = history_service.delete_all_history(
         _descriptions_collection(db),
         current_user["_id"],
