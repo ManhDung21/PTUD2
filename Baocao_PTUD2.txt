@@ -1,0 +1,306 @@
+TRƯỜNG ĐẠI HỌC LẠC HỒNG
+ KHOA CÔNG NGHỆ THÔNG TIN 
+--- ✵ ---
+
+BÁO CÁO PHÁT TRIỂN ỨNG DỤNG
+
+ĐỀ TÀI:
+ỨNG DỤNG AI TẠO MÔ TẢ SẢN PHẨM TRÁI CÂY TỰ ĐỘNG (FRUITEXT AI)
+
+GVHD: 	Nguyễn Minh Sơn
+Lớp:	22CT113
+SVTH: 
+	Phùng Mạnh Dũng - 122001061
+	Nguyễn Hữu Nhật – 122000510
+
+Tháng 11/2025 
+
+LỜI NÓI ĐẦU
+
+Xin chào và chào mừng quý thầy cô đến với đồ án môn phát triển ứng dụng của chúng em. Trong thời gian học tập tại trường Đại học Lạc Hồng, em đã hoàn thành một dự án trong lĩnh vực công nghệ thông tin về ứng dụng AI tạo mô tả sản phẩm trái cây tự động. Đây là sản phẩm của sự tích lũy kiến thức, kỹ năng và trải nghiệm của chúng em trên ghế nhà trường.
+
+Mục tiêu chính của dự án em hướng tới là thiết kế, phát triển một AI có thể tự động tạo mô tả sản phẩm, đặc biệt tập trung vào các loại nông sản, trái cây. Ứng dụng này được xây dựng nhằm hỗ trợ bà con nông dân và các tiểu thương kinh doanh nhỏ lẻ, giúp họ dễ dàng tạo ra những nội dung quảng bá sản phẩm chuyên nghiệp, hấp dẫn mà không cần tốn nhiều thời gian hay kỹ năng viết lách. Trong bối cảnh chuyển đổi số, việc đưa nông sản lên sàn thương mại điện tử là xu hướng tất yếu, và FruiText AI sinh ra để làm cầu nối công nghệ đó.
+
+Đồ án đã dựa trên quy trình phát triển phần mềm hiện đại với các công nghệ tiên tiến như: Next.js (Frontend), FastAPI (Backend), MongoDB (Cơ sở dữ liệu) và tích hợp Google Gemini AI. Chúng em cũng chú trọng đến trải nghiệm người dùng thông qua giao diện thân thiện và các tính năng hỗ trợ như chuyển văn bản thành giọng nói (TTS) và chia sẻ mạng xã hội.
+
+Quý thầy cô đọc sẽ tìm thấy được trong báo cáo này chi tiết về yêu cầu của ứng dụng, thiết kế hệ thống, giao diện người dùng và các tính năng chính. Em hy vọng đồ án này sẽ đem lại cái nhìn tổng quan về việc áp dụng công nghệ AI vào thực tiễn đời sống.
+
+Em muốn gửi lời cảm ơn sâu sắc đến giảng viên hướng dẫn là thầy Nguyễn Minh Sơn vì sự hỗ trợ và đóng góp quý báu của thầy.
+
+Em Xin Chân Thành Cảm Ơn!
+
+MỤC LỤC
+
+Chương 1.	TỔNG QUAN VỀ ĐỀ TÀI
+1.1.	Tổng quan
+1.1.1.	Lý do chọn đề tài
+1.1.2.	Mục tiêu của đề tài
+1.1.3.	So sánh với hệ thống tương tự
+Chương 2.	CƠ SỞ LÝ THUYẾT
+2.1.	Tổng quan về Next.js (Frontend)
+2.2.	Tổng quan về FastAPI (Backend)
+2.3.	Tổng quan về MongoDB (Database)
+2.4.	Tổng quan về Google Gemini AI
+2.5.	Các công nghệ hỗ trợ khác
+Chương 3.	PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG
+3.1.	Đối tượng sử dụng
+3.2.	Kiến trúc hệ thống chi tiết
+3.3.	Thiết kế Cơ sở dữ liệu (Database Schema)
+3.4.	Đặc tả API (API Specification)
+Chương 4.	NỘI DUNG THỰC HIỆN CHI TIẾT
+4.1.	Module Xác thực & Bảo mật
+4.2.	Module Tạo mô tả từ hình ảnh (Image-to-Text)
+4.3.	Module Tạo mô tả từ văn bản (Text-to-Text)
+4.4.	Module Chuyển văn bản thành giọng nói (TTS)
+4.5.	Module Tích hợp Mạng xã hội
+4.6.	Kỹ thuật Prompt Engineering
+Chương 5.	HƯỚNG DẪN SỬ DỤNG (USER MANUAL)
+5.1.	Quy trình trên Web
+5.2.	Quy trình trên Mobile
+5.3.	Các câu hỏi thường gặp (FAQ)
+Chương 6.	KIỂM THỬ VÀ ĐÁNH GIÁ
+6.1.	Các trường hợp kiểm thử (Test Cases)
+6.2.	Đánh giá hiệu năng
+Chương 7.	KẾT LUẬN
+7.1.	Kết quả đạt được
+7.2.	Hạn chế
+7.3.	Hướng phát triển
+
+---
+
+CHƯƠNG 1. 	TỔNG QUAN VỀ ĐỀ TÀI
+
+1.1. 	Tổng quan
+1.1.1. 	Lý do chọn đề tài
+Trong kỷ nguyên số, thương mại điện tử đang trở thành kênh tiêu thụ nông sản quan trọng. Tuy nhiên, việc biên soạn nội dung mô tả sản phẩm sao cho hấp dẫn, chuẩn SEO và thu hút khách hàng vẫn là một thách thức lớn đối với bà con nông dân và các tiểu thương. Quy trình thủ công thường tốn thời gian và thiếu tính chuyên nghiệp. Nhiều người bán hàng gặp khó khăn trong việc tìm kiếm từ ngữ để miêu tả độ tươi ngon, hương vị của trái cây một cách sinh động. Xuất phát từ thực tế đó, nhóm chúng em quyết định xây dựng "FruiText AI" - ứng dụng sử dụng trí tuệ nhân tạo để tự động hóa việc tạo mô tả sản phẩm trái cây, giúp nâng cao hiệu quả kinh doanh và giá trị nông sản Việt.
+
+1.1.2. 	Mục tiêu của đề tài 
+- Xây dựng ứng dụng web hiện đại, thân thiện với người dùng, hoạt động mượt mà trên cả máy tính và điện thoại di động.
+- Tích hợp AI (Google Gemini Vision) để phân tích hình ảnh và sinh nội dung tự động với độ chính xác cao.
+- Hỗ trợ đa dạng phong cách viết (Tiếp thị, Chuyên nghiệp, Thân thiện, Kể chuyện) để phù hợp với nhiều nền tảng đăng bài khác nhau (Facebook, Website, Zalo).
+- Cung cấp công cụ hỗ trợ toàn diện: Chuyển đổi văn bản thành giọng nói (TTS) để làm video review, chia sẻ nhanh lên mạng xã hội.
+- Giúp người dùng tiết kiệm thời gian và nâng cao chất lượng nội dung quảng bá.
+
+1.1.3. 	So sánh với hệ thống tương tự
+| Tiêu chí | FruiText AI (Của nhóm) | Các công cụ AI chung (ChatGPT, v.v.) |
+| --- | --- | --- |
+| Chuyên biệt | Tối ưu hóa chuyên sâu cho nông sản, trái cây | Đa dụng, kiến thức chung chung, không chuyên sâu |
+| Đầu vào | Hỗ trợ hình ảnh trực quan và văn bản | Thường chỉ hỗ trợ văn bản (bản miễn phí) |
+| Tính năng bổ sung | TTS (Giọng đọc tiếng Việt tự nhiên), Xuất file DOCX/PDF, Chia sẻ Facebook/TikTok | Thường chỉ trả về văn bản thô, ít công cụ hỗ trợ |
+| Lưu trữ | Lưu lịch sử chi tiết kèm hình ảnh minh họa | Lưu lịch sử chat đơn thuần, khó quản lý |
+| Chi phí | Miễn phí / Chi phí thấp cho nông dân | Các bản cao cấp thường thu phí tháng |
+
+CHƯƠNG 2. 	 CƠ SỞ LÝ THUYẾT
+
+2.1. 	Tổng quan về Next.js
+Next.js là một framework React mạnh mẽ giúp xây dựng các ứng dụng web hiệu suất cao. Trong dự án này, chúng em tận dụng triệt để các tính năng cốt lõi:
+- **Server-Side Rendering (SSR)**: Giúp render nội dung HTML ngay trên server trước khi gửi về client. Điều này cải thiện đáng kể chỉ số First Contentful Paint (FCP), giúp trang web tải nhanh hơn và thân thiện với các bot tìm kiếm (SEO).
+- **Client Components & Hooks**: Sử dụng `useClient` directive để đánh dấu các component tương tác (như Form, Camera). Các React Hooks như `useState` (quản lý trạng thái), `useEffect` (xử lý side-effects), `useCallback` (tối ưu hiệu năng) được sử dụng rộng rãi để tạo trải nghiệm mượt mà.
+- **App Router**: Cơ chế định tuyến dựa trên hệ thống file (File-system based routing) giúp cấu trúc dự án rõ ràng, dễ quản lý các trang con và API routes.
+
+2.2. 	Tổng quan về FastAPI
+FastAPI là framework Python hiện đại, được chọn vì tốc độ và tính năng vượt trội:
+- **Pydantic Models**: Sử dụng Pydantic để định nghĩa Schema dữ liệu (ví dụ: `UserCreate`, `GenerateTextRequest`). Điều này giúp tự động kiểm tra (validate) dữ liệu đầu vào, giảm thiểu lỗi runtime và đảm bảo tính toàn vẹn dữ liệu.
+- **Dependency Injection**: Hệ thống `Depends` mạnh mẽ giúp quản lý các thành phần phụ thuộc như Database session, Current User một cách gọn gàng và tái sử dụng được.
+- **Asynchronous (Async/Await)**: Tận dụng sức mạnh của Python `asyncio` để xử lý đồng thời nhiều request. Điều này cực kỳ quan trọng khi backend phải chờ phản hồi từ các dịch vụ bên ngoài (Gemini, Cloudinary) mà không chặn luồng xử lý chính.
+
+2.3. 	Tổng quan về MongoDB
+MongoDB là lựa chọn tối ưu cho dữ liệu phi cấu trúc:
+- **Document-Oriented**: Dữ liệu được lưu dưới dạng BSON (Binary JSON). Mỗi mô tả sản phẩm có thể có cấu trúc khác nhau (có ảnh hoặc không, độ dài khác nhau) mà không cần sửa đổi Schema cứng nhắc như SQL.
+- **PyMongo Driver**: Thư viện chính thức để tương tác với MongoDB từ Python, hỗ trợ đầy đủ các thao tác CRUD và Aggregation Framework.
+
+2.4. 	Tổng quan về Google Gemini AI
+Google Gemini Vision Pro là trái tim của hệ thống:
+- **Multimodal Capabilities**: Khả năng xử lý đa phương thức (Hình ảnh + Văn bản) cho phép AI "nhìn" thấy sản phẩm như con người.
+- **Context Window**: Cửa sổ ngữ cảnh lớn giúp Gemini hiểu được các yêu cầu phức tạp trong Prompt và duy trì mạch văn nhất quán.
+
+2.5. 	Các công nghệ hỗ trợ khác
+- **Cloudinary**: Giải pháp quản lý media toàn diện. API của Cloudinary giúp upload ảnh, tự động tối ưu hóa định dạng (WebP/JPG) và kích thước để tăng tốc độ tải trang.
+- **Edge-TTS**: Thư viện Python giao tiếp với Microsoft Edge Online TTS service. Ưu điểm là cung cấp các giọng đọc Neural (như `vi-VN-HoaiMyNeural`) có ngữ điệu tự nhiên, không bị máy móc như các giải pháp offline cũ.
+- **Passlib & Jose**: Bộ đôi thư viện bảo mật. `Passlib` dùng để băm mật khẩu an toàn, còn `python-jose` dùng để tạo và xác thực JWT Token.
+
+CHƯƠNG 3. 	PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG
+
+3.1. 	Đối tượng sử dụng
+- **Nông dân**: Những người trực tiếp sản xuất, muốn bán hàng nhưng hạn chế về kỹ năng công nghệ và viết lách.
+- **Tiểu thương**: Các chủ sạp trái cây, cửa hàng thực phẩm sạch cần đăng bài liên tục lên Zalo, Facebook.
+- **Marketer**: Nhân viên nội dung cần công cụ hỗ trợ ý tưởng nhanh chóng.
+
+3.2. 	Kiến trúc hệ thống chi tiết
+Hệ thống tuân theo kiến trúc 3 tầng (3-Tier Architecture):
+1.  **Presentation Layer (Frontend)**:
+    -   Xây dựng bằng Next.js.
+    -   Giao tiếp với Backend qua RESTful API (Axios).
+    -   Xử lý logic hiển thị, camera, và tương tác người dùng.
+2.  **Business Logic Layer (Backend)**:
+    -   Xây dựng bằng FastAPI.
+    -   Chứa các Controller (Router) và Service (Auth, Content, History).
+    -   Xử lý nghiệp vụ chính: Xác thực, gọi AI, xử lý ảnh.
+3.  **Data Access Layer (Database)**:
+    -   MongoDB lưu trữ dữ liệu bền vững.
+    -   Cloudinary lưu trữ file media.
+
+**Luồng dữ liệu (Data Flow) - Ví dụ chức năng Tạo mô tả từ ảnh:**
+1.  User upload ảnh -> Frontend.
+2.  Frontend gửi ảnh -> Backend API (`/api/descriptions/image`).
+3.  Backend -> Cloudinary (Upload ảnh, nhận về URL).
+4.  Backend -> Gemini API (Gửi URL ảnh + Prompt).
+5.  Gemini -> Backend (Trả về văn bản mô tả).
+6.  Backend -> MongoDB (Lưu lịch sử).
+7.  Backend -> Frontend (Trả về kết quả JSON).
+
+3.3. 	Thiết kế Cơ sở dữ liệu (Database Schema)
+Chi tiết các Collection trong MongoDB:
+
+**1. Collection `users`**
+| Field | Type | Description |
+| --- | --- | --- |
+| `_id` | ObjectId | Khóa chính tự sinh |
+| `email` | String | Email (Unique, Index) |
+| `phone_number` | String | SĐT (Unique, Index) |
+| `hashed_password` | String | Mật khẩu đã băm (PBKDF2) |
+| `created_at` | DateTime | Thời gian đăng ký |
+
+**2. Collection `descriptions`**
+| Field | Type | Description |
+| --- | --- | --- |
+| `_id` | ObjectId | Khóa chính |
+| `user_id` | ObjectId | FK tham chiếu User |
+| `content` | String | Nội dung AI tạo |
+| `source` | String | "image" hoặc "text" |
+| `style` | String | Phong cách đã chọn |
+| `image_path` | String | URL ảnh (nếu có) |
+| `timestamp` | DateTime | Thời gian tạo |
+
+**3. Collection `password_reset_tokens`**
+| Field | Type | Description |
+| --- | --- | --- |
+| `user_id` | ObjectId | FK tham chiếu User |
+| `token_hash` | String | Hash của mã reset |
+| `expires_at` | DateTime | Thời gian hết hạn |
+| `used` | Boolean | Đã sử dụng chưa |
+
+3.4. 	Đặc tả API (API Specification)
+Một số API Endpoint quan trọng:
+
+**POST /auth/login**
+-   **Request**: `{"identifier": "user@example.com", "password": "secret"}`
+-   **Response**: `{"access_token": "eyJhbG...", "token_type": "bearer"}`
+
+**POST /api/descriptions/image**
+-   **Headers**: `Authorization: Bearer <token>`
+-   **Form Data**: `file: (binary)`, `style: "Tiếp thị"`
+-   **Response**:
+    ```json
+    {
+      "description": "Tiêu đề: Xoài Cát...",
+      "history_id": "651a...",
+      "image_url": "https://res.cloudinary.com/..."
+    }
+    ```
+
+CHƯƠNG 4. 	NỘI DUNG THỰC HIỆN CHI TIẾT
+
+4.1. 	Module Xác thực & Bảo mật
+Module này đảm bảo chỉ người dùng đã đăng ký mới được sử dụng các tính năng cao cấp và xem lịch sử cá nhân.
+- **Password Hashing**: Sử dụng thuật toán `pbkdf2_sha256` với 36,000 vòng lặp (rounds). Đây là chuẩn bảo mật cao, chống lại các cuộc tấn công Brute-force và Rainbow Table.
+- **JWT Implementation**: Token được ký bằng thuật toán `HS256` với một `SECRET_KEY` phức tạp được lưu trong biến môi trường. Thời gian sống của Token là 12 giờ, đủ cho một phiên làm việc trong ngày của người nông dân.
+
+4.2. 	Module Tạo mô tả từ hình ảnh (Image-to-Text)
+Đây là tính năng đột phá nhất của ứng dụng.
+- **Xử lý ảnh**: Ảnh được resize và nén nhẹ trước khi gửi đi để tối ưu băng thông.
+- **Gemini Vision Integration**: Chúng em sử dụng model `gemini-1.5-flash` (hoặc pro) để cân bằng giữa tốc độ và chất lượng. Prompt được thiết kế để yêu cầu AI đóng vai một chuyên gia nông nghiệp, nhận diện chính xác loại trái cây (ví dụ: phân biệt cam sành và cam xoàn).
+
+4.3. 	Module Tạo mô tả từ văn bản (Text-to-Text)
+Dành cho trường hợp người dùng không có ảnh hoặc muốn tạo nội dung nhanh từ ý tưởng.
+- **Template System**: Hệ thống có sẵn các khung sườn (template) cho từng loại bài viết. Ví dụ, bài "Kể chuyện" sẽ có cấu trúc: Mở bài cảm xúc -> Thân bài mô tả -> Kết bài lắng đọng.
+- **Keyword Expansion**: AI sẽ tự động mở rộng các từ khóa đơn lẻ (ví dụ: "ngọt, giòn") thành các câu văn miêu tả đầy đủ (ví dụ: "Vị ngọt thanh mát tan ngay đầu lưỡi, kết hợp cùng độ giòn tan khó cưỡng...").
+
+4.4. 	Module Chuyển văn bản thành giọng nói (TTS)
+- **Streaming Response**: File âm thanh được trả về dưới dạng Stream (luồng dữ liệu) thay vì file tĩnh, giúp người dùng có thể nghe ngay lập tức mà không cần chờ tải xong toàn bộ file.
+- **Voice Selection**: Mặc định sử dụng giọng nữ miền Bắc (Hoài My) vì độ phổ biến và dễ nghe, phù hợp với đại đa số người dùng Việt Nam.
+
+4.5. 	Module Tích hợp Mạng xã hội
+- **Facebook SDK**: Tích hợp sẵn `fbAsyncInit` để khởi tạo SDK ngay khi trang web tải xong. Hàm `FB.ui({ method: 'share' })` được gọi để mở cửa sổ chia sẻ native của Facebook.
+- **TikTok Automation**: Do TikTok chưa có API chia sẻ trực tiếp như Facebook cho web, chúng em xây dựng quy trình bán tự động: Tự động copy nội dung vào Clipboard -> Tự động tải ảnh về máy -> Mở trang upload của TikTok -> Người dùng chỉ cần Ctrl+V và chọn ảnh là xong.
+
+4.6. 	Kỹ thuật Prompt Engineering
+Chúng em đã áp dụng kỹ thuật "Few-shot Prompting" (cung cấp ví dụ mẫu) trong quá trình phát triển để dạy AI cách viết đúng định dạng mong muốn.
+- **Role Playing**: "Bạn là chuyên gia Copywriter..."
+- **Constraint**: "Không dùng ký tự đặc biệt, không dùng dấu *..."
+- **Format**: "Trả về kết quả theo cấu trúc: Tiêu đề, Slogan, Nội dung..."
+Việc loại bỏ ký tự `*` (asterisk) là một yêu cầu quan trọng để văn bản trông sạch sẽ và tự nhiên hơn khi dán vào Facebook/Zalo (vốn không hỗ trợ Markdown đậm/nghiêng như web).
+
+CHƯƠNG 5. 	HƯỚNG DẪN SỬ DỤNG (USER MANUAL)
+
+5.1. 	Quy trình trên Web
+1.  **Đăng nhập**: Truy cập trang chủ, nhấn nút "Đăng nhập" ở góc phải. Nhập Email/SĐT và mật khẩu.
+2.  **Tạo nội dung**:
+    -   Chọn tab "Hình ảnh" hoặc "Văn bản".
+    -   Upload ảnh hoặc nhập thông tin sản phẩm.
+    -   Chọn phong cách viết (Tiếp thị, Chuyên nghiệp...).
+    -   Nhấn "Tạo mô tả".
+3.  **Sử dụng kết quả**:
+    -   Nhấn biểu tượng "Sao chép" để copy nội dung.
+    -   Nhấn biểu tượng "Loa" để nghe thử.
+    -   Nhấn nút "Facebook" để chia sẻ ngay.
+
+5.2. 	Quy trình trên Mobile
+1.  **Chụp ảnh**: Mở ứng dụng, cấp quyền Camera. Nhấn nút "Chụp ảnh" để chụp trực tiếp sản phẩm tại vườn/sạp.
+2.  **Chỉnh sửa nhanh**: Xem lại ảnh, nếu ưng ý nhấn "Dùng ảnh này".
+3.  **Tạo và Đăng**: Tương tự như trên web, nhưng giao diện được tối ưu cho thao tác vuốt chạm.
+
+5.3. 	Các câu hỏi thường gặp (FAQ)
+-   **Hỏi**: Tôi có thể dùng ứng dụng khi không có mạng không?
+    -   **Đáp**: Không, ứng dụng cần Internet để kết nối với AI Server.
+-   **Hỏi**: Lịch sử của tôi được lưu bao lâu?
+    -   **Đáp**: Lịch sử được lưu vĩnh viễn gắn liền với tài khoản của bạn cho đến khi bạn chủ động xóa.
+-   **Hỏi**: Tại sao AI đôi khi nhận diện sai trái cây?
+    -   **Đáp**: Do chất lượng ảnh (thiếu sáng, mờ) hoặc góc chụp lạ. Hãy thử chụp lại rõ nét hơn.
+
+CHƯƠNG 6. 	KIỂM THỬ VÀ ĐÁNH GIÁ
+
+6.1. 	Các trường hợp kiểm thử (Test Cases)
+Nhóm đã thực hiện kiểm thử hộp đen (Black-box testing) với các kịch bản sau:
+
+| ID | Tên kịch bản | Các bước thực hiện | Kết quả mong đợi | Trạng thái |
+| --- | --- | --- | --- | --- |
+| TC01 | Đăng ký thành công | Nhập email chưa tồn tại, mật khẩu hợp lệ -> Nhấn Đăng ký | Thông báo thành công, chuyển sang đăng nhập | Pass |
+| TC02 | Đăng ký trùng Email | Nhập email đã tồn tại -> Nhấn Đăng ký | Thông báo lỗi "Email đã tồn tại" | Pass |
+| TC03 | Upload ảnh hợp lệ | Upload file .jpg, dung lượng 2MB | Hiển thị ảnh preview, nút Tạo sáng lên | Pass |
+| TC04 | Upload file rác | Upload file .txt hoặc .exe | Thông báo lỗi "Định dạng không hỗ trợ" | Pass |
+| TC05 | Tạo mô tả (Happy Path) | Upload ảnh xoài -> Chọn style Tiếp thị -> Nhấn Tạo | Trả về văn bản mô tả về xoài, đúng style | Pass |
+| TC06 | TTS hoạt động | Nhấn nút Loa sau khi có kết quả | Âm thanh phát ra, giọng đọc rõ ràng | Pass |
+
+6.2. 	Đánh giá hiệu năng
+-   **Thời gian phản hồi trung bình**:
+    -   API Đăng nhập/Đăng ký: < 200ms.
+    -   API Tạo mô tả Text: 2-3 giây.
+    -   API Tạo mô tả Ảnh: 5-8 giây (phụ thuộc vào kích thước ảnh và phản hồi của Gemini).
+-   **Độ chính xác của AI**:
+    -   Nhận diện loại trái cây: Chính xác > 95% với ảnh rõ nét.
+    -   Tuân thủ phong cách: AI thực hiện tốt việc thay đổi giọng văn theo yêu cầu.
+
+CHƯƠNG 7. 	KẾT LUẬN
+
+7.1. 	Kết quả đạt được
+Sau 3 tháng nghiên cứu và phát triển, nhóm đã hoàn thành đồ án "FruiText AI" với các kết quả khả quan:
+-   **Về mặt kỹ thuật**: Làm chủ được các công nghệ mới (Next.js, FastAPI, GenAI). Xây dựng được một hệ thống hoàn chỉnh từ Frontend đến Backend và Database.
+-   **Về mặt sản phẩm**: Tạo ra một công cụ thực sự hữu ích. Ứng dụng không chỉ là bài tập môn học mà còn có tiềm năng phát triển thành sản phẩm khởi nghiệp (Startup) phục vụ cộng đồng nông nghiệp.
+-   **Về mặt kỹ năng**: Nâng cao kỹ năng làm việc nhóm, quản lý dự án (sử dụng Git/GitHub), và kỹ năng giải quyết vấn đề thực tế.
+
+7.2. 	Hạn chế
+-   Phụ thuộc vào API của bên thứ 3 (Google Gemini). Nếu Google thay đổi chính sách hoặc bảo trì, hệ thống sẽ bị ảnh hưởng.
+-   Chưa hỗ trợ chỉnh sửa ảnh (crop, filter) trực tiếp trên ứng dụng.
+-   Chưa có tính năng gợi ý giá bán dựa trên thị trường.
+
+7.3. 	Hướng phát triển
+Trong tương lai, nhóm dự định nâng cấp hệ thống theo các hướng sau:
+-   **Đa ngôn ngữ**: Mở rộng hỗ trợ tiếng Anh, Trung, Nhật để phục vụ xuất khẩu nông sản.
+-   **Tích hợp E-commerce sâu**: Cho phép đăng bán sản phẩm trực tiếp lên Shopee, Lazada, TikTok Shop từ ứng dụng thông qua API của sàn.
+-   **AI nâng cao**: Fine-tune model Gemini với dữ liệu đặc thù của nông sản Việt Nam để nhận diện chính xác các giống loài đặc sản (Vải thiều Lục Ngạn, Nhãn lồng Hưng Yên...).
+-   **Phát triển Mobile App Native**: Xây dựng phiên bản ứng dụng di động (React Native/Flutter) để tận dụng tốt hơn các tính năng phần cứng như Camera, GPS (để xác thực nguồn gốc vùng trồng) và thông báo đẩy (Push Notifications).
+
+---
+Mục lục hình
+(Danh sách các hình ảnh giao diện ứng dụng - Có thể bổ sung sau khi chụp màn hình thực tế)

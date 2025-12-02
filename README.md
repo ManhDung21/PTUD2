@@ -10,6 +10,10 @@
 - **Đa phong cách viết**: Tiếp thị, Chuyên nghiệp, Thân thiện, Kể chuyện
 - **Đánh giá SEO tự động**: Tính điểm SEO và đưa ra gợi ý tối ưu
 
+### 🔊 Tiện ích thông minh
+- **Text-to-Speech (TTS)**: Đọc mô tả sản phẩm bằng giọng đọc tự nhiên (Edge-TTS)
+- **Chia sẻ mạng xã hội**: Chia sẻ nhanh mô tả và hình ảnh lên Facebook, TikTok
+
 ### 👤 Quản Lý Tài Khoản
 - **Đăng ký/Đăng nhập**: Hỗ trợ cả **Email** và **Số điện thoại**
 - **Xác thực JWT**: Bảo mật với JSON Web Token
@@ -23,25 +27,24 @@ flowchart TD
     subgraph UI[Frontend Next.js]
         A1[1. Người dùng truy cập web/app]
         A2[2. Đăng nhập/đăng ký]
-        A3[3. Chọn chế độ: Hình ảnh / Text / Agent]
-        A4[4. Nhập dữ liệu hoặc gửi yêu cầu]
-        A5[5. Xem kết quả, tải xuống, xem lịch sử]
+        A3[3. Chọn chế độ: Hình ảnh / Text]
+        A4[4. Nhập dữ liệu hoặc chụp ảnh]
+        A5[5. Xem kết quả, nghe đọc, chia sẻ]
     end
 
     subgraph BE[Backend FastAPI]
         B1[6. /auth/login - xác thực JWT]
         B2[7. /api/descriptions/image]
         B3[8. /api/descriptions/text]
-        B4[9. /api/agent/chat]
+        B4[9. /api/tts - Text to Speech]
         B5[10. Lưu lịch sử mô tả]
-        B6[11. Lưu phiên agent & hội thoại]
-        B7[12. /api/history & /api/agent/sessions]
-        B8[13. /api/export/docx|pdf]
+        B6[11. /api/history]
     end
 
     subgraph External[External Services]
         C1[Google Gemini API]
-        C2[SQLite data.db]
+        C2[MongoDB Database]
+        C3[Cloudinary (Image Storage)]
     end
 
     A1 --> A2
@@ -52,27 +55,19 @@ flowchart TD
 
     A4 -->|POST /api/descriptions/image| B2
     A4 -->|POST /api/descriptions/text| B3
-    A4 -->|POST /api/agent/chat| B4
+    A5 -->|POST /api/tts| B4
 
+    B2 -->|Upload ảnh| C3
     B2 -->|Gọi Gemini phân tích hình| C1
     B3 -->|Gọi Gemini sinh text| C1
-    B4 -->|Agent quyết định & gọi Gemini| C1
 
     B2 -->|Lưu mô tả| B5
     B3 -->|Lưu mô tả| B5
-    B4 -->|Lưu mô tả (nếu hoàn thành)| B5
-    B4 -->|Lưu hội thoại| B6
 
     B5 -->|Ghi dữ liệu| C2
-    B6 -->|Ghi dữ liệu| C2
 
-    A5 -->|GET /api/history| B7
-    A5 -->|GET /api/agent/sessions| B7
-    B7 -->|Trả dữ liệu lịch sử & phiên| A5
-
-    A5 -->|POST /api/export/docx| B8
-    A5 -->|POST /api/export/pdf| B8
-    B8 -->|Trả file DOCX/PDF| A5
+    A5 -->|GET /api/history| B6
+    B6 -->|Đọc dữ liệu| C2
 ```
 
 ## 🚀 Cài đặt
@@ -80,22 +75,22 @@ flowchart TD
 ### Yêu cầu hệ thống
 - **Python 3.8+** (Backend)
 - **Node.js 18+** và **npm** (Frontend)
+- **MongoDB** (Local hoặc Atlas)
 - Kết nối internet
 
 ### Cấu trúc dự án
 ```
-PTUD1/
+PTUD2/
 ├── backend/          # FastAPI Backend
 │   ├── app/
-│   │   ├── db/      # Database models & session
-│   │   ├── services/ # Business logic
+│   │   ├── db/      # Database connection (MongoDB)
+│   │   ├── services/ # Business logic (Gemini, TTS, Cloudinary)
 │   │   └── main.py  # API endpoints
 │   └── requirements.txt
 ├── frontend/         # Next.js Frontend
 │   ├── app/
 │   └── package.json
-├── .env             # Environment variables
-└── data.db          # SQLite database
+└── .env             # Environment variables
 ```
 
 ### Các bước cài đặt
@@ -104,15 +99,25 @@ PTUD1/
 
 2. **Cấu hình API Key**
 
-   a. Lấy Gemini API key miễn phí:
-   - Truy cập: https://makersuite.google.com/app/apikey
-   - Đăng nhập với tài khoản Google
-   - Nhấn "Create API Key" để tạo key mới
-
-   b. File `.env` đã có sẵn, cập nhật API key:
+   Tạo file `.env` ở thư mục gốc và cấu hình các biến sau:
    ```env
-   GEMINI_API_KEY=AIzaSy...your_api_key_here
+   # AI & Database
+   GEMINI_API_KEY=AIzaSy...your_api_key
+   MONGODB_URI=mongodb://localhost:27017
+   MONGODB_DB=fruitext_db
+
+   # Security
    JWT_SECRET=your_secret_key_here
+
+   # Cloudinary (Lưu trữ ảnh)
+   CLOUDINARY_CLOUD_NAME=your_cloud_name
+   CLOUDINARY_API_KEY=your_api_key
+   CLOUDINARY_API_SECRET=your_api_secret
+
+   # Social Sharing (Frontend)
+   NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+   NEXT_PUBLIC_FACEBOOK_APP_ID=your_fb_app_id
+   NEXT_PUBLIC_TIKTOK_CLIENT_KEY=your_tiktok_key
    ```
 
 3. **Cài đặt Backend**
@@ -135,11 +140,11 @@ cd ..
 **Terminal 1:**
 ```bash
 # Windows PowerShell
-cd C:\path\to\PTUD1
-python -m uvicorn backend.app.main:app --reload --port 8000
+cd backend
+python -m uvicorn app.main:app --reload --port 8000
 
 # Linux/Mac
-python -m uvicorn backend.app.main:app --reload --port 8000
+python -m uvicorn app.main:app --reload --port 8000
 ```
 
 ✅ Backend chạy tại: **http://localhost:8000**  
@@ -160,164 +165,69 @@ npm run dev
 ## 🎯 Hướng dẫn sử dụng
 
 ### 1. Đăng ký/Đăng nhập
-
-**Đăng ký mới:**
-- Nhấn "Đăng nhập / Đăng ký"
-- Chọn "Đăng ký tài khoản"
-- Nhập **Email** hoặc **Số điện thoại** (10-11 số)
-- Nhập mật khẩu (tối thiểu 6 ký tự)
-
-**Đăng nhập:**
-- Nhập email/số điện thoại đã đăng ký
-- Nhập mật khẩu
+- Hỗ trợ đăng ký bằng Email hoặc Số điện thoại.
+- Đăng nhập để lưu lịch sử và sử dụng đầy đủ tính năng.
 
 ### 2. Tạo mô tả từ hình ảnh
-
-1. Chọn tab "📸 Phân tích hình ảnh"
-2. Chọn phong cách viết (Tiếp thị, Chuyên nghiệp, Thân thiện...)
-3. Upload hình hoặc dùng camera chụp ảnh
-4. Nhấn "🚀 AI tạo mô tả ngay"
-5. Xem kết quả với điểm SEO và các gợi ý
+1. Chọn tab "📸 Phân tích hình ảnh".
+2. Upload hình hoặc dùng camera chụp ảnh.
+3. AI sẽ phân tích và tạo mô tả chi tiết.
 
 ### 3. Tạo mô tả từ text
+1. Chọn tab "✍️ Tạo từ mô tả text".
+2. Nhập thông tin ngắn gọn (VD: "Táo Fuji Nhật, ngọt giòn").
+3. AI sẽ viết lại thành bài quảng cáo hấp dẫn.
 
-1. Chọn tab "✍️ Tạo từ mô tả text"
-2. Chọn phong cách viết
-3. Nhập thông tin sản phẩm:
-   ```
-   Táo Fuji nhập khẩu Nhật Bản, quả to, màu đỏ tươi, ngọt giòn
-   ```
-4. Nhấn "✨ Tạo mô tả chi tiết"
-
-### 4. Xem lịch sử
-
-- Sau khi đăng nhập, tất cả mô tả được lưu tự động
-- Cuộn xuống phần "Lịch sử mô tả"
-- Click "Xem chi tiết" để xem lại
-- Sao chép hoặc tải xuống mô tả
-
-## 📝 Cấu trúc mô tả được tạo
-
-AI sẽ tạo mô tả theo cấu trúc chuẩn cho e-commerce:
-
-- **Tên sản phẩm**: Hấp dẫn và tối ưu SEO
-- **Mô tả ngắn gọn**: Câu giới thiệu thu hút
-- **Đặc điểm nổi bật**: Màu sắc, kích thước, chất lượng, nguồn gốc
-- **Lợi ích sức khỏe**: Giá trị dinh dưỡng
-- **Hướng dẫn bảo quản**: Cách bảo quản tốt nhất
-- **Gợi ý sử dụng**: Cách chế biến và sử dụng
-- **Điểm SEO**: Tự động tính toán và đánh giá từ khóa, hashtag, CTA
-
-## 💡 Mẹo sử dụng
-
-- **Đăng nhập** để lưu lịch sử và quản lý mô tả
-- Sử dụng hình ảnh **rõ nét**, **đủ ánh sáng** để có kết quả tốt nhất
-- Thử nhiều **phong cách viết** khác nhau để chọn phù hợp
-- Kiểm tra **điểm SEO** và áp dụng gợi ý để tối ưu
-- Có thể **sao chép** mô tả để chỉnh sửa theo ý muốn
+### 4. Tiện ích khác
+- **Nghe đọc**: Nhấn biểu tượng loa để nghe AI đọc mô tả.
+- **Chia sẻ**: Nhấn nút chia sẻ để đăng lên Facebook hoặc chuẩn bị nội dung cho TikTok.
 
 ## 🛠️ Công nghệ sử dụng
 
 ### Backend
 - **FastAPI**: Modern Python web framework
-- **SQLModel**: ORM dựa trên SQLAlchemy & Pydantic
-- **Google Gemini AI**: Model AI phân tích hình ảnh và tạo text
-- **JWT Authentication**: Xác thực người dùng an toàn
-- **SQLite**: Database nhẹ, dễ deploy
+- **MongoDB**: NoSQL Database linh hoạt
+- **Google Gemini AI**: Model AI đa phương thức
+- **Edge-TTS**: Chuyển văn bản thành giọng nói
+- **Cloudinary**: Lưu trữ hình ảnh đám mây
+- **JWT Authentication**: Xác thực an toàn
 
 ### Frontend
-- **Next.js 15**: React framework với App Router
+- **Next.js 15**: React framework hiện đại
 - **TypeScript**: Type-safe JavaScript
 - **Axios**: HTTP client
-- **CSS-in-JS**: Inline styling
+- **Tailwind CSS** (hoặc CSS Modules): Styling
 
 ## 📊 API Endpoints
 
 ### Authentication
-- `POST /auth/register` - Đăng ký (email hoặc số điện thoại)
+- `POST /auth/register` - Đăng ký
 - `POST /auth/login` - Đăng nhập
-- `GET /auth/me` - Thông tin user hiện tại
+- `GET /auth/me` - Thông tin user
 - `POST /auth/forgot-password` - Quên mật khẩu
-- `POST /auth/reset-password` - Đặt lại mật khẩu
 
 ### Descriptions
 - `POST /api/descriptions/image` - Tạo mô tả từ hình ảnh
 - `POST /api/descriptions/text` - Tạo mô tả từ text
-- `GET /api/history` - Lịch sử mô tả (yêu cầu đăng nhập)
+- `GET /api/history` - Lịch sử mô tả
 - `GET /api/styles` - Danh sách phong cách viết
 
 ### Utilities
+- `POST /api/tts` - Chuyển văn bản thành giọng nói
 - `GET /health` - Health check
 
 **Swagger UI**: http://localhost:8000/docs
 
 ## ⚠️ Lưu ý
-
-- API key Gemini có giới hạn requests miễn phí (60 requests/phút)
-- Không chia sẻ API key và JWT secret
-- File `.env` đã được thêm vào `.gitignore` để bảo mật
-- Database SQLite phù hợp cho development và ứng dụng nhỏ
-- Đăng ký bằng số điện thoại: chỉ chấp nhận 10-11 chữ số
-
-## 🔧 Troubleshooting
-
-**Backend không chạy:**
-```bash
-# Xóa cache Python
-Remove-Item -Recurse backend/__pycache__, backend/app/__pycache__
-
-# Cài lại dependencies
-pip install -r backend/requirements.txt
-```
-
-**Frontend không chạy:**
-```bash
-cd frontend
-# Xóa node_modules và cài lại
-Remove-Item -Recurse node_modules
-npm install
-```
-
-**Database bị lỗi:**
-```bash
-# Xóa và tạo lại database
-del data.db
-# Restart backend để tự động tạo lại
-```
+- Cần có **MongoDB** đang chạy để backend hoạt động.
+- API key Gemini có giới hạn requests miễn phí.
+- Cấu hình đầy đủ Cloudinary để tính năng upload ảnh hoạt động ổn định nhất.
 
 ## 📞 Hỗ trợ
-
-Nếu gặp lỗi:
-1. Kiểm tra backend và frontend đều đang chạy
-2. Kiểm tra API key Gemini đã cấu hình đúng
-3. Đảm bảo port 8000 và 3000 không bị chiếm
-4. Xem logs trong terminal để biết lỗi cụ thể
-5. Check Developer Tools (F12) trong browser
+Nếu gặp lỗi, vui lòng kiểm tra:
+1. MongoDB đã chạy chưa?
+2. Các biến môi trường trong `.env` đã đúng chưa?
+3. Port 8000 và 3000 có bị chiếm dụng không?
 
 ## 📄 License
-
-MIT License - Tự do sử dụng cho mục đích cá nhân và thương mại.
-
-## Social sharing configuration
-
-Facebook Login + TikTok Login/Share now power both the Expo mobile app (`mobile/`) and the Next.js web client (`frontend/`). Define the environment values below before running either target:
-
-| Target | Variable | Description |
-| ------ | -------- | ----------- |
-| Web / Mobile | EXPO_PUBLIC_API_BASE_URL / NEXT_PUBLIC_API_BASE_URL | Existing API base URL, required for all features |
-| Mobile (Expo) | EXPO_PUBLIC_APP_SCHEME (optional) | Custom scheme used for deep links (defaults to fruitext) |
-| Web + Mobile | EXPO_PUBLIC_FACEBOOK_APP_ID / NEXT_PUBLIC_FACEBOOK_APP_ID | Facebook App ID created in the Meta developer portal |
-| Mobile | EXPO_PUBLIC_FACEBOOK_REDIRECT_URI | URI configured in Meta for the Expo client (e.g. fruitext://auth) |
-| Web + Mobile | EXPO_PUBLIC_TIKTOK_CLIENT_KEY / NEXT_PUBLIC_TIKTOK_CLIENT_KEY | TikTok client key from developer portal |
-| Web + Mobile | EXPO_PUBLIC_TIKTOK_CLIENT_SECRET / NEXT_PUBLIC_TIKTOK_CLIENT_SECRET | TikTok client secret (needed for exchanging OAuth codes) |
-| Mobile | EXPO_PUBLIC_TIKTOK_REDIRECT_URI | Deep link handled by the mobile client (e.g. fruitext://tiktok-share) |
-| Web | NEXT_PUBLIC_TIKTOK_REDIRECT_URI | Must point to `https://<your-host>/api/tiktok/callback` (dev default: `http://localhost:3000/api/tiktok/callback`) |
-| Web + Mobile | EXPO_PUBLIC_SHARE_FALLBACK_URL / NEXT_PUBLIC_SHARE_FALLBACK_URL | Public URL Facebook can crawl when the generated image is not reachable (defaults to https://fruitext.ai) |
-
-After updating the .env files:
-
-1. Register the redirect URIs inside Facebook Login and TikTok developer consoles.
-2. For TikTok, enable the user.info.basic scope and add the redirect URI exactly as configured above (including protocol and path).
-3. Restart Expo (mobile/) and Next.js (frontend/) dev servers so the new public env values are picked up.
-4. On web, the TikTok OAuth popup uses /api/tiktok/callback; ensure that route stays reachable behind whatever proxy/hosting stack you deploy to.
-
+MIT License.

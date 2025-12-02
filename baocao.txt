@@ -1,0 +1,41 @@
+CÁC CÔNG NGHỆ SỬ DỤNG TRONG DỰ ÁN
+
+1. Backend (Server-side)
+   - Ngôn ngữ lập trình: Python 3.8+
+   - Framework: FastAPI (High performance web framework)
+   - Server: Uvicorn (ASGI server)
+   - Các thư viện chính:
+     + google-generativeai: Tích hợp Google Gemini AI.
+     + pymongo: Driver kết nối MongoDB.
+     + python-jose[cryptography]: Xử lý JWT (JSON Web Tokens) cho xác thực.
+     + passlib[bcrypt]: Mã hóa mật khẩu an toàn.
+     + edge-tts: Chuyển đổi văn bản thành giọng nói (Text-to-Speech).
+     + cloudinary: Quản lý và lưu trữ hình ảnh trên đám mây.
+
+2. Frontend (Client-side)
+   - Framework: Next.js 15 (React Framework với App Router)
+   - Ngôn ngữ: TypeScript (Tăng tính an toàn và dễ bảo trì cho code)
+   - Styling: Tailwind CSS (Utility-first CSS framework)
+   - HTTP Client: Axios (Xử lý các request API)
+   - State Management: React Hooks (useState, useEffect, useContext)
+
+3. Cơ sở dữ liệu (Database)
+   - Hệ quản trị: MongoDB (NoSQL Database)
+   - Đặc điểm: Lưu trữ dữ liệu dưới dạng Document (JSON-like), linh hoạt và dễ mở rộng.
+   - Các Collection chính:
+     + users: Lưu thông tin người dùng.
+     + descriptions: Lưu lịch sử tạo mô tả sản phẩm.
+     + password_reset_tokens: Quản lý token khôi phục mật khẩu.
+
+4. Các dịch vụ bên thứ ba (Third-party Services)
+   - Google Gemini AI:
+     + Model: Gemini Pro / Gemini Pro Vision
+     + Chức năng: Phân tích hình ảnh trái cây và tạo nội dung mô tả marketing tự động.
+   - Cloudinary:
+     + Chức năng: Lưu trữ và tối ưu hóa hình ảnh tải lên từ người dùng.
+   - Facebook & TikTok Integration:
+     + Chức năng: Hỗ trợ chia sẻ nội dung trực tiếp lên mạng xã hội.
+
+5. Kiến trúc hệ thống
+   - Mô hình Client-Server: Frontend và Backend giao tiếp qua RESTful API.
+   - Stateless Authentication: Sử dụng JWT để xác thực, không lưu session trên server, giúp dễ dàng scale.

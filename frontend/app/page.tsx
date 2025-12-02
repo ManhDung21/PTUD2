@@ -1560,7 +1560,7 @@ export default function HomePage() {
               onClick={handleShareToFacebook}
               disabled={shareLoading.facebook}
             >
-              {shareLoading.facebook ? "Dang mo Facebook..." : "Chia se Facebook"}
+              {shareLoading.facebook ? "Dang mo Facebook..." : "Chia sẻ Facebook"}
             </button>
             <button
               className="secondary-button"
@@ -1568,23 +1568,23 @@ export default function HomePage() {
               onClick={handleShareToTikTok}
               disabled={shareLoading.tiktok || !canShareToTikTok}
             >
-              {shareLoading.tiktok ? "Chuan bi TikTok..." : "Chia se TikTok"}
+              {shareLoading.tiktok ? "Chuan bi TikTok..." : "Chia sẻ TikTok"}
             </button>
           </div>
           <div className="share-status">
             <p className="share-status__text">
               Facebook: {" "}
-              {facebookProfile?.name ? `Da ket noi ${facebookProfile.name}` : "Chua dang nhap"}
+              {facebookProfile?.name ? `Đã kết nối ${facebookProfile.name}` : "Chưa đăng nhập"}
             </p>
             <p className="share-status__text">
               TikTok: {" "}
               {tiktokProfile?.display_name
-                ? `Da xac thuc ${tiktokProfile.display_name}`
-                : "Chua dang nhap"}
+                ? `Đã xác thực ${tiktokProfile.display_name}`
+                : "Chưa đăng nhập"}
             </p>
             {!canShareToTikTok && (
               <p className="share-status__text share-status__text--warning">
-                TikTok can mot ket qua co anh minh hoa.
+                TikTok cần một kết quả có ảnh minh hoa.
               </p>
             )}
           </div>
