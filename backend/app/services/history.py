@@ -83,8 +83,21 @@ def delete_history_item(collection: Collection, user_id: ObjectId, item_id: str)
             print(f"DEBUG: Invalid ObjectId format: {item_id}")
             return False
 
-        print(f"DEBUG: Attempting to delete item {item_id} for user {user_id}")
-        result = collection.delete_one({"_id": ObjectId(item_id), "user_id": user_id})
+        oid = ObjectId(item_id)
+        # Find the document first to verify existence and ownership
+        doc = collection.find_one({"_id": oid})
+        
+        if not doc:
+            print(f"DEBUG: Item {item_id} not found")
+            return False
+            
+        # Verify ownership (handle both ObjectId and string formats)
+        doc_user_id = doc.get("user_id")
+        if str(doc_user_id) != str(user_id):
+            print(f"DEBUG: User {user_id} not authorized to delete item {item_id} (owner: {doc_user_id})")
+            return False
+
+        result = collection.delete_one({"_id": oid})
         print(f"DEBUG: Delete result count: {result.deleted_count}")
         return result.deleted_count > 0
     except Exception as e:
