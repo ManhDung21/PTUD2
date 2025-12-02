@@ -552,6 +552,7 @@ def delete_history_item(
     db: Database = Depends(get_database),
 ) -> JSONResponse:
     """Delete a specific history item."""
+    item_id = item_id.strip()
     print(f"DEBUG: API received delete request for item_id: {item_id}")
     success = history_service.delete_history_item(
         _descriptions_collection(db),
