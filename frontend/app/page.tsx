@@ -204,6 +204,7 @@ export default function HomePage() {
   const [isPaused, setIsPaused] = useState(false);
   const [historyLimit, setHistoryLimit] = useState(2);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   const speechTextRef = useRef<string | null>(null);
   const speakingSourceRef = useRef<"result" | "history" | null>(null);
@@ -1176,21 +1177,35 @@ export default function HomePage() {
   };
 
   const handleDeleteHistoryItem = useCallback(
-    async (itemId: string) => {
-      console.log("DEBUG: Frontend deleting item:", itemId);
-      try {
-        await axios.delete(`${API_BASE_URL}/api/history/${itemId}`, {
-          withCredentials: true,
-        });
-        setHistory((prev) => prev.filter((item) => item.id !== itemId));
-        showToast("success", "Đã xóa mục lịch sử.");
-      } catch (error) {
-        console.error("Failed to delete history item:", error);
-        showToast("error", "Không thể xóa mục lịch sử.");
-      }
+    (itemId: string) => {
+      setDeleteTargetId(itemId);
     },
-    [showToast],
+    [],
   );
+
+  const confirmDelete = useCallback(async () => {
+    if (!deleteTargetId) return;
+
+    try {
+      await axios.delete(`${API_BASE_URL}/api/history/${deleteTargetId}`, {
+        withCredentials: true,
+      });
+
+      setHistory((prev) => prev.filter((item) => item.id !== deleteTargetId));
+
+      // Nếu đang xem chi tiết mục này thì đóng lại
+      if (historyDetail?.id === deleteTargetId) {
+        setHistoryDetail(null);
+      }
+
+      showToast("success", "Đã xóa mục lịch sử.");
+    } catch (error) {
+      console.error("Failed to delete history item:", error);
+      showToast("error", "Không thể xóa mục lịch sử.");
+    } finally {
+      setDeleteTargetId(null);
+    }
+  }, [deleteTargetId, historyDetail?.id, showToast]);
 
   const handleDeleteAllHistory = useCallback(async () => {
     console.log("DEBUG: Frontend deleting ALL history");
@@ -1600,10 +1615,9 @@ export default function HomePage() {
           </div>
           {history.length > 0 && (
             <button
-              className="text-button text-button--danger"
+              className="ghost-button ghost-button--danger"
               type="button"
               onClick={() => setShowDeleteConfirm(true)}
-              style={{ fontSize: "14px" }}
             >
               Xóa tất cả
             </button>
@@ -2057,6 +2071,35 @@ export default function HomePage() {
                   onClick={handleDeleteAllHistory}
                 >
                   Xóa tất cả
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      {
+        deleteTargetId && (
+          <div className="modal-overlay">
+            <div className="modal-card">
+              <h3 className="modal-title">Xóa mục lịch sử?</h3>
+              <div className="alert-box alert-box--error">
+                Bạn có chắc chắn muốn xóa mục này không? Hành động này không thể hoàn tác.
+              </div>
+              <div className="modal-actions">
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => setDeleteTargetId(null)}
+                >
+                  Hủy
+                </button>
+                <button
+                  className="primary-button primary-button--danger"
+                  type="button"
+                  onClick={confirmDelete}
+                >
+                  Xóa
                 </button>
               </div>
             </div>
