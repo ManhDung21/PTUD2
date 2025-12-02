@@ -1198,6 +1198,11 @@ export default function HomePage() {
         setHistoryDetail(null);
       }
 
+      // Nếu mục này đang hiển thị ở phần Result (Kết quả) thì xóa luôn
+      if (result?.history_id === deleteTargetId) {
+        setResult(null);
+      }
+
       showToast("success", "Đã xóa mục lịch sử.");
     } catch (error) {
       console.error("Failed to delete history item:", error);
@@ -1214,6 +1219,7 @@ export default function HomePage() {
         withCredentials: true,
       });
       setHistory([]);
+      setResult(null); // Xóa luôn phần hiển thị kết quả nếu có
       setShowDeleteConfirm(false);
       showToast("success", "Đã xóa toàn bộ lịch sử.");
     } catch (error) {
