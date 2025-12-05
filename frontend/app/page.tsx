@@ -1184,24 +1184,29 @@ export default function HomePage() {
   );
 
   const confirmDelete = useCallback(async () => {
-    if (!deleteTargetId) return;
+    const idToDelete = deleteTargetId;
+    if (!idToDelete) return;
+
+    console.log("Attempting to delete item:", idToDelete);
 
     try {
-      await axios.delete(`${API_BASE_URL}/api/history/${deleteTargetId}`, {
+      await axios.delete(`${API_BASE_URL}/api/history/${idToDelete}`, {
         withCredentials: true,
       });
 
-      setHistory((prev) => prev.filter((item) => item.id !== deleteTargetId));
+      console.log("Delete API success, updating state for ID:", idToDelete);
 
-      // Nếu đang xem chi tiết mục này thì đóng lại
-      if (historyDetail?.id === deleteTargetId) {
-        setHistoryDetail(null);
-      }
+      setHistory((prev) => {
+        const newHistory = prev.filter((item) => item.id !== idToDelete);
+        console.log("Old history length:", prev.length, "New history length:", newHistory.length);
+        return newHistory;
+      });
+
+      // Nếu đang xem chi tiết mục này thì đóng lại (sử dụng functional update để tránh phụ thuộc stale state)
+      setHistoryDetail((prev) => (prev?.id === idToDelete ? null : prev));
 
       // Nếu mục này đang hiển thị ở phần Result (Kết quả) thì xóa luôn
-      if (result?.history_id === deleteTargetId) {
-        setResult(null);
-      }
+      setResult((prev) => (prev?.history_id === idToDelete ? null : prev));
 
       showToast("success", "Đã xóa mục lịch sử.");
     } catch (error) {
@@ -1210,7 +1215,7 @@ export default function HomePage() {
     } finally {
       setDeleteTargetId(null);
     }
-  }, [deleteTargetId, historyDetail?.id, showToast]);
+  }, [deleteTargetId, showToast]);
 
   const handleDeleteAllHistory = useCallback(async () => {
     console.log("DEBUG: Frontend deleting ALL history");
