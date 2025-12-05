@@ -1,41 +1,89 @@
-  CÁC CÔNG NGHỆ SỬ DỤNG TRONG DỰ ÁN
+BÁO CÁO HOÀN THIỆN DỰ ÁN
+TÊN ĐỀ TÀI: FRUITEXT AI - ỨNG DỤNG HỖ TRỢ MARKETING SẢN PHẨM TRÁI CÂY BẰNG AI
 
-  1. Backend (Server-side)
-    - Ngôn ngữ lập trình: Python 3.8+
-    - Framework: FastAPI (High performance web framework)
-    - Server: Uvicorn (ASGI server)
-    - Các thư viện chính:
-      + google-generativeai: Tích hợp Google Gemini AI.
-      + pymongo: Driver kết nối MongoDB.
-      + python-jose[cryptography]: Xử lý JWT (JSON Web Tokens) cho xác thực.
-      + passlib[bcrypt]: Mã hóa mật khẩu an toàn.
-      + edge-tts: Chuyển đổi văn bản thành giọng nói (Text-to-Speech).
-      + cloudinary: Quản lý và lưu trữ hình ảnh trên đám mây.
+I. GIỚI THIỆU ĐỀ TÀI
+   Trong kỷ nguyên số, việc marketing sản phẩm nông sản, đặc biệt là trái cây, đòi hỏi nội dung hình ảnh và văn bản phải hấp dẫn, nhanh chóng và chuyên nghiệp. "FruiText AI" là giải pháp ứng dụng trí tuệ nhân tạo để tự động hóa quy trình sáng tạo nội dung marketing. Ứng dụng giúp người dùng (chủ cửa hàng, người bán lẻ) dễ dàng tạo ra các bài viết quảng cáo ấn tượng chỉ từ hình ảnh sản phẩm, tích hợp khả năng chuyển đổi văn bản thành giọng nói để phục vụ xu hướng video ngắn.
 
-  2. Frontend (Client-side)
-    - Framework: Next.js 15 (React Framework với App Router)
-    - Ngôn ngữ: TypeScript (Tăng tính an toàn và dễ bảo trì cho code)
-    - Styling: Tailwind CSS (Utility-first CSS framework)
-    - HTTP Client: Axios (Xử lý các request API)
-    - State Management: React Hooks (useState, useEffect, useContext)
+II. MỤC TIÊU DỰ ÁN
+   1. Xây dựng hệ thống tự động phân tích hình ảnh trái cây để xác định loại sản phẩm, độ tươi ngon và đặc điểm nổi bật.
+   2. Tạo nội dung quảng cáo (caption, bài viết) tự động, sáng tạo và chuẩn SEO dựa trên kết quả phân tích ảnh.
+   3. Tích hợp tính năng chuyển văn bản thành giọng nói (Text-to-Speech) đa ngôn ngữ, hỗ trợ tạo video marketing.
+   4. Cung cấp giao diện web hiện đại, thân thiện, dễ sử dụng trên cả máy tính và thiết bị di động.
+   5. Quản lý lịch sử tạo nội dung hiệu quả, cho phép người dùng xem lại và tái sử dụng.
 
-  3. Cơ sở dữ liệu (Database)
-    - Hệ quản trị: MongoDB (NoSQL Database)
-    - Đặc điểm: Lưu trữ dữ liệu dưới dạng Document (JSON-like), linh hoạt và dễ mở rộng.
-    - Các Collection chính:
-      + users: Lưu thông tin người dùng.
-      + descriptions: Lưu lịch sử tạo mô tả sản phẩm.
-      + password_reset_tokens: Quản lý token khôi phục mật khẩu.
+III. CÁC CÔNG NGHỆ SỬ DỤNG
+   1. Backend (Server-side)
+     - Ngôn ngữ lập trình: Python 3.8+
+     - Framework: FastAPI (High performance web framework) - Đảm bảo hiệu năng cao và khả năng xử lý bất đồng bộ.
+     - Server: Uvicorn (ASGI server)
+     - Các thư viện chính:
+       + google-generativeai: Tích hợp Google Gemini AI để xử lý ngôn ngữ và hình ảnh.
+       + pymongo: Driver kết nối và thao tác với cơ sở dữ liệu MongoDB.
+       + python-jose[cryptography]: Xử lý JWT (JSON Web Tokens) cho xác thực và bảo mật.
+       + passlib[bcrypt]: Mã hóa mật khẩu người dùng an toàn.
+       + edge-tts: Chuyển đổi văn bản thành giọng nói (Text-to-Speech) chất lượng cao.
+       + cloudinary: Quản lý, lưu trữ và tối ưu hóa hình ảnh trên đám mây.
 
-  4. Các dịch vụ bên thứ ba (Third-party Services)
-    - Google Gemini AI:
-      + Model: Gemini Pro / Gemini Pro Vision
-      + Chức năng: Phân tích hình ảnh trái cây và tạo nội dung mô tả marketing tự động.
-    - Cloudinary:
-      + Chức năng: Lưu trữ và tối ưu hóa hình ảnh tải lên từ người dùng.
-    - Facebook & TikTok Integration:
-      + Chức năng: Hỗ trợ chia sẻ nội dung trực tiếp lên mạng xã hội.
+   2. Frontend (Client-side)
+     - Framework: Next.js 15 (React Framework với App Router) - Tối ưu SEO và hiệu năng render.
+     - Ngôn ngữ: TypeScript - Tăng tính an toàn kiểu dữ liệu và dễ bảo trì.
+     - Styling: Tailwind CSS - Thiết kế giao diện nhanh chóng, hiện đại và responsive.
+     - HTTP Client: Axios - Xử lý các request API tới Backend.
+     - State Management: React Hooks (useState, useEffect, useContext) để quản lý trạng thái ứng dụng.
 
-  5. Kiến trúc hệ thống
-    - Mô hình Client-Server: Frontend và Backend giao tiếp qua RESTful API.
-    - Stateless Authentication: Sử dụng JWT để xác thực, không lưu session trên server, giúp dễ dàng scale.
+   3. Cơ sở dữ liệu (Database)
+     - Hệ quản trị: MongoDB (NoSQL Database)
+     - Đặc điểm: Lưu trữ dữ liệu dưới dạng Document (JSON-like), linh hoạt thay đổi cấu trúc.
+     - Các Collection chính:
+       + users: Lưu thông tin tài khoản người dùng.
+       + descriptions: Lưu lịch sử các lần tạo mô tả sản phẩm (ảnh, văn bản, file âm thanh).
+       + password_reset_tokens: Quản lý token cho chức năng quên mật khẩu.
+
+   4. Các dịch vụ bên thứ ba (Third-party Services)
+     - Google Gemini AI:
+       + Model: Gemini Pro / Gemini Pro Vision.
+       + Chức năng: Phân tích hình ảnh đầu vào và sinh nội dung văn bản marketing.
+     - Cloudinary:
+       + Chức năng: Lưu trữ hình ảnh sản phẩm tải lên, trả về URL truy cập nhanh.
+     - Facebook & TikTok Integration (Hướng phát triển):
+       + Chức năng: Hỗ trợ chia sẻ nội dung trực tiếp lên các nền tảng mạng xã hội.
+
+   5. Kiến trúc hệ thống
+     - Mô hình Client-Server: Tách biệt rõ ràng giữa giao diện (Frontend) và xử lý logic (Backend), giao tiếp qua RESTful API.
+     - Stateless Authentication: Sử dụng JWT, không lưu session trên server, giúp hệ thống dễ dàng mở rộng (scale).
+
+IV. KẾT QUẢ ĐẠT ĐƯỢC
+   Sau quá trình phát triển và kiểm thử, dự án đã hoàn thành các hạng mục sau:
+   1. Chức năng Xác thực & Người dùng:
+      - Đăng ký, Đăng nhập, Đăng xuất hoàn chỉnh và bảo mật.
+      - Chức năng Quên mật khẩu/Khôi phục mật khẩu hoạt động ổn định qua email.
+   2. Chức năng Cốt lõi (AI & Xử lý ảnh):
+      - Upload hình ảnh lên Cloudinary thành công.
+      - Tích hợp Gemini AI phân tích ảnh chính xác, nhận diện đúng loại trái cây.
+      - Sinh nội dung quảng cáo hấp dẫn, đúng ngữ cảnh (khuyến mãi, giới thiệu, v.v.).
+   3. Chức năng Text-to-Speech:
+      - Chuyển đổi nội dung văn bản thành file âm thanh (MP3) thành công.
+      - Hỗ trợ nghe thử trực tiếp trên trình duyệt và tải xuống.
+   4. Quản lý Lịch sử:
+      - Lưu trữ đầy đủ lịch sử các lần tạo nội dung.
+      - Giao diện xem lại chi tiết, xóa lịch sử hoạt động mượt mà.
+   5. Giao diện (UI/UX):
+         - Giao diện đẹp, hiện đại, sử dụng tông màu phù hợp với sản phẩm nông sản.
+         - Responsive tốt trên các kích thước màn hình khác nhau.
+
+V. HƯỚNG PHÁT TRIỂN TIẾP THEO
+   1. Mở rộng AI: Huấn luyện hoặc tinh chỉnh prompt để hỗ trợ nhiều ngành hàng khác ngoài trái cây (thời trang, đồ gia dụng).
+   2. Đa ngôn ngữ: Hỗ trợ tạo nội dung và giọng đọc tiếng Anh, tiếng Trung để phục vụ xuất khẩu.
+   3. Tích hợp Mạng xã hội: Đăng bài tự động lên Fanpage Facebook hoặc TikTok từ ứng dụng.
+   4. Analytics: Thống kê các mẫu nội dung được ưa chuộng nhất để gợi ý cho người dùng.
+
+VI. KẾT LUẬN
+   Dự án "FruiText AI" đã hoàn thành đúng tiến độ và đáp ứng đầy đủ các yêu cầu kỹ thuật cũng như nghiệp vụ đề ra. Hệ thống vận hành ổn định, mang lại giải pháp thiết thực cho việc marketing sản phẩm nông sản, giúp tiết kiệm thời gian và chi phí cho người dùng. Các công nghệ được lựa chọn (Next.js, FastAPI, MongoDB, Gemini) đã chứng minh được sự phù hợp và hiệu quả cao.
+
+VII. MỤC LỤC
+I. GIỚI THIỆU ĐỀ TÀI
+II. MỤC TIÊU DỰ ÁN
+III. CÁC CÔNG NGHỆ SỬ DỤNG
+IV. KẾT QUẢ ĐẠT ĐƯỢC
+V. HƯỚNG PHÁT TRIỂN TIẾP THEO
+VI. KẾT LUẬN
