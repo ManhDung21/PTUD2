@@ -860,8 +860,28 @@ textarea {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+  /* Existing reduced motion media query content */
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+.hero-auth-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.hero-btn {
+  min-width: 120px;
+  justify-content: center;
+}
+
+@media (min-width: 640px) {
+  .hero-auth-group {
+    flex-direction: row;
+    align-items: center;
   }
 }

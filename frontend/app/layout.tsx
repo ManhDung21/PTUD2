@@ -5,6 +5,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "FruitText AI",
   description: "FruitText AI tạo mô tả sản phẩm trái cây bằng FastAPI và Gemini",
+  icons: {
+    icon: "/logo.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

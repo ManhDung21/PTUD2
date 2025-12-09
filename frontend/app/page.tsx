@@ -1274,7 +1274,9 @@ export default function HomePage() {
     <main className="page-shell">
       <section className="hero-card">
         <div className="hero-info">
-          <h1 className="hero-title">FruitText AI</h1>
+          <div className="logo-wrapper" style={{ marginBottom: "1rem" }}>
+            <Image src="/logo.png" alt="FruitText AI Logo" width={250} height={80} style={{ objectFit: 'contain' }} unoptimized />
+          </div>
           <p className="hero-subtitle">
             FruitText AI biến mọi hình ảnh thành nội dung bán hàng hấp dẫn: mô tả chuẩn SEO, tự động, sẵn sàng đăng tải sau vài giây.
           </p>
@@ -1305,9 +1307,9 @@ export default function HomePage() {
               </div>
             </div>
           ) : (
-            <div className="stack stack--sm align-end">
+            <div className="hero-auth-group">
               <button
-                className="primary-button"
+                className="primary-button hero-btn"
                 type="button"
                 onClick={() => {
                   changeAuthMode("login");
@@ -1318,7 +1320,7 @@ export default function HomePage() {
                 Đăng Nhập
               </button>
               <button
-                className="secondary-button"
+                className="secondary-button hero-btn"
                 type="button"
                 onClick={() => {
                   changeAuthMode("register");
@@ -1526,96 +1528,97 @@ export default function HomePage() {
       </section>
 
 
-      {result && (
-        <section className="section-card">
-          <div className="section-header">
-            <div>
-              <p className="section-subtitle">Kết quả </p>
-              <h2 className="section-title">Mô tả đã sẵn sàng</h2>
-            </div>
-            <div className="result-meta">
-              {resultTimestamp && <span className="result-meta-badge">{resultTimestamp}</span>}
-              {resultSourceLabel && <span className="result-meta-badge">{resultSourceLabel}</span>}
-              {result.style && (
-                <span className="result-meta-badge">Phong cách: {result.style}</span>
-              )}
-            </div>
-          </div>
-          {resultImageSrc && (
-            <div className="preview-surface">
-              <div className="preview-frame-wrapper">
-                <Image
-                  src={resultImageSrc}
-                  alt="Ảnh dùng để tạo mô tả"
-                  fill
-                  className="preview-frame"
-                  sizes="(max-width: 768px) 100vw, 680px"
-                />
+      {
+        result && (
+          <section className="section-card">
+            <div className="section-header">
+              <div>
+                <p className="section-subtitle">Kết quả </p>
+                <h2 className="section-title">Mô tả đã sẵn sàng</h2>
+              </div>
+              <div className="result-meta">
+                {resultTimestamp && <span className="result-meta-badge">{resultTimestamp}</span>}
+                {resultSourceLabel && <span className="result-meta-badge">{resultSourceLabel}</span>}
+                {result.style && (
+                  <span className="result-meta-badge">Phong cách: {result.style}</span>
+                )}
               </div>
             </div>
-          )}
-          <p className="result-description">{result.description}</p>
-          <div className="inline-actions inline-actions--wrap">
-            <button
-              className="secondary-button"
-              type="button"
-              onClick={() => navigator.clipboard.writeText(result.description)}
-            >
-              Sao Chép
-            </button>
-            <button
-              className="secondary-button"
-              type="button"
-              onClick={() => {
-                if (isReading && speakingSource === "result") {
-                  isPaused ? resumeSpeech() : pauseSpeech();
-                } else {
-                  handleToggleSpeech(result.description, "result");
-                }
-              }}
-            >
-              {isReading && speakingSource === "result"
-                ? isPaused
-                  ? "Tiếp tục"
-                  : "Tạm dừng"
-                : "Đọc mô tả"}
-            </button>
-            <button
-              className="secondary-button"
-              type="button"
-              onClick={handleShareToFacebook}
-              disabled={shareLoading.facebook}
-            >
-              {shareLoading.facebook ? "Dang mo Facebook..." : "Chia sẻ Facebook"}
-            </button>
-            <button
-              className="secondary-button"
-              type="button"
-              onClick={handleShareToTikTok}
-              disabled={shareLoading.tiktok || !canShareToTikTok}
-            >
-              {shareLoading.tiktok ? "Chuan bi TikTok..." : "Chia sẻ TikTok"}
-            </button>
-          </div>
-          <div className="share-status">
-            <p className="share-status__text">
-              Facebook: {" "}
-              {facebookProfile?.name ? `Đã kết nối ${facebookProfile.name}` : "Chưa đăng nhập"}
-            </p>
-            <p className="share-status__text">
-              TikTok: {" "}
-              {tiktokProfile?.display_name
-                ? `Đã xác thực ${tiktokProfile.display_name}`
-                : "Chưa đăng nhập"}
-            </p>
-            {!canShareToTikTok && (
-              <p className="share-status__text share-status__text--warning">
-                TikTok cần một kết quả có ảnh minh hoa.
-              </p>
+            {resultImageSrc && (
+              <div className="preview-surface">
+                <div className="preview-frame-wrapper">
+                  <Image
+                    src={resultImageSrc}
+                    alt="Ảnh dùng để tạo mô tả"
+                    fill
+                    className="preview-frame"
+                    sizes="(max-width: 768px) 100vw, 680px"
+                  />
+                </div>
+              </div>
             )}
-          </div>
-        </section>
-      )
+            <p className="result-description">{result.description}</p>
+            <div className="inline-actions inline-actions--wrap">
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={() => navigator.clipboard.writeText(result.description)}
+              >
+                Sao Chép
+              </button>
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={() => {
+                  if (isReading && speakingSource === "result") {
+                    isPaused ? resumeSpeech() : pauseSpeech();
+                  } else {
+                    handleToggleSpeech(result.description, "result");
+                  }
+                }}
+              >
+                {isReading && speakingSource === "result"
+                  ? isPaused
+                    ? "Tiếp tục"
+                    : "Tạm dừng"
+                  : "Đọc mô tả"}
+              </button>
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={handleShareToFacebook}
+                disabled={shareLoading.facebook}
+              >
+                {shareLoading.facebook ? "Dang mo Facebook..." : "Chia sẻ Facebook"}
+              </button>
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={handleShareToTikTok}
+                disabled={shareLoading.tiktok || !canShareToTikTok}
+              >
+                {shareLoading.tiktok ? "Chuan bi TikTok..." : "Chia sẻ TikTok"}
+              </button>
+            </div>
+            <div className="share-status">
+              <p className="share-status__text">
+                Facebook: {" "}
+                {facebookProfile?.name ? `Đã kết nối ${facebookProfile.name}` : "Chưa đăng nhập"}
+              </p>
+              <p className="share-status__text">
+                TikTok: {" "}
+                {tiktokProfile?.display_name
+                  ? `Đã xác thực ${tiktokProfile.display_name}`
+                  : "Chưa đăng nhập"}
+              </p>
+              {!canShareToTikTok && (
+                <p className="share-status__text share-status__text--warning">
+                  TikTok cần một kết quả có ảnh minh hoa.
+                </p>
+              )}
+            </div>
+          </section>
+        )
       }
 
       <section className="section-card">
@@ -2058,7 +2061,8 @@ export default function HomePage() {
               </form>
             </div>
           </div>
-        )}
+        )
+      }
 
       {
         showDeleteConfirm && (
