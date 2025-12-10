@@ -10,6 +10,8 @@ class UserDocument(TypedDict, total=False):
     _id: ObjectId
     email: Optional[str]
     phone_number: Optional[str]
+    full_name: Optional[str]
+    avatar_url: Optional[str]
     hashed_password: str
     created_at: datetime
 

@@ -19,15 +19,17 @@ from .config import Settings, get_settings
 from .db.models import DescriptionDocument, PasswordResetTokenDocument, UserDocument
 from .db.session import get_database, init_db
 from .schemas import (
+    AvatarUploadResponse,
     ChangePasswordRequest,
     DescriptionResponse,
     ForgotPasswordRequest,
     GenerateTextRequest,
     HistoryItem,
+    LoginRequest,
     MessageResponse,
+    RegisterRequest,
     ResetPasswordRequest,
     TokenResponse,
-    UserCreate,
     UserOut,
 )
 from .services import auth, content, email as email_service, history as history_service, tts
@@ -78,6 +80,8 @@ def root() -> JSONResponse:
 BASE_STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 IMAGES_DIR = BASE_STATIC_DIR / "images"
 IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+AVATARS_DIR = BASE_STATIC_DIR / "avatars"
+AVATARS_DIR.mkdir(parents=True, exist_ok=True)
 
 app.mount("/static", StaticFiles(directory=BASE_STATIC_DIR), name="static")
 
@@ -113,8 +117,40 @@ def _user_out(user: UserDocument) -> UserOut:
         id=str(user["_id"]),
         email=user.get("email"),
         phone_number=user.get("phone_number"),
+        full_name=user.get("full_name"),
+        avatar_url=user.get("avatar_url"),
         created_at=created_at.isoformat(),
     )
+
+
+async def _process_avatar_upload(
+    avatar: UploadFile,
+    settings: Settings,
+) -> str:
+    try:
+        contents = await avatar.read()
+        image = Image.open(BytesIO(contents)).convert("RGB")
+    except UnidentifiedImageError as exc:
+        raise HTTPException(status_code=400, detail="Ảnh đại diện không hợp lệ") from exc
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=400, detail="Không thể đọc tệp ảnh đại diện") from exc
+
+    suffix = Path(avatar.filename or "").suffix.lower()
+    if suffix not in {".jpg", ".jpeg", ".png"}:
+        suffix = ".jpg"
+    filename = f"{uuid4().hex}{suffix}"
+
+    cloudinary_url: Optional[str] = None
+    if settings.cloudinary_cloud_name and settings.cloudinary_api_key and settings.cloudinary_api_secret:
+        cloudinary_url = cloudinary_service.upload_image(image, filename)
+
+    if cloudinary_url:
+        return cloudinary_url
+
+    avatar_path = AVATARS_DIR / filename
+    save_kwargs = {"format": "PNG" if suffix == ".png" else "JPEG"}
+    image.save(avatar_path, **save_kwargs)
+    return f"/static/avatars/{filename}"
 
 
 @app.on_event("startup")
@@ -161,6 +197,7 @@ def seed_admin_user() -> None:
     admin: UserDocument = {
         "email": email,
         "phone_number": None,
+        "full_name": "Admin",
         "hashed_password": auth.hash_password("123456"),
         "created_at": utc_now(),
     }
@@ -191,40 +228,55 @@ def get_admin_user(current_user: UserDocument = Depends(get_current_user)) -> Us
 
 
 @app.post("/auth/register", response_model=TokenResponse)
-def register(payload: UserCreate, db: Database = Depends(get_database)) -> TokenResponse:
+def register(payload: RegisterRequest, db: Database = Depends(get_database)) -> TokenResponse:
     users = _users_collection(db)
-    identifier = payload.identifier.strip()
+    email = payload.email.strip().lower()
+    phone_number = payload.phone_number.strip()
+    full_name = payload.full_name.strip()
+    avatar_url = payload.avatar_url.strip() if payload.avatar_url else None
 
-    if is_email(identifier):
-        email = identifier.lower()
-        phone_number = None
-        if users.find_one({"email": email}):
-            raise HTTPException(status_code=400, detail="Email đã tồn tại")
-    elif is_phone_number(identifier):
-        email = None
-        phone_number = identifier
-        if users.find_one({"phone_number": phone_number}):
-            raise HTTPException(status_code=400, detail="Số điện thoại đã tồn tại")
-    else:
-        raise HTTPException(status_code=400, detail="Vui lòng nhập email hoặc số điện thoại hợp lệ")
+    if not is_email(email):
+        raise HTTPException(status_code=400, detail="Vui lòng nhập email hợp lệ")
+    if not is_phone_number(phone_number):
+        raise HTTPException(status_code=400, detail="Vui lòng nhập số điện thoại hợp lệ")
+
+    if users.find_one({"email": email}):
+        raise HTTPException(status_code=400, detail="Email đã tồn tại")
+    if users.find_one({"phone_number": phone_number}):
+        raise HTTPException(status_code=400, detail="Số điện thoại đã tồn tại")
 
     user: UserDocument = {
         "hashed_password": auth.hash_password(payload.password),
         "created_at": utc_now(),
+        "email": email,
+        "phone_number": phone_number,
+        "full_name": full_name,
     }
-
-    if email is not None:
-        user["email"] = email
-    if phone_number is not None:
-        user["phone_number"] = phone_number
+    if avatar_url:
+        user["avatar_url"] = avatar_url
     result = users.insert_one(user)
 
-    token = auth.create_access_token(email if email else phone_number or str(result.inserted_id))
+    token = auth.create_access_token(email or phone_number or str(result.inserted_id))
     return TokenResponse(access_token=token)
 
 
+@app.post("/auth/avatar", response_model=AvatarUploadResponse)
+async def upload_avatar(
+    file: UploadFile = File(...),
+    current_user: UserDocument = Depends(get_current_user),
+    settings: Settings = Depends(get_settings),
+    db: Database = Depends(get_database),
+) -> AvatarUploadResponse:
+    avatar_url = await _process_avatar_upload(file, settings)
+
+    users = _users_collection(db)
+    users.update_one({"_id": current_user["_id"]}, {"$set": {"avatar_url": avatar_url}})
+
+    return AvatarUploadResponse(url=avatar_url)
+
+
 @app.post("/auth/login", response_model=TokenResponse)
-def login(payload: UserCreate, db: Database = Depends(get_database)) -> TokenResponse:
+def login(payload: LoginRequest, db: Database = Depends(get_database)) -> TokenResponse:
     users = _users_collection(db)
     identifier = payload.identifier.strip()
 

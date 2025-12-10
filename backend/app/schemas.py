@@ -29,7 +29,15 @@ class HistoryItem(BaseModel):
     image_url: Optional[str]
 
 
-class UserCreate(BaseModel):
+class RegisterRequest(BaseModel):
+    email: str = Field(..., description="Địa chỉ email")
+    phone_number: str = Field(..., min_length=10, max_length=11, description="Số điện thoại")
+    full_name: str = Field(..., min_length=2, description="Họ tên")
+    password: str = Field(min_length=6)
+    avatar_url: Optional[str] = Field(default=None, description="Ảnh đại diện (tùy chọn)")
+
+
+class LoginRequest(BaseModel):
     identifier: str  # Email hoặc số điện thoại
     password: str = Field(min_length=6)
 
@@ -43,6 +51,8 @@ class UserOut(BaseModel):
     id: str
     email: Optional[str] = None
     phone_number: Optional[str] = None
+    full_name: Optional[str] = None
+    avatar_url: Optional[str] = None
     created_at: str
 
 
@@ -63,3 +73,7 @@ class ChangePasswordRequest(BaseModel):
 
 class MessageResponse(BaseModel):
     message: str
+
+
+class AvatarUploadResponse(BaseModel):
+    url: str

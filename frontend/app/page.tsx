@@ -76,9 +76,11 @@ interface ImageItem {
 }
 
 interface User {
-  id: number;
+  id: string;
   email: string | null;
   phone_number: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
   created_at: string;
 }
 
@@ -91,6 +93,10 @@ interface MessageResponse {
   message: string;
 }
 
+interface AvatarUploadResponse {
+  url: string;
+}
+
 type ToastKind = "error" | "success";
 
 interface ToastState {
@@ -101,6 +107,7 @@ interface ToastState {
 
 const DEFAULT_STYLES = ["Tiếp thị", "Chuyên nghiệp", "Thân thiện", "Kể chuyện"];
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_REGEX = /^[0-9]{10,11}$/;
 const resolveImageUrl = (url?: string | null): string | null => {
   if (!url) {
     return null;
@@ -179,10 +186,21 @@ export default function HomePage() {
 
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const userAvatarSrc = useMemo(() => resolveImageUrl(user?.avatar_url), [user?.avatar_url]);
+  const userDisplayName = useMemo(
+    () => (user ? (user.full_name?.trim() ? user.full_name : user.email || user.phone_number || "Người dùng") : "Khách"),
+    [user],
+  );
+  const userInitial = useMemo(
+    () => (user ? userDisplayName.trim().charAt(0).toUpperCase() || "👤" : "👤"),
+    [user, userDisplayName],
+  );
   const [authVisible, setAuthVisible] = useState<boolean>(false);
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [authLoading, setAuthLoading] = useState<boolean>(false);
-  const [authForm, setAuthForm] = useState({ identifier: "", password: "" });
+  const [authForm, setAuthForm] = useState({ identifier: "", password: "", email: "", phone_number: "", full_name: "" });
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [forgotEmail, setForgotEmail] = useState("");
   const [resetForm, setResetForm] = useState({ identifier: "", token: "", password: "", confirmPassword: "" });
   const [changePasswordVisible, setChangePasswordVisible] = useState(false);
@@ -357,6 +375,12 @@ export default function HomePage() {
     }
   }, []);
 
+  useEffect(() => () => {
+    if (avatarPreview) {
+      URL.revokeObjectURL(avatarPreview);
+    }
+  }, [avatarPreview]);
+
   useEffect(() => {
     if (!FACEBOOK_APP_ID || typeof window === "undefined") {
       return;
@@ -402,6 +426,27 @@ export default function HomePage() {
       }
     }
   }, [showToast]);
+
+  const uploadAvatar = useCallback(
+    async (jwt: string) => {
+      if (!avatarFile) {
+        return null;
+      }
+      const formData = new FormData();
+      formData.append("file", avatarFile);
+      try {
+        const { data } = await axios.post<AvatarUploadResponse>(`${API_BASE_URL}/auth/avatar`, formData, {
+          headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${jwt}` },
+        });
+        return data.url;
+      } catch (err: any) {
+        const detail = err?.response?.data?.detail ?? "Không thể tải ảnh đại diện.";
+        showToast("error", detail);
+        return null;
+      }
+    },
+    [avatarFile, showToast],
+  );
 
   const exchangeTikTokCode = useCallback(
     async (code: string) => {
@@ -930,6 +975,31 @@ export default function HomePage() {
     }
   };
 
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+    if (!file.type.startsWith("image/")) {
+      showToast("error", "Vui lòng chọn tệp hình ảnh hợp lệ.");
+      return;
+    }
+    if (avatarPreview) {
+      URL.revokeObjectURL(avatarPreview);
+    }
+    const previewUrl = URL.createObjectURL(file);
+    setAvatarFile(file);
+    setAvatarPreview(previewUrl);
+  };
+
+  const clearAvatarSelection = () => {
+    if (avatarPreview) {
+      URL.revokeObjectURL(avatarPreview);
+    }
+    setAvatarPreview(null);
+    setAvatarFile(null);
+  };
+
 
 
 
@@ -943,18 +1013,87 @@ export default function HomePage() {
     clearToast();
     setAuthMessage(null);
     try {
-      const identifier = authForm.identifier.trim();
+      if (authMode === "login") {
+        const identifier = authForm.identifier.trim();
+        const password = authForm.password.trim();
+        if (!identifier || !password) {
+          const message = "Vui lòng nhập đầy đủ email/số điện thoại và mật khẩu hợp lệ.";
+          setAuthMessage({ type: "error", message });
+          showToast("error", message);
+          setAuthLoading(false);
+          return;
+        }
+        const { data } = await axios.post<TokenResponse>(`${API_BASE_URL}/auth/login`, {
+          identifier,
+          password,
+        });
+        const newToken = data.access_token;
+        setToken(newToken);
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("token", newToken);
+        }
+        axios.defaults.headers.common.Authorization = `Bearer ${newToken}`;
+        await fetchProtectedData(newToken);
+        setAuthMessage({ type: "success", message: "Đăng nhập thành công" });
+        setAuthForm({ identifier: "", password: "", email: "", phone_number: "", full_name: "" });
+        clearAvatarSelection();
+        showToast("success", "Đăng nhập thành công");
+        setTimeout(() => {
+          setAuthVisible(false);
+          setAuthMessage(null);
+        }, 1200);
+        return;
+      }
+
+      const email = authForm.email.trim();
+      const phoneNumber = authForm.phone_number.trim();
+      const fullName = authForm.full_name.trim();
       const password = authForm.password.trim();
-      if (!identifier || !password) {
-        const message = "Vui lòng nhập đầy đủ email/số điện thoại và mật khẩu hợp lệ.";
+
+      if (!email || !phoneNumber || !fullName || !password) {
+        const message = "Vui lòng nhập đầy đủ họ tên, email, số điện thoại và mật khẩu.";
         setAuthMessage({ type: "error", message });
         showToast("error", message);
         setAuthLoading(false);
         return;
       }
-      const url = authMode === "login" ? "/auth/login" : "/auth/register";
-      const { data } = await axios.post<TokenResponse>(`${API_BASE_URL}${url}`, {
-        identifier,
+
+      if (!EMAIL_REGEX.test(email)) {
+        const message = "Vui lòng nhập email hợp lệ.";
+        setAuthMessage({ type: "error", message });
+        showToast("error", message);
+        setAuthLoading(false);
+        return;
+      }
+
+      if (!PHONE_REGEX.test(phoneNumber)) {
+        const message = "Số điện thoại phải gồm 10-11 chữ số.";
+        setAuthMessage({ type: "error", message });
+        showToast("error", message);
+        setAuthLoading(false);
+        return;
+      }
+
+      if (fullName.length < 2) {
+        const message = "Họ tên cần ít nhất 2 ký tự.";
+        setAuthMessage({ type: "error", message });
+        showToast("error", message);
+        setAuthLoading(false);
+        return;
+      }
+
+      if (password.length < 6) {
+        const message = "Mật khẩu cần ít nhất 6 ký tự.";
+        setAuthMessage({ type: "error", message });
+        showToast("error", message);
+        setAuthLoading(false);
+        return;
+      }
+
+      const { data } = await axios.post<TokenResponse>(`${API_BASE_URL}/auth/register`, {
+        email,
+        phone_number: phoneNumber,
+        full_name: fullName,
         password,
       });
       const newToken = data.access_token;
@@ -962,13 +1101,13 @@ export default function HomePage() {
       if (typeof window !== "undefined") {
         sessionStorage.setItem("token", newToken);
       }
+      axios.defaults.headers.common.Authorization = `Bearer ${newToken}`;
+      await uploadAvatar(newToken);
       await fetchProtectedData(newToken);
-      setAuthMessage({
-        type: "success",
-        message: authMode === "login" ? "Đăng nhập thành công" : "Đăng ký thành công",
-      });
-      setAuthForm({ identifier: "", password: "" });
-      showToast("success", authMode === "login" ? "Đăng nhập thành công" : "Đăng ký thành công");
+      setAuthMessage({ type: "success", message: "Đăng ký thành công" });
+      setAuthForm({ identifier: "", password: "", email: "", phone_number: "", full_name: "" });
+      clearAvatarSelection();
+      showToast("success", "Đăng ký thành công");
       setTimeout(() => {
         setAuthVisible(false);
         setAuthMessage(null);
@@ -1099,7 +1238,7 @@ export default function HomePage() {
       showToast("success", data.message);
       setResetForm({ identifier: "", token: "", password: "", confirmPassword: "" });
       setAuthMode("login");
-      setAuthForm({ identifier, password: "" });
+      setAuthForm({ identifier, password: "", email: "", phone_number: "", full_name: "" });
     } catch (err: any) {
       let detail = "Không thể đặt lại mật khẩu";
 
@@ -1125,6 +1264,8 @@ export default function HomePage() {
     setAuthMode(mode);
     setAuthMessage(null);
     setAuthLoading(false);
+    setAuthForm({ identifier: "", password: "", email: "", phone_number: "", full_name: "" });
+    clearAvatarSelection();
     if (mode !== "forgot") {
       setForgotEmail("");
     }
@@ -1246,6 +1387,8 @@ export default function HomePage() {
     setUser(null);
     setHistory([]);
     setResult(null);
+    clearAvatarSelection();
+    setAuthForm({ identifier: "", password: "", email: "", phone_number: "", full_name: "" });
     stopCamera();
     showToast("success", "Đã đăng xuất");
   };
@@ -1264,7 +1407,10 @@ export default function HomePage() {
   }, [images, selectedImageId]);
 
   const historyStyles = useMemo(
-    () => ["all", ...Array.from(new Set(history.map((item) => item.style)))],
+    () => [
+      "all",
+      ...Array.from(new Set([...DEFAULT_STYLES, ...history.map((item) => item.style)])),
+    ],
     [history],
   );
 
@@ -1693,9 +1839,7 @@ export default function HomePage() {
               >
                 Đăng nhập ngay
               </button>
-            </div>
-          ) : filteredHistory.length === 0 ? (
-            <p className="muted-text">Chưa có lịch sử phù hợp với bộ lọc.</p>
+              </div>
           ) : (
             <>
               <div className="filter-bar">
@@ -1735,97 +1879,103 @@ export default function HomePage() {
                   ))}
                 </div>
               </div>
-              <div className="history-grid history-grid--list">
-                {visibleHistory.map((item) => {
-                  const imageSrc = resolveImageUrl(item.image_url);
-                  const sourceLabel = item.source === "image" ? "Hình ảnh" : "Văn bản";
-                  return (
-                    <article key={item.id} className="history-card">
-                      <div className="history-meta">
-                        <span className="history-date">{formatVietnamTime(item.timestamp)}</span>
-                        <span className="history-style">Nguồn: {sourceLabel}</span>
-                        <span className="history-style">Phong cách: {item.style}</span>
-                      </div>
+              {filteredHistory.length === 0 ? (
+                <p className="muted-text">Chưa có lịch sử phù hợp. Thử đổi bộ lọc hoặc tạo mới.</p>
+              ) : (
+                <>
+                  <div className="history-grid history-grid--list">
+                    {visibleHistory.map((item) => {
+                      const imageSrc = resolveImageUrl(item.image_url);
+                      const sourceLabel = item.source === "image" ? "Hình ảnh" : "Văn bản";
+                      return (
+                        <article key={item.id} className="history-card">
+                          <div className="history-meta">
+                            <span className="history-date">{formatVietnamTime(item.timestamp)}</span>
+                            <span className="history-style">Nguồn: {sourceLabel}</span>
+                            <span className="history-style">Phong cách: {item.style}</span>
+                          </div>
+                          <button
+                            className="history-delete"
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteHistoryItem(item.id);
+                            }}
+                            aria-label="Xóa mục này"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <polyline points="3 6 5 6 21 6"></polyline>
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                          </button>
+                          {imageSrc && (
+                            <div className="history-thumb">
+                              <Image
+                                src={imageSrc}
+                                alt="Ảnh đã lưu trong lịch sử"
+                                fill
+                                sizes="(max-width: 768px) 100vw, 320px"
+                                className="history-thumb-image"
+                              />
+                            </div>
+                          )}
+                          <p className="muted-text">{item.summary}</p>
+                          <button
+                            className="ghost-button"
+                            type="button"
+                            onClick={() => {
+                              setActiveView("create");
+                              setActiveTab("text");
+                              setHistoryDetail(item);
+                              setResult({
+                                description: item.full_description,
+                                history_id: item.id,
+                                timestamp: item.timestamp,
+                                style: item.style,
+                                source: item.source,
+                                image_url: item.image_url ?? null,
+                              });
+                            }}
+                          >
+                            Xem chi tiết
+                          </button>
+                        </article>
+                      );
+                    })}
+                  </div>
+                  {filteredHistory.length > historyLimit && (
+                    <div style={{ textAlign: "center", marginTop: "24px" }}>
                       <button
-                        className="history-delete"
+                        className="secondary-button"
                         type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteHistoryItem(item.id);
-                        }}
-                        aria-label="Xóa mục này"
+                        onClick={() => setHistoryLimit(filteredHistory.length)}
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <polyline points="3 6 5 6 21 6"></polyline>
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        </svg>
+                        Xem thêm ({filteredHistory.length - historyLimit})
                       </button>
-                      {imageSrc && (
-                        <div className="history-thumb">
-                          <Image
-                            src={imageSrc}
-                            alt="Ảnh đã lưu trong lịch sử"
-                            fill
-                            sizes="(max-width: 768px) 100vw, 320px"
-                            className="history-thumb-image"
-                          />
-                        </div>
-                      )}
-                      <p className="muted-text">{item.summary}</p>
+                    </div>
+                  )}
+                  {filteredHistory.length > 4 && historyLimit >= filteredHistory.length && (
+                    <div style={{ textAlign: "center", marginTop: "24px" }}>
                       <button
-                        className="ghost-button"
+                        className="secondary-button"
                         type="button"
-                        onClick={() => {
-                          setActiveView("create");
-                          setActiveTab("text");
-                          setHistoryDetail(item);
-                          setResult({
-                            description: item.full_description,
-                            history_id: item.id,
-                            timestamp: item.timestamp,
-                            style: item.style,
-                            source: item.source,
-                            image_url: item.image_url ?? null,
-                          });
-                        }}
+                        onClick={() => setHistoryLimit(4)}
                       >
-                        Xem chi tiết
+                        Thu gọn
                       </button>
-                    </article>
-                  );
-                })}
-              </div>
-              {filteredHistory.length > historyLimit && (
-                <div style={{ textAlign: "center", marginTop: "24px" }}>
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    onClick={() => setHistoryLimit(filteredHistory.length)}
-                  >
-                    Xem thêm ({filteredHistory.length - historyLimit})
-                  </button>
-                </div>
-              )}
-              {filteredHistory.length > 4 && historyLimit >= filteredHistory.length && (
-                <div style={{ textAlign: "center", marginTop: "24px" }}>
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    onClick={() => setHistoryLimit(4)}
-                  >
-                    Thu gọn
-                  </button>
-                </div>
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}
@@ -1845,9 +1995,29 @@ export default function HomePage() {
           </div>
           {isAuthenticated ? (
             <div className="stack">
+              <div className="profile-identity">
+                <div
+                  className={`avatar-preview avatar-preview--lg ${userAvatarSrc ? "avatar-preview--image" : ""}`}
+                  style={userAvatarSrc ? { backgroundImage: `url(${userAvatarSrc})` } : undefined}
+                >
+                  {!userAvatarSrc && userInitial}
+                </div>
+                <div>
+                  <p className="panel-title">{userDisplayName}</p>
+                  <p className="muted-text">{user?.email || user?.phone_number || "Chưa cập nhật liên hệ"}</p>
+                </div>
+              </div>
               <div className="profile-row">
-                <p className="muted-text">Email/SĐT</p>
-                <p className="panel-title">{user?.email || user?.phone_number}</p>
+                <p className="muted-text">Họ tên</p>
+                <p className="panel-title">{user?.full_name || "--"}</p>
+              </div>
+              <div className="profile-row">
+                <p className="muted-text">Email</p>
+                <p className="panel-title">{user?.email || "--"}</p>
+              </div>
+              <div className="profile-row">
+                <p className="muted-text">Số điện thoại</p>
+                <p className="panel-title">{user?.phone_number || "--"}</p>
               </div>
               <div className="profile-row">
                 <p className="muted-text">Ngày tạo</p>
@@ -1903,11 +2073,18 @@ export default function HomePage() {
         <div className="menu-overlay" onClick={() => setMenuOpen(false)}>
           <div className="menu-sheet" onClick={(event) => event.stopPropagation()}>
             <div className="menu-header">
-              <div className="menu-avatar" aria-hidden>👤</div>
+              <div
+                className={`menu-avatar ${userAvatarSrc ? "menu-avatar--image" : ""}`}
+                aria-hidden
+                style={userAvatarSrc ? { backgroundImage: `url(${userAvatarSrc})` } : undefined}
+              >
+                {!userAvatarSrc && userInitial}
+              </div>
               <div className="menu-header__text">
                 {isAuthenticated ? (
                   <>
-                    <p className="menu-title">{user?.email || user?.phone_number}</p>
+                    <p className="menu-title">{userDisplayName}</p>
+                    <p className="menu-sub">{user?.email || user?.phone_number || "Chưa cập nhật liên hệ"}</p>
                     <p className="menu-sub">Đã đăng nhập • {user?.created_at ? formatVietnamTime(user.created_at) : "--"}</p>
                     <div className="menu-inline">
                       <button
@@ -2172,7 +2349,8 @@ export default function HomePage() {
                   onClick={() => {
                     setAuthVisible(false);
                     changeAuthMode("login");
-                    setAuthForm({ identifier: "", password: "" });
+                    setAuthForm({ identifier: "", password: "", email: "", phone_number: "", full_name: "" });
+                    clearAvatarSelection();
                     setAuthMessage(null);
                   }}
                   aria-label="Đóng"
@@ -2190,21 +2368,88 @@ export default function HomePage() {
               )}
               {(authMode === "login" || authMode === "register") && (
                 <form className="stack" onSubmit={handleAuthSubmit}>
-                  <input
-                    type="text"
-                    placeholder="Email hoặc số điện thoại"
-                    value={authForm.identifier}
-                    onChange={(event) => setAuthForm((prev) => ({ ...prev, identifier: event.target.value }))}
-                    required
-                  />
-                  <input
-                    type="password"
-                    placeholder="Mật khẩu"
-                    value={authForm.password}
-                    onChange={(event) => setAuthForm((prev) => ({ ...prev, password: event.target.value }))}
-                    required
-                    minLength={6}
-                  />
+                  {authMode === "login" ? (
+                    <>
+                      <input
+                        type="text"
+                        placeholder="Email hoặc số điện thoại"
+                        value={authForm.identifier}
+                        onChange={(event) => setAuthForm((prev) => ({ ...prev, identifier: event.target.value }))}
+                        required
+                      />
+                      <input
+                        type="password"
+                        placeholder="Mật khẩu"
+                        value={authForm.password}
+                        onChange={(event) => setAuthForm((prev) => ({ ...prev, password: event.target.value }))}
+                        required
+                        minLength={6}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <input
+                        type="text"
+                        placeholder="Họ và tên"
+                        value={authForm.full_name}
+                        onChange={(event) => setAuthForm((prev) => ({ ...prev, full_name: event.target.value }))}
+                        required
+                        minLength={2}
+                      />
+                      <input
+                        type="email"
+                        placeholder="Email"
+                        value={authForm.email}
+                        onChange={(event) => setAuthForm((prev) => ({ ...prev, email: event.target.value }))}
+                        required
+                      />
+                      <input
+                        type="tel"
+                        placeholder="Số điện thoại"
+                        value={authForm.phone_number}
+                        onChange={(event) => setAuthForm((prev) => ({ ...prev, phone_number: event.target.value }))}
+                        required
+                        pattern="[0-9]{10,11}"
+                        inputMode="tel"
+                      />
+                      <input
+                        type="password"
+                        placeholder="Mật khẩu"
+                        value={authForm.password}
+                        onChange={(event) => setAuthForm((prev) => ({ ...prev, password: event.target.value }))}
+                        required
+                        minLength={6}
+                      />
+                      <div className="avatar-upload">
+                        <div className="avatar-upload__controls">
+                          <div
+                            className={`avatar-preview ${avatarPreview ? "avatar-preview--image" : ""}`}
+                            style={avatarPreview ? { backgroundImage: `url(${avatarPreview})` } : undefined}
+                          >
+                            {!avatarPreview && (authForm.full_name.trim().charAt(0).toUpperCase() || "👤")}
+                          </div>
+                          <div className="avatar-upload__buttons">
+                            <label className="secondary-button" htmlFor="avatar-upload-input">
+                              Chọn ảnh đại diện (tùy chọn)
+                            </label>
+                            <input
+                              id="avatar-upload-input"
+                              type="file"
+                              accept="image/*"
+                              className="hidden-file-input"
+                              onChange={handleAvatarChange}
+                            />
+                            {avatarPreview && (
+                              <button className="ghost-button" type="button" onClick={clearAvatarSelection}>
+                                Xóa ảnh
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        <p className="muted-text avatar-hint">Hỗ trợ JPG/PNG. Ảnh sẽ hiển thị sau khi đăng ký.</p>
+                      </div>
+                    </>
+                  )}
                   <button className="primary-button primary-button--full" type="submit" disabled={authLoading}>
                     {authLoading ? "Đang xử lý..." : authMode === "login" ? "Đăng nhập" : "Đăng ký"}
                   </button>
