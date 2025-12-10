@@ -202,12 +202,17 @@ export default function HomePage() {
   const [isReading, setIsReading] = useState(false);
   const [speakingSource, setSpeakingSource] = useState<"result" | "history" | null>(null);
   const [isPaused, setIsPaused] = useState(false);
-  const [historyLimit, setHistoryLimit] = useState(2);
+  const [historyLimit, setHistoryLimit] = useState(4);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [activeView, setActiveView] = useState<"create" | "history" | "profile">("create");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [historySourceFilter, setHistorySourceFilter] = useState<"all" | "image" | "text">("all");
+  const [historyStyleFilter, setHistoryStyleFilter] = useState<string>("all");
 
   const speechTextRef = useRef<string | null>(null);
   const speakingSourceRef = useRef<"result" | "history" | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const showToast = useCallback((type: ToastKind, message: string) => {
     const id = Date.now();
@@ -1258,6 +1263,59 @@ export default function HomePage() {
     return images[0];
   }, [images, selectedImageId]);
 
+  const historyStyles = useMemo(
+    () => ["all", ...Array.from(new Set(history.map((item) => item.style)))],
+    [history],
+  );
+
+  const filteredHistory = useMemo(
+    () =>
+      history.filter((item) => {
+        if (historySourceFilter !== "all" && item.source !== historySourceFilter) {
+          return false;
+        }
+        if (historyStyleFilter !== "all" && item.style !== historyStyleFilter) {
+          return false;
+        }
+        return true;
+      }),
+    [history, historySourceFilter, historyStyleFilter],
+  );
+
+  const visibleHistory = useMemo(
+    () => filteredHistory.slice(0, historyLimit),
+    [filteredHistory, historyLimit],
+  );
+
+  useEffect(() => {
+    setHistoryLimit(4);
+  }, [historySourceFilter, historyStyleFilter]);
+
+  const weeklyHistoryCount = useMemo(() => {
+    const now = Date.now();
+    const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+    return history.filter((item) => {
+      const ts = new Date(item.timestamp).getTime();
+      return Number.isFinite(ts) && ts >= sevenDaysAgo;
+    }).length;
+  }, [history]);
+
+  const mostUsedStyle = useMemo(() => {
+    if (!history.length) {
+      return null;
+    }
+    const counter = history.reduce<Record<string, number>>((acc, item) => {
+      acc[item.style] = (acc[item.style] || 0) + 1;
+      return acc;
+    }, {});
+    return Object.entries(counter).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+  }, [history]);
+
+  const creditBalance = 15;
+  const isPrimaryActionDisabled =
+    loading || (activeTab === "image" ? !activeImage : !productInfo.trim());
+  const primaryActionLabel = activeTab === "image" ? "Sinh mô tả từ ảnh" : "Sinh mô tả từ văn bản";
+
   const resultTimestamp = result?.timestamp ? formatVietnamTime(result.timestamp) : null;
   const resultSourceLabel =
     result?.source === "image" ? "Hình ảnh" : result?.source === "text" ? "Văn bản" : null;
@@ -1270,128 +1328,194 @@ export default function HomePage() {
           ? "Quên mật khẩu"
           : "Đặt lại mật khẩu";
 
+  const navigateToCreate = (tab: TabKey) => {
+    setActiveView("create");
+    setActiveTab(tab);
+  };
+
+  const handleQuickUpload = () => {
+    navigateToCreate("image");
+    fileInputRef.current?.click();
+  };
+
+  const handleQuickCamera = () => {
+    navigateToCreate("image");
+    void startCamera();
+  };
+
+  const handleQuickText = () => {
+    navigateToCreate("text");
+  };
+
+  const trendingTip = mostUsedStyle
+    ? `Phong cách ${mostUsedStyle} đang được dùng nhiều nhất.`
+    : "Hãy chọn một phong cách để AI đề xuất nội dung.";
+
   return (
-    <main className="page-shell">
-      <section className="hero-card">
-        <div className="hero-info">
-          <div className="logo-wrapper" style={{ marginBottom: "1rem" }}>
-            <Image src="/logo.png" alt="FruitText AI Logo" width={250} height={80} style={{ objectFit: 'contain' }} unoptimized />
+    <main className="page-shell mobile-shell">
+      <header className="mobile-header">
+        <div className="brand-mark">
+          <div className="brand-logo">
+            <Image
+              src="/logo.jpg"
+              alt="FruitText AI Logo"
+              fill
+              sizes="96px"
+              priority
+              unoptimized
+              className="brand-logo__img"
+            />
           </div>
-          <p className="hero-subtitle">
-            FruitText AI biến mọi hình ảnh thành nội dung bán hàng hấp dẫn: mô tả chuẩn SEO, tự động, sẵn sàng đăng tải sau vài giây.
-          </p>
-          <div className="hero-actions">
-            <button type="button" className="secondary-button" onClick={() => setGuideVisible(true)}>
-              Hướng dẫn sử dụng
-            </button>
+          <div className="brand-meta">
+            <span className="brand-name">FruitText AI</span>
+            <span className="brand-tagline">Mô tả bán hàng trong vài giây</span>
           </div>
         </div>
-        <div className="hero-auth">
-          {isAuthenticated ? (
-            <div className="stack stack--sm align-end">
-              <span className="hero-user-label">{user?.email || user?.phone_number}</span>
-              <div className="inline-actions inline-actions--wrap">
-                <button
-                  className="ghost-button"
-                  type="button"
-                  onClick={() => {
-                    setChangePasswordVisible(true);
-                    setChangePasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+        <div className="header-actions">
+          <button className="icon-button" type="button" aria-label="Menu" onClick={() => setMenuOpen(true)}>
+            ☰
+          </button>
+          <button className="icon-button" type="button" aria-label="Hướng dẫn" onClick={() => setGuideVisible(true)}>
+            ?
+          </button>
+        </div>
+      </header>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={handleImageChange}
+        className="hidden-file-input"
+      />
+
+      {activeView === "create" && (
+        <>
+          <section className="section-card">
+            <div className="section-header">
+              <div>
+                <p className="section-subtitle">Tạo mô tả</p>
+                <h2 className="section-title">Chọn phong cách & nguồn dữ liệu</h2>
+              </div>
+              <button className="ghost-button" type="button" onClick={() => setGuideVisible(true)}>
+                Hướng dẫn
+              </button>
+            </div>
+            <div className="section-content">
+              <label htmlFor="style-select" className="panel-title">Phong cách mô tả</label>
+              <select
+                id="style-select"
+                value={selectedStyle}
+                onChange={(event) => setSelectedStyle(event.target.value)}
+              >
+                {styles.map((style) => (
+                  <option key={style} value={style}>
+                    {style}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="segmented-control">
+              <button
+                type="button"
+                className={activeTab === "image" ? "segmented-button active" : "segmented-button"}
+                onClick={() => navigateToCreate("image")}
+              >
+                📷 Từ hình ảnh
+              </button>
+              <button
+                type="button"
+                className={activeTab === "text" ? "segmented-button active" : "segmented-button"}
+                onClick={() => navigateToCreate("text")}
+              >
+                📝 Từ văn bản
+              </button>
+            </div>
+          </section>
+
+          <section className="section-card">
+            {activeTab === "image" ? (
+              <div className="upload-compact">
+                <div
+                  className="upload-drop"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => fileInputRef.current?.click()}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      fileInputRef.current?.click();
+                    }
                   }}
                 >
-                  Đổi mật khẩu
-                </button>
-                <button className="ghost-button" type="button" onClick={handleLogout}>
-                  Đăng xuất
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="hero-auth-group">
-              <button
-                className="primary-button hero-btn"
-                type="button"
-                onClick={() => {
-                  changeAuthMode("login");
-                  setAuthForm({ identifier: "", password: "" });
-                  setAuthVisible(true);
-                }}
-              >
-                Đăng Nhập
-              </button>
-              <button
-                className="secondary-button hero-btn"
-                type="button"
-                onClick={() => {
-                  changeAuthMode("register");
-                  setAuthForm({ identifier: "", password: "" });
-                  setAuthVisible(true);
-                }}
-              >
-                Đăng ký
-              </button>
-            </div>
-          )}
-        </div>
-      </section>
+                  {activeImage ? (
+                    <div className="upload-preview">
+                      <div className="preview-frame-wrapper preview-frame-wrapper--tight">
+                        <Image
+                          src={activeImage.previewUrl}
+                          alt="Ảnh đã chọn"
+                          fill
+                          className="preview-frame"
+                          sizes="(max-width: 768px) 100vw, 460px"
+                        />
+                      </div>
+                      <div className="upload-meta">
+                        <p className="panel-title">Ảnh đã chọn</p>
+                        <p className="muted-text">Chạm để thay ảnh hoặc thêm ảnh mới.</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="upload-placeholder">
+                      <p className="panel-title">Chưa có ảnh</p>
+                      <p className="muted-text">Chọn ảnh từ thư viện hoặc mở camera để chụp.</p>
+                    </div>
+                  )}
+                </div>
 
-      <section className="section-card">
-        <div>
-          <p className="section-subtitle">Bước 1</p>
-          <h2 className="section-title">Lựa chọn phong cách viết</h2>
-        </div>
-        <div className="section-content">
-          <label htmlFor="style-select" className="panel-title">
-            Phong cách mô tả
-          </label>
-          <select
-            id="style-select"
-            value={selectedStyle}
-            onChange={(event) => setSelectedStyle(event.target.value)}
-          >
-            {styles.map((style) => (
-              <option key={style} value={style}>
-                {style}
-              </option>
-            ))}
-          </select>
-        </div>
-      </section>
+                <div className="upload-actions inline-actions inline-actions--wrap">
+                  <button className="secondary-button" type="button" onClick={handleQuickUpload}>
+                    Chọn ảnh
+                  </button>
+                  <button className="secondary-button" type="button" onClick={handleQuickCamera}>
+                    {cameraActive ? "Camera đang bật" : "Mở camera"}
+                  </button>
+                  {activeImage && (
+                    <button
+                      className="ghost-button"
+                      type="button"
+                      onClick={() => handleRemoveImage(activeImage.id)}
+                    >
+                      Xóa ảnh đang chọn
+                    </button>
+                  )}
+                </div>
 
-      <section className="section-card">
-        <div className="section-header">
-          <div>
-            <p className="section-subtitle">Bước 2</p>
-            <h2 className="section-title">Chọn cách tạo mô tả</h2>
-          </div>
-        </div>
-        <div className="tab-group">
-          <button
-            className={`tab-button ${activeTab === "image" ? "active" : ""}`}
-            type="button"
-            onClick={() => setActiveTab("image")}
-          >
-            Từ ảnh
-          </button>
-          <button
-            className={`tab-button ${activeTab === "text" ? "active" : ""}`}
-            type="button"
-            onClick={() => setActiveTab("text")}
-          >
-            Từ văn bản
-          </button>
-        </div>
+                {cameraActive && (
+                  <div className="camera-block">
+                    <div className="preview-surface">
+                      <div className="preview-frame-wrapper preview-frame-wrapper--tight">
+                        <video
+                          ref={videoRef}
+                          className="preview-frame"
+                          autoPlay
+                          playsInline
+                          muted
+                        />
+                      </div>
+                    </div>
+                    <div className="inline-actions inline-actions--wrap">
+                      <button className="secondary-button" type="button" onClick={capturePhoto}>
+                        Chụp ảnh
+                      </button>
+                      <button className="ghost-button" type="button" onClick={stopCamera}>
+                        Đóng camera
+                      </button>
+                    </div>
+                  </div>
+                )}
 
-        {activeTab === "image" ? (
-          <div className="stack">
-            <div className="panel-grid panel-grid--split">
-              <div className="stack">
-                <h3 className="panel-title">Tải ảnh hoặc mở camera</h3>
-                <p className="muted-text">
-                  Hỗ trợ định dạng JPG, JPEG, PNG tối đa 5MB. Trên mobile bạn có thể chụp trực tiếp.
-                </p>
-                <input type="file" accept="image/*" multiple onChange={handleImageChange} />
-                {images.length > 0 && (
+                {images.length > 1 && (
                   <div className="thumb-strip">
                     {images.map((item) => (
                       <div
@@ -1424,339 +1548,506 @@ export default function HomePage() {
                           fill
                           sizes="88px"
                           className="thumb-image"
-                          unoptimized
                         />
                       </div>
                     ))}
                   </div>
                 )}
-                <div className="inline-actions inline-actions--wrap">
-                  {cameraActive ? (
-                    <>
-                      <button className="primary-button" type="button" onClick={capturePhoto}>
-                        Chụp ảnh
-                      </button>
-                      <button className="ghost-button" type="button" onClick={stopCamera}>
-                        Đóng camera
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button className="ghost-button" type="button" onClick={startCamera}>
-                        Mở camera
-                      </button>
-                    </>
-                  )}
-                </div>
               </div>
-              <div className="preview-surface">
-                {cameraActive ? (
-                  <div className="preview-frame-wrapper">
-                    <video ref={videoRef} className="preview-frame" autoPlay playsInline muted />
-                  </div>
-                ) : activeImage ? (
-                  <div className="preview-frame-wrapper">
-                    <button
-                      type="button"
-                      className="preview-remove"
-                      aria-label="Xóa ảnh đang xem"
-                      onClick={() => handleRemoveImage(activeImage.id)}
-                    >
-                      X
-                    </button>
-                    <Image
-                      src={activeImage.previewUrl}
-                      alt="Ảnh xem trước"
-                      fill
-                      className="preview-frame"
-                      sizes="(max-width: 768px) 100vw, 600px"
-                      unoptimized
-                    />
-                  </div>
-                ) : (
-                  <div className="preview-placeholder">
-                    Chưa có ảnh. Tải lên hoặc mở camera để chọn ảnh.
-                  </div>
-                )}
-              </div>
-            </div>
-            <button
-              className="primary-button primary-button--full"
-              type="button"
-              onClick={handleImageSubmit}
-              disabled={loading}
-            >
-              {loading ? (
-                <span className="button-loader">
-                  <span className="loader" /> Đang tạo mô tả...
-                </span>
-              ) : (
-                "Sinh mô tả từ ảnh"
-              )}
-            </button>
-          </div>
-        ) : (
-          <div className="stack">
-            <div className="stack">
-              <h3 className="panel-title">Nhập thông tin sản phẩm</h3>
-              <p className="muted-text">
-                Mô tả nguyên liệu, hương vị và ưu điểm để AI tạo nội dung hấp dẫn.
-              </p>
-              <textarea
-                rows={7}
-                placeholder="Ví dụ: Táo Fuji nhập khẩu từ Nhật Bản, trái to, vỏ đỏ tươi, thịt giòn giòn..."
-                value={productInfo}
-                onChange={(event) => setProductInfo(event.target.value)}
-              />
-            </div>
-            <button
-              className="primary-button primary-button--full"
-              type="button"
-              onClick={handleTextSubmit}
-              disabled={loading}
-            >
-              {loading ? (
-                <span className="button-loader">
-                  <span className="loader" /> Đang tạo mô tả...
-                </span>
-              ) : (
-                "Sinh mô tả từ văn bản"
-              )}
-            </button>
-          </div>
-        )}
-      </section>
-
-
-      {
-        result && (
-          <section className="section-card">
-            <div className="section-header">
-              <div>
-                <p className="section-subtitle">Kết quả </p>
-                <h2 className="section-title">Mô tả đã sẵn sàng</h2>
-              </div>
-              <div className="result-meta">
-                {resultTimestamp && <span className="result-meta-badge">{resultTimestamp}</span>}
-                {resultSourceLabel && <span className="result-meta-badge">{resultSourceLabel}</span>}
-                {result.style && (
-                  <span className="result-meta-badge">Phong cách: {result.style}</span>
-                )}
-              </div>
-            </div>
-            {resultImageSrc && (
-              <div className="preview-surface">
-                <div className="preview-frame-wrapper">
-                  <Image
-                    src={resultImageSrc}
-                    alt="Ảnh dùng để tạo mô tả"
-                    fill
-                    className="preview-frame"
-                    sizes="(max-width: 768px) 100vw, 680px"
-                  />
-                </div>
+            ) : (
+              <div className="stack">
+                <h3 className="panel-title">Nhập thông tin sản phẩm</h3>
+                <p className="muted-text">
+                  Mô tả nguyên liệu, hương vị và ưu điểm để AI tạo nội dung hấp dẫn.
+                </p>
+                <textarea
+                  rows={7}
+                  placeholder="Ví dụ: Táo Fuji nhập khẩu từ Nhật Bản, trái to, vỏ đỏ tươi, thịt giòn giòn..."
+                  value={productInfo}
+                  onChange={(event) => setProductInfo(event.target.value)}
+                />
               </div>
             )}
-            <p className="result-description">{result.description}</p>
-            <div className="inline-actions inline-actions--wrap">
+          </section>
+
+          {result && (
+            <section className="section-card result-card">
+              <div className="section-header">
+                <div>
+                  <p className="section-subtitle">Kết quả</p>
+                  <h2 className="section-title">Mô tả đã sẵn sàng</h2>
+                </div>
+                <div className="result-meta">
+                  {resultTimestamp && <span className="result-meta-badge">{resultTimestamp}</span>}
+                  {resultSourceLabel && <span className="result-meta-badge">{resultSourceLabel}</span>}
+                  {result.style && (
+                    <span className="result-meta-badge">Phong cách: {result.style}</span>
+                  )}
+                </div>
+              </div>
+              {resultImageSrc && (
+                <div className="preview-surface">
+                  <div className="preview-frame-wrapper">
+                    <Image
+                      src={resultImageSrc}
+                      alt="Ảnh dùng để tạo mô tả"
+                      fill
+                      className="preview-frame"
+                      sizes="(max-width: 768px) 100vw, 680px"
+                    />
+                  </div>
+                </div>
+              )}
+              <p className="result-description">{result.description}</p>
+              <div className="inline-actions inline-actions--wrap">
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => navigator.clipboard.writeText(result.description)}
+                >
+                  Sao Chép
+                </button>
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => {
+                    if (isReading && speakingSource === "result") {
+                      isPaused ? resumeSpeech() : pauseSpeech();
+                    } else {
+                      handleToggleSpeech(result.description, "result");
+                    }
+                  }}
+                >
+                  {isReading && speakingSource === "result"
+                    ? isPaused
+                      ? "Tiếp tục"
+                      : "Tạm dừng"
+                    : "Đọc mô tả"}
+                </button>
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={handleShareToFacebook}
+                  disabled={shareLoading.facebook}
+                >
+                  {shareLoading.facebook ? "Dang mo Facebook..." : "Chia sẻ Facebook"}
+                </button>
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={handleShareToTikTok}
+                  disabled={shareLoading.tiktok || !canShareToTikTok}
+                >
+                  {shareLoading.tiktok ? "Chuan bi TikTok..." : "Chia sẻ TikTok"}
+                </button>
+              </div>
+              <div className="share-status">
+                <p className="share-status__text">
+                  Facebook: {" "}
+                  {facebookProfile?.name ? `Đã kết nối ${facebookProfile.name}` : "Chưa đăng nhập"}
+                </p>
+                <p className="share-status__text">
+                  TikTok: {" "}
+                  {tiktokProfile?.display_name
+                    ? `Đã xác thực ${tiktokProfile.display_name}`
+                    : "Chưa đăng nhập"}
+                </p>
+                {!canShareToTikTok && (
+                  <p className="share-status__text share-status__text--warning">
+                    TikTok cần một kết quả có ảnh minh hoa.
+                  </p>
+                )}
+              </div>
+            </section>
+          )}
+        </>
+      )}
+
+      {activeView === "history" && (
+        <section className="section-card">
+          <div className="section-header">
+            <div>
+              <p className="section-subtitle">Quản lý mô tả</p>
+              <h2 className="section-title">Lịch sử mô tả</h2>
+            </div>
+            {history.length > 0 && (
               <button
-                className="secondary-button"
+                className="ghost-button ghost-button--danger"
                 type="button"
-                onClick={() => navigator.clipboard.writeText(result.description)}
+                onClick={() => setShowDeleteConfirm(true)}
               >
-                Sao Chép
+                Xóa tất cả
               </button>
+            )}
+          </div>
+          {!isAuthenticated ? (
+            <div className="empty-state">
+              <p className="muted-text">Đăng nhập để lưu và xem lịch sử mô tả đã tạo.</p>
               <button
-                className="secondary-button"
+                className="primary-button"
                 type="button"
                 onClick={() => {
-                  if (isReading && speakingSource === "result") {
-                    isPaused ? resumeSpeech() : pauseSpeech();
-                  } else {
-                    handleToggleSpeech(result.description, "result");
-                  }
+                  setAuthVisible(true);
+                  changeAuthMode("login");
                 }}
               >
-                {isReading && speakingSource === "result"
-                  ? isPaused
-                    ? "Tiếp tục"
-                    : "Tạm dừng"
-                  : "Đọc mô tả"}
-              </button>
-              <button
-                className="secondary-button"
-                type="button"
-                onClick={handleShareToFacebook}
-                disabled={shareLoading.facebook}
-              >
-                {shareLoading.facebook ? "Dang mo Facebook..." : "Chia sẻ Facebook"}
-              </button>
-              <button
-                className="secondary-button"
-                type="button"
-                onClick={handleShareToTikTok}
-                disabled={shareLoading.tiktok || !canShareToTikTok}
-              >
-                {shareLoading.tiktok ? "Chuan bi TikTok..." : "Chia sẻ TikTok"}
+                Đăng nhập ngay
               </button>
             </div>
-            <div className="share-status">
-              <p className="share-status__text">
-                Facebook: {" "}
-                {facebookProfile?.name ? `Đã kết nối ${facebookProfile.name}` : "Chưa đăng nhập"}
-              </p>
-              <p className="share-status__text">
-                TikTok: {" "}
-                {tiktokProfile?.display_name
-                  ? `Đã xác thực ${tiktokProfile.display_name}`
-                  : "Chưa đăng nhập"}
-              </p>
-              {!canShareToTikTok && (
-                <p className="share-status__text share-status__text--warning">
-                  TikTok cần một kết quả có ảnh minh hoa.
-                </p>
-              )}
-            </div>
-          </section>
-        )
-      }
-
-      <section className="section-card">
-        <div className="section-header">
-          <div>
-            <p className="section-subtitle">Quản lý mô tả</p>
-            <h2 className="section-title">Lịch sử mô tả</h2>
-          </div>
-          {history.length > 0 && (
-            <button
-              className="ghost-button ghost-button--danger"
-              type="button"
-              onClick={() => setShowDeleteConfirm(true)}
-            >
-              Xóa tất cả
-            </button>
-          )}
-        </div>
-        {!isAuthenticated ? (
-          <div className="empty-state">
-            <p className="muted-text">Đăng nhập để lưu và xem lịch sử mô tả đã tạo.</p>
-            <button
-              className="primary-button"
-              type="button"
-              onClick={() => {
-                setAuthVisible(true);
-                changeAuthMode("login");
-              }}
-            >
-              Đăng nhập ngay
-            </button>
-          </div>
-        ) : history.length === 0 ? (
-          <p className="muted-text">Chưa có lịch sử nào. Bắt đầu tạo mô tả ngay hôm nay.</p>
-        ) : (
-          <div className="history-grid">
-            {history.slice(0, historyLimit).map((item) => {
-              const imageSrc = resolveImageUrl(item.image_url);
-              const sourceLabel = item.source === "image" ? "Hình ảnh" : "Văn bản";
-              return (
-                <article key={item.id} className="history-card">
-                  <div className="history-meta">
-                    <span className="history-date">{formatVietnamTime(item.timestamp)}</span>
-                    <span className="history-style">Nguồn: {sourceLabel}</span>
-                    <span className="history-style">Phong cách: {item.style}</span>
-                  </div>
+          ) : filteredHistory.length === 0 ? (
+            <p className="muted-text">Chưa có lịch sử phù hợp với bộ lọc.</p>
+          ) : (
+            <>
+              <div className="filter-bar">
+                <div className="segmented-control segmented-control--tight">
                   <button
-                    className="history-delete"
+                    className={historySourceFilter === "all" ? "segmented-button active" : "segmented-button"}
                     type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteHistoryItem(item.id);
-                    }}
-                    aria-label="Xóa mục này"
+                    onClick={() => setHistorySourceFilter("all")}
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
+                    Tất cả
+                  </button>
+                  <button
+                    className={historySourceFilter === "image" ? "segmented-button active" : "segmented-button"}
+                    type="button"
+                    onClick={() => setHistorySourceFilter("image")}
+                  >
+                    Từ ảnh
+                  </button>
+                  <button
+                    className={historySourceFilter === "text" ? "segmented-button active" : "segmented-button"}
+                    type="button"
+                    onClick={() => setHistorySourceFilter("text")}
+                  >
+                    Từ văn bản
+                  </button>
+                </div>
+                <div className="chip-row chip-row--wrap">
+                  {historyStyles.map((style) => (
+                    <button
+                      key={style}
+                      type="button"
+                      className={`chip chip--sm ${historyStyleFilter === style ? "active" : ""}`}
+                      onClick={() => setHistoryStyleFilter(style)}
                     >
-                      <polyline points="3 6 5 6 21 6"></polyline>
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    </svg>
-                  </button>
-                  {imageSrc && (
-                    <div className="history-thumb">
-                      <Image
-                        src={imageSrc}
-                        alt="Ảnh đã lưu trong lịch sử"
-                        fill
-                        sizes="(max-width: 768px) 100vw, 320px"
-                        className="history-thumb-image"
-                      />
-                    </div>
-                  )}
-                  <p className="muted-text">{item.summary}</p>
+                      {style === "all" ? "Tất cả phong cách" : style}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="history-grid history-grid--list">
+                {visibleHistory.map((item) => {
+                  const imageSrc = resolveImageUrl(item.image_url);
+                  const sourceLabel = item.source === "image" ? "Hình ảnh" : "Văn bản";
+                  return (
+                    <article key={item.id} className="history-card">
+                      <div className="history-meta">
+                        <span className="history-date">{formatVietnamTime(item.timestamp)}</span>
+                        <span className="history-style">Nguồn: {sourceLabel}</span>
+                        <span className="history-style">Phong cách: {item.style}</span>
+                      </div>
+                      <button
+                        className="history-delete"
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteHistoryItem(item.id);
+                        }}
+                        aria-label="Xóa mục này"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <polyline points="3 6 5 6 21 6"></polyline>
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                      </button>
+                      {imageSrc && (
+                        <div className="history-thumb">
+                          <Image
+                            src={imageSrc}
+                            alt="Ảnh đã lưu trong lịch sử"
+                            fill
+                            sizes="(max-width: 768px) 100vw, 320px"
+                            className="history-thumb-image"
+                          />
+                        </div>
+                      )}
+                      <p className="muted-text">{item.summary}</p>
+                      <button
+                        className="ghost-button"
+                        type="button"
+                        onClick={() => {
+                          setActiveView("create");
+                          setActiveTab("text");
+                          setHistoryDetail(item);
+                          setResult({
+                            description: item.full_description,
+                            history_id: item.id,
+                            timestamp: item.timestamp,
+                            style: item.style,
+                            source: item.source,
+                            image_url: item.image_url ?? null,
+                          });
+                        }}
+                      >
+                        Xem chi tiết
+                      </button>
+                    </article>
+                  );
+                })}
+              </div>
+              {filteredHistory.length > historyLimit && (
+                <div style={{ textAlign: "center", marginTop: "24px" }}>
                   <button
-                    className="ghost-button"
+                    className="secondary-button"
                     type="button"
-                    onClick={() => {
-                      setActiveTab("text");
-                      setHistoryDetail(item);
-                      setResult({
-                        description: item.full_description,
-                        history_id: item.id,
-                        timestamp: item.timestamp,
-                        style: item.style,
-                        source: item.source,
-                        image_url: item.image_url ?? null,
-                      });
-                    }}
+                    onClick={() => setHistoryLimit(filteredHistory.length)}
                   >
-                    Xem chi tiết
+                    Xem thêm ({filteredHistory.length - historyLimit})
                   </button>
-                </article>
-              );
-            })}
-          </div>
-        )}
-        {history.length > historyLimit && (
-          <div style={{ textAlign: "center", marginTop: "24px" }}>
-            <button
-              className="secondary-button"
-              type="button"
-              onClick={() => setHistoryLimit(history.length)}
-            >
-              Xem thêm ({history.length - historyLimit})
+                </div>
+              )}
+              {filteredHistory.length > 4 && historyLimit >= filteredHistory.length && (
+                <div style={{ textAlign: "center", marginTop: "24px" }}>
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={() => setHistoryLimit(4)}
+                  >
+                    Thu gọn
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </section>
+      )}
+
+      {activeView === "profile" && (
+        <section className="section-card profile-card">
+          <div className="section-header">
+            <div>
+              <p className="section-subtitle">Tài khoản</p>
+              <h2 className="section-title">Thông tin người dùng</h2>
+            </div>
+            <button className="ghost-button" type="button" onClick={() => setGuideVisible(true)}>
+              Hướng dẫn
             </button>
           </div>
-        )}
-        {history.length > 2 && historyLimit >= history.length && (
-          <div style={{ textAlign: "center", marginTop: "24px" }}>
-            <button
-              className="secondary-button"
-              type="button"
-              onClick={() => setHistoryLimit(2)}
-            >
-              Thu gọn
-            </button>
+          {isAuthenticated ? (
+            <div className="stack">
+              <div className="profile-row">
+                <p className="muted-text">Email/SĐT</p>
+                <p className="panel-title">{user?.email || user?.phone_number}</p>
+              </div>
+              <div className="profile-row">
+                <p className="muted-text">Ngày tạo</p>
+                <p className="panel-title">{user?.created_at ? formatVietnamTime(user.created_at) : "--"}</p>
+              </div>
+              <div className="inline-actions inline-actions--wrap">
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => {
+                    setChangePasswordVisible(true);
+                    setChangePasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+                  }}
+                >
+                  Đổi mật khẩu
+                </button>
+                <button className="ghost-button" type="button" onClick={handleLogout}>
+                  Đăng xuất
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="empty-state">
+              <p className="muted-text">Đăng nhập hoặc tạo tài khoản để lưu lịch sử và quản lý hồ sơ.</p>
+              <div className="inline-actions inline-actions--wrap">
+                <button
+                  className="primary-button"
+                  type="button"
+                  onClick={() => {
+                    changeAuthMode("login");
+                    setAuthVisible(true);
+                  }}
+                >
+                  Đăng nhập
+                </button>
+                <button
+                  className="ghost-button"
+                  type="button"
+                  onClick={() => {
+                    changeAuthMode("register");
+                    setAuthVisible(true);
+                  }}
+                >
+                  Đăng ký
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
+      {menuOpen && (
+        <div className="menu-overlay" onClick={() => setMenuOpen(false)}>
+          <div className="menu-sheet" onClick={(event) => event.stopPropagation()}>
+            <div className="menu-header">
+              <div className="menu-avatar" aria-hidden>👤</div>
+              <div className="menu-header__text">
+                {isAuthenticated ? (
+                  <>
+                    <p className="menu-title">{user?.email || user?.phone_number}</p>
+                    <p className="menu-sub">Đã đăng nhập • {user?.created_at ? formatVietnamTime(user.created_at) : "--"}</p>
+                    <div className="menu-inline">
+                      <button
+                        className="menu-btn menu-btn--pill"
+                        type="button"
+                        onClick={() => {
+                          handleLogout();
+                          setMenuOpen(false);
+                        }}
+                      >
+                        Đăng xuất
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="menu-title">Xin chào, bạn chưa đăng nhập</p>
+                    <p className="menu-sub">Đăng nhập để lưu lịch sử và đồng bộ.</p>
+                    <div className="menu-inline">
+                      <button
+                        className="menu-btn menu-btn--pill menu-btn--primary-soft"
+                        type="button"
+                        onClick={() => {
+                          changeAuthMode("login");
+                          setAuthVisible(true);
+                          setMenuOpen(false);
+                        }}
+                      >
+                        Đăng nhập / Đăng ký
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="menu-actions">
+              <button
+                className="menu-btn menu-btn--primary"
+                type="button"
+                onClick={() => {
+                  navigateToCreate("image");
+                  setMenuOpen(false);
+                }}
+              >
+                Bắt đầu tạo nội dung
+              </button>
+              <button
+                className="menu-btn menu-btn--secondary"
+                type="button"
+                onClick={() => {
+                  setGuideVisible(true);
+                  setMenuOpen(false);
+                }}
+              >
+                Hướng dẫn sử dụng
+              </button>
+              {isAuthenticated && (
+                <button
+                  className="menu-btn menu-btn--ghost"
+                  type="button"
+                  onClick={() => {
+                    setChangePasswordVisible(true);
+                    setMenuOpen(false);
+                  }}
+                >
+                  Đổi mật khẩu
+                </button>
+              )}
+              <button
+                className="menu-btn menu-btn--text"
+                type="button"
+                onClick={() => setMenuOpen(false)}
+              >
+                Đóng
+              </button>
+            </div>
           </div>
-        )}
-      </section>
+        </div>
+      )}
 
+      <nav className="bottom-nav bottom-nav--four">
+        <button
+          className={`nav-button ${activeView === "create" ? "active" : ""}`}
+          type="button"
+          onClick={() => setActiveView("create")}
+        >
+          <span className="nav-icon">＋</span>
+          <span className="nav-label">Tạo</span>
+        </button>
+        <button
+          className={`nav-button ${activeView === "history" ? "active" : ""}`}
+          type="button"
+          onClick={() => setActiveView("history")}
+        >
+          <span className="nav-icon">🕒</span>
+          <span className="nav-label">Lịch sử</span>
+        </button>
+        <button
+          className={`nav-button ${activeView === "profile" ? "active" : ""}`}
+          type="button"
+          onClick={() => setActiveView("profile")}
+        >
+          <span className="nav-icon">👤</span>
+          <span className="nav-label">Tôi</span>
+        </button>
+        <button
+          className="nav-button"
+          type="button"
+          onClick={() => setMenuOpen(true)}
+        >
+          <span className="nav-icon">≡</span>
+          <span className="nav-label">Menu</span>
+        </button>
+      </nav>
 
+      {activeView === "create" && (
+        <div className="sticky-cta">
+          <button
+            className="primary-button primary-button--full"
+            type="button"
+            onClick={activeTab === "image" ? handleImageSubmit : handleTextSubmit}
+            disabled={isPrimaryActionDisabled}
+          >
+            {loading ? (
+              <span className="button-loader">
+                <span className="loader" /> Đang tạo mô tả...
+              </span>
+            ) : (
+              primaryActionLabel
+            )}
+          </button>
+        </div>
+      )}
 
-      {
-        toast && (
-          <div className={`app-toast app-toast--${toast.type}`} role="status">
-            {toast.message}
-          </div>
-        )
-      }
+      {toast && (
+        <div className={`app-toast app-toast--${toast.type}`} role="status">
+          {toast.message}
+        </div>
+      )}
 
       {
         guideVisible && (
