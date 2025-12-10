@@ -240,6 +240,31 @@ export default function HomePage() {
     }, 4000);
   }, []);
 
+  const copyImage = useCallback(
+    async (url: string) => {
+      if (typeof window === "undefined" || !navigator.clipboard) {
+        showToast("error", "Trình duyệt không hỗ trợ sao chép ảnh.");
+        return;
+      }
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error("Không tải được ảnh.");
+        }
+        const blob = await response.blob();
+        // @ts-expect-error ClipboardItem may not be in TS lib target
+        const clipboardItem = new ClipboardItem({ [blob.type]: blob });
+        // @ts-expect-error write may not be in TS lib target
+        await navigator.clipboard.write([clipboardItem]);
+        showToast("success", "Đã sao chép ảnh vào clipboard.");
+      } catch (error) {
+        console.error("copy image error", error);
+        showToast("error", "Không thể sao chép ảnh. Hãy thử trình duyệt khác.");
+      }
+    },
+    [showToast],
+  );
+
   const stopSpeech = useCallback(() => {
     if ((window as any).currentAudio) {
       (window as any).currentAudio.pause();
@@ -1761,6 +1786,15 @@ export default function HomePage() {
                 >
                   Sao Chép
                 </button>
+                {resultImageSrc && (
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={() => copyImage(resultImageSrc)}
+                  >
+                    Sao chép ảnh
+                  </button>
+                )}
                 <button
                   className="secondary-button"
                   type="button"
@@ -2328,6 +2362,15 @@ export default function HomePage() {
                     >
                       Sao chép
                     </button>
+                    {detailImageSrc && (
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={() => copyImage(detailImageSrc)}
+                      >
+                        Sao chép ảnh
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
