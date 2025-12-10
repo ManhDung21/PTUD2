@@ -153,6 +153,28 @@ async def _process_avatar_upload(
     return f"/static/avatars/{filename}"
 
 
+def _append_user_info(description: str, user: Optional[UserDocument]) -> str:
+    if not user:
+        return description
+    parts: list[str] = []
+    full_name = (user.get("full_name") or "").strip()
+    email = (user.get("email") or "").strip()
+    phone = (user.get("phone_number") or "").strip()
+
+    if full_name:
+        parts.append(f"Họ tên: {full_name}")
+    if phone:
+        parts.append(f"Số điện thoại: {phone}")
+    if email:
+        parts.append(f"Email: {email}")
+
+    if not parts:
+        return description
+
+    footer = "\n\nThông tin người tạo:\n" + "\n".join(parts)
+    return description + footer
+
+
 @app.on_event("startup")
 def on_startup() -> None:
     init_db()
@@ -480,6 +502,8 @@ async def generate_description_from_image(
     if not description_text:
         raise HTTPException(status_code=502, detail="Không tạo được mô tả từ hình ảnh")
 
+    description_text = _append_user_info(description_text, current_user)
+
     history_payload = None
     if current_user:
         description_doc: DescriptionDocument = {
@@ -519,6 +543,8 @@ async def generate_description_from_text(
 
     if not description_text:
         raise HTTPException(status_code=502, detail="Không tạo được mô tả từ văn bản")
+
+    description_text = _append_user_info(description_text, current_user)
 
     history_payload = None
     if current_user:

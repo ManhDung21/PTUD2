@@ -252,9 +252,8 @@ export default function HomePage() {
           throw new Error("Không tải được ảnh.");
         }
         const blob = await response.blob();
-        // @ts-expect-error ClipboardItem may not be in TS lib target
+        
         const clipboardItem = new ClipboardItem({ [blob.type]: blob });
-        // @ts-expect-error write may not be in TS lib target
         await navigator.clipboard.write([clipboardItem]);
         showToast("success", "Đã sao chép ảnh vào clipboard.");
       } catch (error) {
