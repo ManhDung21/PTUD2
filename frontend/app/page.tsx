@@ -251,23 +251,44 @@ export default function HomePage() {
 
   const copyImage = useCallback(
     async (url: string) => {
-      if (typeof window === "undefined" || !navigator.clipboard) {
-        showToast("error", "Trình duyệt không hỗ trợ sao chép ảnh.");
+      const downloadFallback = async () => {
+        try {
+          const response = await fetch(url);
+          if (!response.ok) throw new Error("download failed");
+          const blob = await response.blob();
+          const objectUrl = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = objectUrl;
+          link.download = `image-${Date.now()}`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(objectUrl);
+          showToast("error", "Trình duyệt không cho sao chép ảnh. Đã tải ảnh về máy.");
+        } catch (downloadErr) {
+          console.error("download fallback error", downloadErr);
+          showToast("error", "Không thể sao chép hoặc tải ảnh. Hãy thử trình duyệt khác.");
+        }
+      };
+
+      if (typeof window === "undefined" || !navigator.clipboard || typeof ClipboardItem === "undefined") {
+        await downloadFallback();
         return;
       }
+
       try {
-        const response = await fetch(url);
+        const response = await fetch(url, { mode: "cors" });
         if (!response.ok) {
           throw new Error("Không tải được ảnh.");
         }
         const blob = await response.blob();
-        
+
         const clipboardItem = new ClipboardItem({ [blob.type]: blob });
         await navigator.clipboard.write([clipboardItem]);
         showToast("success", "Đã sao chép ảnh vào clipboard.");
       } catch (error) {
         console.error("copy image error", error);
-        showToast("error", "Không thể sao chép ảnh. Hãy thử trình duyệt khác.");
+        await downloadFallback();
       }
     },
     [showToast],
