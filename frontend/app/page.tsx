@@ -1355,13 +1355,16 @@ export default function HomePage() {
       setResult((prev) => (prev?.history_id === idToDelete ? null : prev));
 
       showToast("success", "Đã xóa mục lịch sử.");
+      await refreshHistory();
     } catch (error) {
       console.error("Failed to delete history item:", error);
-      showToast("error", "Không thể xóa mục lịch sử.");
+      if (!handleUnauthorized(error)) {
+        showToast("error", "Không thể xóa mục lịch sử.");
+      }
     } finally {
       setDeleteTargetId(null);
     }
-  }, [deleteTargetId, showToast]);
+  }, [deleteTargetId, handleUnauthorized, refreshHistory, showToast]);
 
   const handleDeleteAllHistory = useCallback(async () => {
     console.log("DEBUG: Frontend deleting ALL history");
@@ -1373,11 +1376,14 @@ export default function HomePage() {
       setResult(null); // Xóa luôn phần hiển thị kết quả nếu có
       setShowDeleteConfirm(false);
       showToast("success", "Đã xóa toàn bộ lịch sử.");
+      await refreshHistory();
     } catch (error) {
       console.error("Failed to delete all history:", error);
-      showToast("error", "Không thể xóa toàn bộ lịch sử.");
+      if (!handleUnauthorized(error)) {
+        showToast("error", "Không thể xóa toàn bộ lịch sử.");
+      }
     }
-  }, [showToast]);
+  }, [handleUnauthorized, refreshHistory, showToast]);
 
   const handleLogout = () => {
     setToken(null);
