@@ -397,6 +397,14 @@ button {
   z-index: 2;
 }
 
+.preview-remove--small {
+  top: 10px;
+  right: 10px;
+  width: 26px;
+  height: 26px;
+  font-size: 0.9rem;
+}
+
 .preview-remove:hover {
   background: rgba(15, 23, 42, 0.85);
   transform: translateY(-1px);
@@ -1145,7 +1153,7 @@ textarea {
 
 .preview-frame-wrapper--tight {
   max-width: 260px;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 3 / 4;
 }
 
 .upload-meta {
@@ -1179,6 +1187,23 @@ textarea {
   flex-direction: column;
   gap: 12px;
   margin-bottom: 12px;
+}
+
+.filter-list {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.filter-row {
+  display: grid;
+  gap: 6px;
+}
+
+.filter-label {
+  font-weight: 700;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
 }
 
 .profile-card {

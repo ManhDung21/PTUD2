@@ -1598,6 +1598,17 @@ export default function HomePage() {
                   {activeImage ? (
                     <div className="upload-preview">
                       <div className="preview-frame-wrapper preview-frame-wrapper--tight">
+                        <button
+                          type="button"
+                          className="preview-remove preview-remove--small"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleRemoveImage(activeImage.id);
+                          }}
+                          aria-label="Xóa ảnh đang chọn"
+                        >
+                          ×
+                        </button>
                         <Image
                           src={activeImage.previewUrl}
                           alt="Ảnh đã chọn"
@@ -1626,15 +1637,6 @@ export default function HomePage() {
                   <button className="secondary-button" type="button" onClick={handleQuickCamera}>
                     {cameraActive ? "Camera đang bật" : "Mở camera"}
                   </button>
-                  {activeImage && (
-                    <button
-                      className="ghost-button"
-                      type="button"
-                      onClick={() => handleRemoveImage(activeImage.id)}
-                    >
-                      Xóa ảnh đang chọn
-                    </button>
-                  )}
                 </div>
 
                 {cameraActive && (
@@ -1842,41 +1844,32 @@ export default function HomePage() {
               </div>
           ) : (
             <>
-              <div className="filter-bar">
-                <div className="segmented-control segmented-control--tight">
-                  <button
-                    className={historySourceFilter === "all" ? "segmented-button active" : "segmented-button"}
-                    type="button"
-                    onClick={() => setHistorySourceFilter("all")}
+              <div className="filter-list">
+                <div className="filter-row">
+                  <label className="filter-label" htmlFor="history-source">Nguồn</label>
+                  <select
+                    id="history-source"
+                    value={historySourceFilter}
+                    onChange={(event) => setHistorySourceFilter(event.target.value as typeof historySourceFilter)}
                   >
-                    Tất cả
-                  </button>
-                  <button
-                    className={historySourceFilter === "image" ? "segmented-button active" : "segmented-button"}
-                    type="button"
-                    onClick={() => setHistorySourceFilter("image")}
-                  >
-                    Từ ảnh
-                  </button>
-                  <button
-                    className={historySourceFilter === "text" ? "segmented-button active" : "segmented-button"}
-                    type="button"
-                    onClick={() => setHistorySourceFilter("text")}
-                  >
-                    Từ văn bản
-                  </button>
+                    <option value="all">Tất cả</option>
+                    <option value="image">Từ ảnh</option>
+                    <option value="text">Từ văn bản</option>
+                  </select>
                 </div>
-                <div className="chip-row chip-row--wrap">
-                  {historyStyles.map((style) => (
-                    <button
-                      key={style}
-                      type="button"
-                      className={`chip chip--sm ${historyStyleFilter === style ? "active" : ""}`}
-                      onClick={() => setHistoryStyleFilter(style)}
-                    >
-                      {style === "all" ? "Tất cả phong cách" : style}
-                    </button>
-                  ))}
+                <div className="filter-row">
+                  <label className="filter-label" htmlFor="history-style">Phong cách</label>
+                  <select
+                    id="history-style"
+                    value={historyStyleFilter}
+                    onChange={(event) => setHistoryStyleFilter(event.target.value)}
+                  >
+                    {historyStyles.map((style) => (
+                      <option key={style} value={style}>
+                        {style === "all" ? "Tất cả phong cách" : style}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               {filteredHistory.length === 0 ? (
