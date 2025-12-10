@@ -42,6 +42,12 @@ class LoginRequest(BaseModel):
     password: str = Field(min_length=6)
 
 
+class UpdateProfileRequest(BaseModel):
+    full_name: Optional[str] = Field(default=None, description="Họ tên")
+    email: Optional[str] = Field(default=None, description="Email")
+    phone_number: Optional[str] = Field(default=None, description="Số điện thoại")
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"

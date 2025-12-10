@@ -30,6 +30,7 @@ from .schemas import (
     RegisterRequest,
     ResetPasswordRequest,
     TokenResponse,
+    UpdateProfileRequest,
     UserOut,
 )
 from .services import auth, content, email as email_service, history as history_service, tts
@@ -420,6 +421,49 @@ def change_password(
 @app.get("/auth/me", response_model=UserOut)
 def me(current_user: UserDocument = Depends(get_current_user)) -> UserOut:
     return _user_out(current_user)
+
+
+@app.put("/auth/profile", response_model=UserOut)
+def update_profile(
+    payload: UpdateProfileRequest,
+    current_user: UserDocument = Depends(get_current_user),
+    db: Database = Depends(get_database),
+) -> UserOut:
+    users = _users_collection(db)
+    updates: dict[str, str] = {}
+
+    if payload.full_name is not None:
+        full_name = payload.full_name.strip()
+        if len(full_name) < 2:
+            raise HTTPException(status_code=400, detail="Họ tên cần ít nhất 2 ký tự")
+        updates["full_name"] = full_name
+
+    if payload.email is not None:
+        email = payload.email.strip().lower()
+        if not is_email(email):
+            raise HTTPException(status_code=400, detail="Vui lòng nhập email hợp lệ")
+        exists = users.find_one({"email": email, "_id": {"$ne": current_user["_id"]}})
+        if exists:
+            raise HTTPException(status_code=400, detail="Email đã tồn tại")
+        updates["email"] = email
+
+    if payload.phone_number is not None:
+        phone = payload.phone_number.strip()
+        if not is_phone_number(phone):
+            raise HTTPException(status_code=400, detail="Vui lòng nhập số điện thoại hợp lệ")
+        exists = users.find_one({"phone_number": phone, "_id": {"$ne": current_user["_id"]}})
+        if exists:
+            raise HTTPException(status_code=400, detail="Số điện thoại đã tồn tại")
+        updates["phone_number"] = phone
+
+    if not updates:
+        raise HTTPException(status_code=400, detail="Không có thông tin cập nhật")
+
+    users.update_one({"_id": current_user["_id"]}, {"$set": updates})
+    updated = users.find_one({"_id": current_user["_id"]})
+    if not updated:
+        raise HTTPException(status_code=404, detail="Không tìm thấy người dùng")
+    return _user_out(updated)
 
 
 def get_current_user_optional(

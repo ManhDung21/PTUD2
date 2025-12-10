@@ -206,6 +206,11 @@ export default function HomePage() {
   const [changePasswordVisible, setChangePasswordVisible] = useState(false);
   const [changePasswordLoading, setChangePasswordLoading] = useState(false);
   const [changePasswordForm, setChangePasswordForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  const [profileEditVisible, setProfileEditVisible] = useState(false);
+  const [profileEditLoading, setProfileEditLoading] = useState(false);
+  const [profileForm, setProfileForm] = useState({ full_name: "", email: "", phone_number: "" });
+  const [profileAvatarFile, setProfileAvatarFile] = useState<File | null>(null);
+  const [profileAvatarPreview, setProfileAvatarPreview] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastState | null>(null);
   const [authMessage, setAuthMessage] = useState<{ type: ToastKind; message: string } | null>(null);
   const [guideVisible, setGuideVisible] = useState(false);
@@ -231,6 +236,10 @@ export default function HomePage() {
   const speechTextRef = useRef<string | null>(null);
   const speakingSourceRef = useRef<"result" | "history" | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const profileAvatarDisplay = useMemo(
+    () => profileAvatarPreview || userAvatarSrc || null,
+    [profileAvatarPreview, userAvatarSrc],
+  );
 
   const showToast = useCallback((type: ToastKind, message: string) => {
     const id = Date.now();
@@ -405,6 +414,12 @@ export default function HomePage() {
     }
   }, [avatarPreview]);
 
+  useEffect(() => () => {
+    if (profileAvatarPreview) {
+      URL.revokeObjectURL(profileAvatarPreview);
+    }
+  }, [profileAvatarPreview]);
+
   useEffect(() => {
     if (!FACEBOOK_APP_ID || typeof window === "undefined") {
       return;
@@ -452,12 +467,13 @@ export default function HomePage() {
   }, [showToast]);
 
   const uploadAvatar = useCallback(
-    async (jwt: string) => {
-      if (!avatarFile) {
+    async (jwt: string, file?: File | null) => {
+      const targetFile = file ?? avatarFile;
+      if (!targetFile) {
         return null;
       }
       const formData = new FormData();
-      formData.append("file", avatarFile);
+      formData.append("file", targetFile);
       try {
         const { data } = await axios.post<AvatarUploadResponse>(`${API_BASE_URL}/auth/avatar`, formData, {
           headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${jwt}` },
@@ -1024,6 +1040,31 @@ export default function HomePage() {
     setAvatarFile(null);
   };
 
+  const handleProfileAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+    if (!file.type.startsWith("image/")) {
+      showToast("error", "Vui lòng chọn tệp hình ảnh hợp lệ.");
+      return;
+    }
+    if (profileAvatarPreview) {
+      URL.revokeObjectURL(profileAvatarPreview);
+    }
+    const previewUrl = URL.createObjectURL(file);
+    setProfileAvatarFile(file);
+    setProfileAvatarPreview(previewUrl);
+  };
+
+  const clearProfileAvatarSelection = () => {
+    if (profileAvatarPreview) {
+      URL.revokeObjectURL(profileAvatarPreview);
+    }
+    setProfileAvatarPreview(null);
+    setProfileAvatarFile(null);
+  };
+
 
 
 
@@ -1298,6 +1339,23 @@ export default function HomePage() {
     }
   };
 
+  const openProfileEdit = () => {
+    if (!user) return;
+    setProfileForm({
+      full_name: user.full_name ?? "",
+      email: user.email ?? "",
+      phone_number: user.phone_number ?? "",
+    });
+    setProfileEditVisible(true);
+    clearProfileAvatarSelection();
+  };
+
+  const closeProfileEdit = () => {
+    setProfileEditVisible(false);
+    setProfileEditLoading(false);
+    clearProfileAvatarSelection();
+  };
+
   const handleChangePasswordSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setChangePasswordLoading(true);
@@ -1343,6 +1401,67 @@ export default function HomePage() {
       showToast("error", detail);
     } finally {
       setChangePasswordLoading(false);
+    }
+  };
+
+  const handleProfileSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!token) {
+      showToast("error", "Vui lòng đăng nhập lại.");
+      return;
+    }
+    setProfileEditLoading(true);
+    clearToast();
+    try {
+      const full_name = profileForm.full_name.trim();
+      const email = profileForm.email.trim();
+      const phone_number = profileForm.phone_number.trim();
+
+      if (!full_name || full_name.length < 2) {
+        showToast("error", "Họ tên cần ít nhất 2 ký tự.");
+        setProfileEditLoading(false);
+        return;
+      }
+      if (!EMAIL_REGEX.test(email)) {
+        showToast("error", "Vui lòng nhập email hợp lệ.");
+        setProfileEditLoading(false);
+        return;
+      }
+      if (!PHONE_REGEX.test(phone_number)) {
+        showToast("error", "Số điện thoại phải gồm 10-11 chữ số.");
+        setProfileEditLoading(false);
+        return;
+      }
+
+      await axios.put(
+        `${API_BASE_URL}/auth/profile`,
+        { full_name, email, phone_number },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      await uploadAvatar(token, profileAvatarFile);
+      await fetchProtectedData(token);
+
+      showToast("success", "Đã cập nhật thông tin cá nhân.");
+      closeProfileEdit();
+    } catch (err: any) {
+      if (handleUnauthorized(err)) {
+        return;
+      }
+      let detail = "Không thể cập nhật thông tin";
+      if (err?.response?.data?.detail) {
+        const errorDetail = err.response.data.detail;
+        if (Array.isArray(errorDetail)) {
+          detail = errorDetail.map((e: any) => e.msg || e.message).join(", ");
+        } else if (typeof errorDetail === "string") {
+          detail = errorDetail;
+        } else if (typeof errorDetail === "object") {
+          detail = errorDetail.msg || errorDetail.message || JSON.stringify(errorDetail);
+        }
+      }
+      showToast("error", detail);
+    } finally {
+      setProfileEditLoading(false);
     }
   };
 
@@ -2059,6 +2178,13 @@ export default function HomePage() {
                 <button
                   className="secondary-button"
                   type="button"
+                  onClick={openProfileEdit}
+                >
+                  Cập nhật thông tin
+                </button>
+                <button
+                  className="secondary-button"
+                  type="button"
                   onClick={() => {
                     setChangePasswordVisible(true);
                     setChangePasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
@@ -2634,6 +2760,78 @@ export default function HomePage() {
                   disabled={changePasswordLoading}
                 >
                   {changePasswordLoading ? "Đang xử lý..." : "Cập nhật mật khẩu"}
+                </button>
+              </form>
+            </div>
+          </div>
+        )
+      }
+
+      {
+        profileEditVisible && (
+          <div className="modal-overlay" role="dialog" aria-modal="true">
+            <div className="modal-card modal-card--auth">
+              <div className="modal-header">
+                <h2 className="modal-title">Cập nhật thông tin</h2>
+                <button type="button" className="icon-button" onClick={closeProfileEdit} aria-label="Đóng">
+                  ×
+                </button>
+              </div>
+              <form className="stack" onSubmit={handleProfileSubmit}>
+                <input
+                  type="text"
+                  placeholder="Họ và tên"
+                  value={profileForm.full_name}
+                  onChange={(event) => setProfileForm((prev) => ({ ...prev, full_name: event.target.value }))}
+                  required
+                  minLength={2}
+                />
+                <input
+                  type="email"
+                  placeholder="Email"
+                  value={profileForm.email}
+                  onChange={(event) => setProfileForm((prev) => ({ ...prev, email: event.target.value }))}
+                  required
+                />
+                <input
+                  type="tel"
+                  placeholder="Số điện thoại"
+                  value={profileForm.phone_number}
+                  onChange={(event) => setProfileForm((prev) => ({ ...prev, phone_number: event.target.value }))}
+                  required
+                  pattern="[0-9]{10,11}"
+                  inputMode="tel"
+                />
+                <div className="avatar-upload">
+                  <div className="avatar-upload__controls">
+                    <div
+                      className={`avatar-preview avatar-preview--lg ${profileAvatarDisplay ? "avatar-preview--image" : ""}`}
+                      style={profileAvatarDisplay ? { backgroundImage: `url(${profileAvatarDisplay})` } : undefined}
+                    >
+                      {!profileAvatarDisplay && userInitial}
+                    </div>
+                    <div className="avatar-upload__buttons">
+                      <label className="secondary-button" htmlFor="profile-avatar-upload">
+                        Chọn ảnh đại diện
+                      </label>
+                      <input
+                        id="profile-avatar-upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden-file-input"
+                        onChange={handleProfileAvatarChange}
+                      />
+                      {profileAvatarDisplay && (
+                        <button className="ghost-button" type="button" onClick={clearProfileAvatarSelection}>
+                          Xóa ảnh
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <p className="muted-text avatar-hint">Chọn ảnh JPG/PNG. Ảnh mới sẽ thay thế ảnh hiện tại.</p>
+                </div>
+                <button className="primary-button primary-button--full" type="submit" disabled={profileEditLoading}>
+                  {profileEditLoading ? "Đang cập nhật..." : "Lưu thay đổi"}
                 </button>
               </form>
             </div>
