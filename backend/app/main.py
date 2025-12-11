@@ -11,7 +11,7 @@ from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageDraw, ImageFont, UnidentifiedImageError
 from pymongo.collection import Collection
 from pymongo.database import Database
 
@@ -174,6 +174,60 @@ def _append_user_info(description: str, user: Optional[UserDocument]) -> str:
 
     footer = "\n\nThông tin người tạo:\n" + "\n".join(parts)
     return description + footer
+
+
+def _overlay_user_info_on_image(image: Image.Image, user: Optional[UserDocument]) -> Image.Image:
+    """Overlay user's full name and phone number onto the top-left corner of an image."""
+    if not user:
+        return image
+
+    full_name = (user.get("full_name") or "").strip()
+    phone = (user.get("phone_number") or "").strip()
+    lines: list[str] = []
+    if full_name:
+        lines.append(f"Họ tên: {full_name}")
+    if phone:
+        lines.append(f"SĐT: {phone}")
+
+    if not lines:
+        return image
+
+    base_image = image.convert("RGBA")
+    draw = ImageDraw.Draw(base_image)
+
+    # Dynamic font sizing with safe fallback
+    min_dim = min(base_image.size)
+    target_size = max(14, int(min_dim * 0.035))
+    try:
+        font = ImageFont.truetype("arial.ttf", target_size)
+    except Exception:
+        font = ImageFont.load_default()
+
+    text_padding = 10
+    line_spacing = 4
+
+    bboxes = [draw.textbbox((0, 0), line, font=font) for line in lines]
+    text_width = max((bbox[2] - bbox[0]) for bbox in bboxes)
+    text_height = sum((bbox[3] - bbox[1]) for bbox in bboxes) + line_spacing * (len(lines) - 1)
+
+    box_x = 8
+    box_y = 8
+    box_width = text_width + text_padding * 2
+    box_height = text_height + text_padding * 2
+
+    draw.rectangle(
+        [(box_x, box_y), (box_x + box_width, box_y + box_height)],
+        fill=(0, 0, 0, 160),
+    )
+
+    text_x = box_x + text_padding
+    text_y = box_y + text_padding
+    for idx, line in enumerate(lines):
+        draw.text((text_x, text_y), line, font=font, fill=(255, 255, 255, 230))
+        line_height = bboxes[idx][3] - bboxes[idx][1]
+        text_y += line_height + line_spacing
+
+    return base_image.convert("RGB")
 
 
 @app.on_event("startup")
@@ -510,8 +564,9 @@ async def generate_description_from_image(
     
     # Try to upload to Cloudinary, fallback to local storage if fails
     cloudinary_url: Optional[str] = None
+    processed_image = _overlay_user_info_on_image(image, current_user)
     if settings.cloudinary_cloud_name and settings.cloudinary_api_key and settings.cloudinary_api_secret:
-        cloudinary_url = cloudinary_service.upload_image(image, filename)
+        cloudinary_url = cloudinary_service.upload_image(processed_image, filename)
     
     # Fallback to local storage if Cloudinary is not configured or upload fails
     image_url: Optional[str] = None
@@ -530,7 +585,7 @@ async def generate_description_from_image(
                 save_kwargs["format"] = "JPEG"
             elif suffix == ".png":
                 save_kwargs["format"] = "PNG"
-            image.save(image_path, **save_kwargs)
+            processed_image.save(image_path, **save_kwargs)
             if image_path:
                 image_url = f"/static/{relative_image_path.as_posix()}"
                 stored_image_path = relative_image_path.as_posix()
