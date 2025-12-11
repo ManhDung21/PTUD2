@@ -715,14 +715,16 @@ textarea {
 }
 
 .history-detail-grid {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr;
   gap: 20px;
 }
 
 @media (min-width: 768px) {
   .history-detail-grid {
-    flex-direction: row;
+    grid-template-columns: 320px 1fr;
+    grid-template-rows: 1fr;
     align-items: flex-start;
   }
 }
@@ -736,10 +738,17 @@ textarea {
   position: relative;
   width: 100%;
   max-width: 320px;
-  max-height: 60vh;
+  min-height: 240px;
+  max-height: 50vh;
   aspect-ratio: 3 / 4;
   height: auto;
   margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .history-detail-image .preview-frame-wrapper {
+    max-height: 60vh;
+  }
 }
 
 .history-detail-content {
@@ -747,6 +756,7 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-height: 0;
 }
 
 .history-detail-description {
