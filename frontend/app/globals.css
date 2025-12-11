@@ -1458,15 +1458,15 @@ textarea {
   background: #ffffff;
   border-top: 1px solid var(--border-soft);
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
   padding: 8px 6px;
   z-index: 1100;
   box-shadow: 0 -8px 20px rgba(15, 23, 42, 0.08);
 }
 
-.bottom-nav--four {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+.bottom-nav--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .nav-button {
@@ -1489,18 +1489,6 @@ textarea {
   background: rgba(249, 115, 22, 0.1);
 }
 
-.nav-button--primary {
-  transform: translateY(-10px);
-  background: linear-gradient(135deg, var(--accent-orange) 0%, var(--accent-coral) 100%);
-  color: #ffffff;
-  box-shadow: var(--shadow);
-}
-
-.nav-button--primary .nav-label,
-.nav-button--primary .nav-icon {
-  color: #ffffff;
-}
-
 .nav-icon {
   font-size: 1.1rem;
 }
@@ -1513,7 +1501,7 @@ textarea {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 68px;
+  bottom: calc(72px + env(safe-area-inset-bottom));
   padding: 12px 16px;
   z-index: 1150;
 }

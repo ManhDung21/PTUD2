@@ -2315,6 +2315,26 @@ export default function HomePage() {
                 className="menu-btn menu-btn--secondary"
                 type="button"
                 onClick={() => {
+                  setActiveView("history");
+                  setMenuOpen(false);
+                }}
+              >
+                Lịch sử mô tả
+              </button>
+              <button
+                className="menu-btn"
+                type="button"
+                onClick={() => {
+                  setActiveView("profile");
+                  setMenuOpen(false);
+                }}
+              >
+                Hồ sơ của tôi
+              </button>
+              <button
+                className="menu-btn menu-btn--secondary"
+                type="button"
+                onClick={() => {
                   setGuideVisible(true);
                   setMenuOpen(false);
                 }}
@@ -2345,7 +2365,7 @@ export default function HomePage() {
         </div>
       )}
 
-      <nav className="bottom-nav bottom-nav--four">
+      <nav className="bottom-nav bottom-nav--three">
         <button
           className={`nav-button ${activeView === "create" ? "active" : ""}`}
           type="button"
@@ -2369,14 +2389,6 @@ export default function HomePage() {
         >
           <span className="nav-icon">👤</span>
           <span className="nav-label">Tôi</span>
-        </button>
-        <button
-          className="nav-button"
-          type="button"
-          onClick={() => setMenuOpen(true)}
-        >
-          <span className="nav-icon">≡</span>
-          <span className="nav-label">Menu</span>
         </button>
       </nav>
 
