@@ -172,7 +172,7 @@ def _append_user_info(description: str, user: Optional[UserDocument]) -> str:
     if not parts:
         return description
 
-    footer = "\n\nThông tin người tạo:\n" + "\n".join(parts)
+    footer = "\n\nThông tin liên hệ:\n" + "\n".join(parts)
     return description + footer
 
 
