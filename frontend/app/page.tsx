@@ -264,7 +264,7 @@ export default function HomePage() {
           link.click();
           document.body.removeChild(link);
           URL.revokeObjectURL(objectUrl);
-          showToast("error", "Trình duyệt không cho sao chép ảnh. Đã tải ảnh về máy.");
+          showToast("error", "Đã tải ảnh về máy.");
         } catch (downloadErr) {
           console.error("download fallback error", downloadErr);
           showToast("error", "Không thể sao chép hoặc tải ảnh. Hãy thử trình duyệt khác.");
@@ -1931,7 +1931,7 @@ export default function HomePage() {
                     type="button"
                     onClick={() => copyImage(resultImageSrc)}
                   >
-                    Sao chép ảnh
+                    Lưu ảnh
                   </button>
                 )}
                 <button
@@ -2514,7 +2514,7 @@ export default function HomePage() {
                         type="button"
                         onClick={() => copyImage(detailImageSrc)}
                       >
-                        Sao chép ảnh
+                        Lưu ảnh
                       </button>
                     )}
                   </div>
