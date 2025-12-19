@@ -59,7 +59,7 @@ const FAQs = [
   {
     question: "Khi cần hỗ trợ thì làm thế nào?",
     answer:
-      "Liên hệ qua email hỗ trợ trong mục Thông tin (ví dụ support@mdung21.id.vn).",
+      "Liên hệ qua email hỗ trợ trong mục Thông tin (ví dụ mdung07102004@gmail.com).",
   },
 ];
 
