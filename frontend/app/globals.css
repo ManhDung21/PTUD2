@@ -9,6 +9,7 @@
   --text-secondary: #4b5563;
   --text-muted: #6b7280;
   --accent-orange: #f97316;
+  --accent-orange-dark: #c2410c;
   --accent-coral: #fb7185;
   --accent-lime: #22c55e;
   --border: #e2e8f0;
@@ -159,7 +160,7 @@ button {
   padding: 6px 16px;
   border-radius: 999px;
   background: rgba(249, 115, 22, 0.12);
-  color: var(--accent-orange);
+  color: var(--accent-orange-dark);
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.05em;
@@ -221,7 +222,7 @@ button {
 
 .section-subtitle {
   margin: 0 0 4px;
-  color: var(--accent-orange);
+  color: var(--accent-orange-dark);
   font-weight: 600;
   font-size: 0.95rem;
   text-transform: uppercase;
@@ -287,7 +288,7 @@ button {
 
 .tab-button.active {
   background: #ffffff;
-  color: var(--accent-orange);
+  color: var(--accent-orange-dark);
   box-shadow: 0 8px 20px rgba(249, 115, 22, 0.22);
 }
 
@@ -1139,7 +1140,7 @@ textarea {
 
 .segmented-button.active {
   background: #ffffff;
-  color: var(--accent-orange);
+  color: var(--accent-orange-dark);
   box-shadow: var(--shadow-soft);
 }
 
@@ -1498,7 +1499,7 @@ textarea {
 }
 
 .nav-button.active {
-  color: var(--accent-orange);
+  color: var(--accent-orange-dark);
   background: rgba(249, 115, 22, 0.1);
 }
 
