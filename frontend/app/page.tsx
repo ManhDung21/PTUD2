@@ -91,32 +91,26 @@ export default function HomePage() {
     setResult(null);
 
     try {
-      const formData = new FormData();
-      if (input.trim()) formData.append("product_info", input);
-      if (selectedImageFile) formData.append("file", selectedImageFile);
-      formData.append("style", selectedStyle);
+      let url = "";
+      let payload: any;
+      let headers: any = token ? { Authorization: `Bearer ${token}` } : {};
 
-      let url = `${API_BASE_URL}/api/generate-text`;
-      // Logic adjustment based on original: if image is present, usually use visual endpoint or generic one handled by backend
       if (selectedImageFile) {
-        // Assuming backend handles image at generic endpoint or specific one. 
-        // Original code didn't strictly separate endpoints clearly in the snippets I saw, but usually:
-        // If image -> generate-image-description equivalent or same endpoint. 
-        // I will use generate-text which seems to handle text, and verify if it supports file.
-        // Actually, looking at original page.tsx lines 346: axios.post(`${API_BASE_URL}/api/tts`)...
-        // Wait, where was the generation logic?
-        // It was likely in a part of page.tsx I didn't see fully or I missed it.
-        // However, standard pattern:
-        url = `${API_BASE_URL}/api/generate-text`; // Fallback
-        // If backend has specific image endpoint, it should be used. 
-        // I'll stick to a safe assumption or try to match original if I can recall.
-        // Let's assume the backend handles multipart on `/api/generate-text` or similar.
-        // Actually, best to use `/api/generate-text` for now.
+        url = `${API_BASE_URL}/api/descriptions/image`;
+        const formData = new FormData();
+        formData.append("file", selectedImageFile);
+        formData.append("style", selectedStyle);
+        payload = formData;
+        // Axios handles content-type for FormData automatically
+      } else {
+        url = `${API_BASE_URL}/api/descriptions/text`;
+        payload = {
+          product_info: input,
+          style: selectedStyle
+        };
       }
 
-      const response = await axios.post(url, formData, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
+      const response = await axios.post(url, payload, { headers });
 
       setResult(response.data);
 
@@ -151,10 +145,10 @@ export default function HomePage() {
   const handleLogin = async (data: any) => {
     setAuthLoading(true);
     try {
-      const formData = new FormData();
-      formData.append("username", data.identifier);
-      formData.append("password", data.password);
-      const res = await axios.post(`${API_BASE_URL}/auth/token`, formData);
+      const res = await axios.post(`${API_BASE_URL}/auth/login`, {
+        identifier: data.identifier,
+        password: data.password
+      });
       const accessToken = res.data.access_token;
       setToken(accessToken);
       sessionStorage.setItem("token", accessToken);
