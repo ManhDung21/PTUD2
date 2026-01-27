@@ -1,9 +1,9 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
-from app.db.session import get_database, Database
-from app.db.models import UserDocument, DescriptionDocument
-from app.core.security import get_current_user
-from app.schemas import UserOut
+from ..db.session import get_database, Database
+from ..db.models import UserDocument, DescriptionDocument
+from ..core.security import get_current_user
+from ..schemas import UserOut
 from bson import ObjectId
 
 router = APIRouter()
