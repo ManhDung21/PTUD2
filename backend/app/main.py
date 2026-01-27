@@ -737,7 +737,7 @@ app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 
 @app.on_event("startup")
 async def startup_db_client():
-    await init_db()
+    init_db()
     
     # Create default admin user if not exists
     db = get_database()
