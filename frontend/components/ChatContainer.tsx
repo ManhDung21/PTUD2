@@ -49,8 +49,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-[700px]">
                     {[
-                        { title: "Mô tả hình ảnh", desc: "Phân tích hình ảnh" },
-                        { title: "Caption mạng xã hội", desc: "Cho Instagram & TikTok" }
+                        { title: "Mô tả hình ảnh", desc: "Phân tích hình ảnh", icon: "🖼️" },
+                        { title: "Caption mạng xã hội", desc: "Cho Instagram & TikTok", icon: "✨" }
                     ].map((item, i) => (
                         <motion.div
                             key={i}
