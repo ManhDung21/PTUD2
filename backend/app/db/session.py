@@ -17,7 +17,11 @@ _resolved_db_name: Optional[str] = None
 def get_client() -> MongoClient:
     global _client
     if _client is None:
-        _client = MongoClient(settings.mongodb_uri)
+        # Debug: Print masked URI to verify env var loading
+        uri = settings.mongodb_uri
+        masked_uri = uri.replace(uri.split("@")[0], "mongodb+srv://****:****") if "@" in uri else "mongodb://****"
+        print(f"Connecting to MongoDB: {masked_uri}")
+        _client = MongoClient(uri)
     return _client
 
 
