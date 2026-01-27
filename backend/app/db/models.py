@@ -24,6 +24,7 @@ class DescriptionDocument(TypedDict, total=False):
     style: str
     content: str
     image_path: Optional[str]
+    prompt: Optional[str]
 
 
 class PasswordResetTokenDocument(TypedDict, total=False):

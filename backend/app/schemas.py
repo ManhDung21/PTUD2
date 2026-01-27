@@ -17,6 +17,7 @@ class DescriptionResponse(BaseModel):
     style: str
     source: str
     image_url: Optional[str]
+    prompt: Optional[str] = None
 
 
 class HistoryItem(BaseModel):
@@ -27,6 +28,7 @@ class HistoryItem(BaseModel):
     summary: str
     full_description: str
     image_url: Optional[str]
+    prompt: Optional[str] = None
 
 
 class RegisterRequest(BaseModel):

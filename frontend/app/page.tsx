@@ -307,7 +307,8 @@ export default function HomePage() {
             timestamp: item.timestamp,
             style: item.style,
             source: item.source,
-            image_url: item.image_url
+            image_url: item.image_url,
+            prompt: item.prompt
           });
           setSidebarOpen(false);
         }}

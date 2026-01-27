@@ -612,6 +612,7 @@ async def generate_description_from_image(
             "style": style,
             "content": description_text,
             "image_path": stored_image_path,
+            "prompt": None,
         }
         stored = _store_description(_descriptions_collection(db), description_doc)
         history_payload = history_service.history_item_from_doc(stored)
@@ -623,6 +624,7 @@ async def generate_description_from_image(
         style=style,
         source="image",
         image_url=history_payload.get("image_url") if history_payload else image_url,
+        prompt=history_payload.get("prompt") if history_payload else None,
     )
 
 
@@ -654,6 +656,7 @@ async def generate_description_from_text(
             "style": payload.style,
             "content": description_text,
             "image_path": None,
+            "prompt": payload.product_info,
         }
         stored = _store_description(_descriptions_collection(db), description_doc)
         history_payload = history_service.history_item_from_doc(stored)
@@ -665,6 +668,7 @@ async def generate_description_from_text(
         style=payload.style,
         source="text",
         image_url=history_payload.get("image_url") if history_payload else None,
+        prompt=payload.product_info,
     )
 
 

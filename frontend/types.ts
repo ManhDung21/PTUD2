@@ -5,6 +5,7 @@ export interface DescriptionResponse {
     style: string;
     source: string;
     image_url?: string | null;
+    prompt?: string | null;
 }
 
 export interface HistoryItem {
@@ -15,6 +16,7 @@ export interface HistoryItem {
     summary: string;
     full_description: string;
     image_url?: string | null;
+    prompt?: string | null;
 }
 
 export interface ImageItem {

@@ -64,6 +64,7 @@ def history_item_from_doc(description: DescriptionDocument) -> Dict[str, str | N
         "summary": content[:200] + ("..." if len(content) > 200 else ""),
         "full_description": content,
         "image_url": _image_url(description.get("image_path")),
+        "prompt": description.get("prompt"),
     }
 
 

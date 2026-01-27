@@ -73,18 +73,18 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
         <div className="flex-1 overflow-y-auto px-4 py-8 pb-48 scroll-smooth custom-scrollbar relative z-10">
             <div className="max-w-[800px] mx-auto flex flex-col gap-10">
                 {/* User Message */}
-                {(inputContent?.text || inputContent?.image) && (
+                {(result?.prompt || inputContent?.text || result?.image_url || inputContent?.image) && (
                     <motion.div
                         initial={{ opacity: 0, y: 20, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         className="flex justify-end"
                     >
                         <div className="glass-panel px-6 py-4 rounded-[26px] rounded-tr-md max-w-[85%]">
-                            {inputContent.image && (
-                                <img src={inputContent.image} alt="Upload" className="max-h-[300px] rounded-xl mb-3 shadow-lg" />
+                            {(result?.image_url || inputContent?.image) && (
+                                <img src={result?.image_url || inputContent?.image || undefined} alt="Upload" className="max-h-[300px] rounded-xl mb-3 shadow-lg" />
                             )}
-                            {inputContent.text && (
-                                <p className="text-white/90 text-lg leading-relaxed">{inputContent.text}</p>
+                            {(result?.prompt || inputContent?.text) && (
+                                <p className="text-white/90 text-lg leading-relaxed">{result?.prompt || inputContent?.text}</p>
                             )}
                             {inputContent.style && (
                                 <div className="mt-2 flex justify-end">
