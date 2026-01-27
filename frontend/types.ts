@@ -32,6 +32,7 @@ export interface User {
     full_name: string | null;
     avatar_url: string | null;
     created_at: string;
+    role?: string;
 }
 
 export type AuthMode = "login" | "register" | "forgot" | "reset";

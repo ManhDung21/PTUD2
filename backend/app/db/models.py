@@ -12,6 +12,7 @@ class UserDocument(TypedDict, total=False):
     phone_number: Optional[str]
     full_name: Optional[str]
     avatar_url: Optional[str]
+    role: Optional[str]  # "user" or "admin"
     hashed_password: str
     created_at: datetime
 

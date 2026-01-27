@@ -111,7 +111,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="font-medium text-sm text-white truncate">{user.full_name}</div>
-                                <div className="text-xs text-white/50 truncate">Thành viên Pro</div>
+                                <div className="text-xs text-white/50 truncate flex items-center justify-between">
+                                    <span>Thành viên Pro</span>
+                                    {user.role === 'admin' && (
+                                        <a href="/admin" className="text-purple-400 hover:text-purple-300 font-bold ml-2">Admin</a>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     ) : (

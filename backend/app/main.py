@@ -35,6 +35,8 @@ from .schemas import (
 )
 from .services import auth, content, email as email_service, history as history_service, tts
 from .services import cloudinary_service
+from .routers import admin
+from .core.security import get_password_hash
 
 
 def utc_now() -> datetime:
@@ -758,3 +760,34 @@ def delete_all_history(
         current_user["_id"],
     )
     return JSONResponse({"status": "ok", "message": f"Đã xóa {count} mục lịch sử"})
+
+
+app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
+
+
+@app.on_event("startup")
+async def startup_db_client():
+    await init_db()
+    
+    # Create default admin user if not exists
+    db = get_database()
+    admin_email = "test@admin.com"
+    existing_admin = db.users.find_one({"email": admin_email})
+    
+    if not existing_admin:
+        print(f"Creating default admin user: {admin_email}")
+        admin_data = {
+            "email": admin_email,
+            "phone_number": "0000000000",
+            "full_name": "Administrator", 
+            "role": "admin",
+            "hashed_password": get_password_hash("123456"),
+            "created_at": utc_now(),
+            "avatar_url": None
+        }
+        db.users.insert_one(admin_data)
+    else:
+        # Ensure role is admin
+        if existing_admin.get("role") != "admin":
+            db.users.update_one({"_id": existing_admin["_id"]}, {"$set": {"role": "admin"}})
+            print("Updated existing test user to admin role")

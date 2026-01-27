@@ -60,6 +60,7 @@ class UserOut(BaseModel):
     email: Optional[str] = None
     phone_number: Optional[str] = None
     full_name: Optional[str] = None
+    role: str = "user"
     avatar_url: Optional[str] = None
     created_at: str
 
