@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { HistoryItem, User } from "../types";
+import { HistoryItem, User } from "../../types";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus, MessageSquare, Trash2, LogIn, User as UserIcon } from "lucide-react";
 import clsx from "clsx";
