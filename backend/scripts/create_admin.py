@@ -8,7 +8,7 @@ backend_path = Path(__file__).parent.parent.parent
 sys.path.append(str(backend_path))
 
 from app.db.session import init_db, get_database
-from app.core.security import get_password_hash
+from app.services.auth import hash_password
 from app.config import get_settings
 
 async def create_admin():
@@ -41,7 +41,7 @@ async def create_admin():
         "phone_number": "0000000000",
         "full_name": "Administrator",
         "role": "admin",
-        "hashed_password": get_password_hash("123456"),
+        "hashed_password": hash_password("123456"),
         "created_at": datetime.utcnow()
     }
     

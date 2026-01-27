@@ -2,14 +2,20 @@
 
 import hashlib
 import secrets
+import re
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
+from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+from pymongo.collection import Collection
+from pymongo.database import Database
 
 from ..config import get_settings
+from ..db.session import get_database
+from ..db.models import UserDocument
 
 settings = get_settings()
 
@@ -55,6 +61,57 @@ def generate_reset_token(length: int = 6) -> tuple[str, str]:
     return token, token_hash
 
 
-def match_reset_token(raw_token: str, token_hash: str) -> bool:
-    calculated = hashlib.sha256(raw_token.encode()).hexdigest()
-    return secrets.compare_digest(calculated, token_hash)
+
+# --- Helpers moved from main.py ---
+
+def is_email(identifier: str) -> bool:
+    """Kiểm tra xem identifier có phải là email không."""
+    email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+    return bool(re.match(email_pattern, identifier))
+
+
+def is_phone_number(identifier: str) -> bool:
+    """Kiểm tra xem identifier có phải là số điện thoại không."""
+    phone_pattern = r"^[0-9]{10,11}$"
+    return bool(re.match(phone_pattern, identifier))
+
+
+def _users_collection(db: Database) -> Collection:
+    return db.get_collection("users")
+
+
+def _find_user_by_identifier(db: Database, identifier: str) -> Optional[UserDocument]:
+    users = _users_collection(db)
+    if is_email(identifier):
+        return users.find_one({"email": identifier.lower()})
+    if is_phone_number(identifier):
+        return users.find_one({"phone_number": identifier})
+    return None
+
+
+def get_current_user(
+    token: Optional[str] = Depends(optional_oauth2_scheme),
+    db: Database = Depends(get_database),
+) -> UserDocument:
+    if not token:
+        raise HTTPException(status_code=401, detail="Yêu cầu đăng nhập")
+    identifier = decode_access_token(token)
+    if not identifier:
+        raise HTTPException(status_code=401, detail="Token không hợp lệ")
+
+    user = _find_user_by_identifier(db, identifier)
+    if not user:
+        raise HTTPException(status_code=401, detail="Không tìm thấy người dùng")
+    return user
+
+
+def get_current_user_optional(
+    token: Optional[str] = Depends(optional_oauth2_scheme),
+    db: Database = Depends(get_database),
+) -> Optional[UserDocument]:
+    if not token:
+        return None
+    identifier = decode_access_token(token)
+    if not identifier:
+        return None
+    return _find_user_by_identifier(db, identifier)

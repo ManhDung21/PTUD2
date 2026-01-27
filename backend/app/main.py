@@ -35,8 +35,17 @@ from .schemas import (
 )
 from .services import auth, content, email as email_service, history as history_service, tts
 from .services import cloudinary_service
+from .services.auth import (
+    get_current_user, 
+    get_current_user_optional, 
+    _find_user_by_identifier, 
+    _users_collection,
+    is_email,
+    is_phone_number,
+    hash_password
+)
 from .routers import admin
-from .core.security import get_password_hash
+
 
 
 def utc_now() -> datetime:
@@ -61,17 +70,8 @@ def _ensure_utc_datetime(value: datetime | str | None) -> datetime:
         return dt.replace(tzinfo=timezone.utc)
     return dt.astimezone(timezone.utc)
 
-def is_email(identifier: str) -> bool:
-    """Kiểm tra xem identifier có phải là email không."""
-    email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-    return bool(re.match(email_pattern, identifier))
 
-
-def is_phone_number(identifier: str) -> bool:
-    """Kiểm tra xem identifier có phải là số điện thoại không."""
-    phone_pattern = r"^[0-9]{10,11}$"
-    return bool(re.match(phone_pattern, identifier))
-
+# Helpers is_email, is_phone_number, _users_collection, _find_user_by_identifier imported from services.auth
 
 app = FastAPI(title="AI Product Description Service")
 
@@ -89,10 +89,6 @@ AVATARS_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory=BASE_STATIC_DIR), name="static")
 
 
-def _users_collection(db: Database) -> Collection:
-    return db.get_collection("users")
-
-
 def _descriptions_collection(db: Database) -> Collection:
     return db.get_collection("descriptions")
 
@@ -100,14 +96,6 @@ def _descriptions_collection(db: Database) -> Collection:
 def _reset_tokens_collection(db: Database) -> Collection:
     return db.get_collection("password_reset_tokens")
 
-
-def _find_user_by_identifier(db: Database, identifier: str) -> Optional[UserDocument]:
-    users = _users_collection(db)
-    if is_email(identifier):
-        return users.find_one({"email": identifier.lower()})
-    if is_phone_number(identifier):
-        return users.find_one({"phone_number": identifier})
-    return None
 
 
 def _token_subject(user: UserDocument) -> str:
@@ -283,20 +271,9 @@ def seed_admin_user() -> None:
     users.insert_one(admin)
 
 
-def get_current_user(
-    token: Optional[str] = Depends(auth.optional_oauth2_scheme),
-    db: Database = Depends(get_database),
-) -> UserDocument:
-    if not token:
-        raise HTTPException(status_code=401, detail="Yêu cầu đăng nhập")
-    identifier = auth.decode_access_token(token)
-    if not identifier:
-        raise HTTPException(status_code=401, detail="Token không hợp lệ")
 
-    user = _find_user_by_identifier(db, identifier)
-    if not user:
-        raise HTTPException(status_code=401, detail="Không tìm thấy người dùng")
-    return user
+# get_current_user imported from services.auth
+
 
 
 def get_admin_user(current_user: UserDocument = Depends(get_current_user)) -> UserDocument:
@@ -522,16 +499,9 @@ def update_profile(
     return _user_out(updated)
 
 
-def get_current_user_optional(
-    token: Optional[str] = Depends(auth.optional_oauth2_scheme),
-    db: Database = Depends(get_database),
-) -> Optional[UserDocument]:
-    if not token:
-        return None
-    identifier = auth.decode_access_token(token)
-    if not identifier:
-        return None
-    return _find_user_by_identifier(db, identifier)
+
+# get_current_user_optional imported from services.auth
+
 
 
 def _store_description(
@@ -781,7 +751,7 @@ async def startup_db_client():
             "phone_number": "0000000000",
             "full_name": "Administrator", 
             "role": "admin",
-            "hashed_password": get_password_hash("123456"),
+            "hashed_password": hash_password("123456"),
             "created_at": utc_now(),
             "avatar_url": None
         }

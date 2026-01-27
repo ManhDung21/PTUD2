@@ -2,7 +2,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from ..db.session import get_database, Database
 from ..db.models import UserDocument, DescriptionDocument
-from ..core.security import get_current_user
+from ..services.auth import get_current_user
 from ..schemas import UserOut
 from bson import ObjectId
 
