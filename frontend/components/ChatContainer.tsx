@@ -86,10 +86,10 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                             {(result?.prompt || inputContent?.text) && (
                                 <p className="text-white/90 text-lg leading-relaxed">{result?.prompt || inputContent?.text}</p>
                             )}
-                            {inputContent.style && (
+                            {(result?.style || inputContent?.style) && (
                                 <div className="mt-2 flex justify-end">
                                     <span className="text-xs font-medium text-white/50 bg-white/10 px-2 py-1 rounded-md">
-                                        {inputContent.style}
+                                        {result?.style || inputContent?.style}
                                     </span>
                                 </div>
                             )}
