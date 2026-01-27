@@ -2,7 +2,7 @@
 
 import React from "react";
 import { DescriptionResponse, User } from "../types";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Share2, Volume2, VolumeX, Facebook, Music } from "lucide-react";
 import clsx from "clsx";
 
@@ -69,91 +69,133 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
         );
     }
 
-    return (
-        <div className="flex-1 overflow-y-auto px-4 py-8 pb-48 scroll-smooth custom-scrollbar relative z-10">
-            <div className="max-w-[800px] mx-auto flex flex-col gap-10">
-                {/* User Message */}
-                {(result?.prompt || inputContent?.text || result?.image_url || inputContent?.image) && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        className="flex justify-end"
-                    >
-                        <div className="glass-panel px-6 py-4 rounded-[26px] rounded-tr-md max-w-[85%]">
-                            {(result?.image_url || inputContent?.image) && (
-                                <img src={result?.image_url || inputContent?.image || undefined} alt="Upload" className="max-h-[300px] rounded-xl mb-3 shadow-lg" />
-                            )}
-                            {(result?.prompt || inputContent?.text) && (
-                                <p className="text-white/90 text-lg leading-relaxed">{result?.prompt || inputContent?.text}</p>
-                            )}
-                            {(result?.style || inputContent?.style) && (
-                                <div className="mt-2 flex justify-end">
-                                    <span className="text-xs font-medium text-white/50 bg-white/10 px-2 py-1 rounded-md">
-                                        {result?.style || inputContent?.style}
-                                    </span>
-                                </div>
-                            )}
-                        </div>
-                    </motion.div>
-                )}
+    const [viewImage, setViewImage] = React.useState<string | null>(null);
 
-                {/* AI Response */}
-                {(result || loading) && (
+    return (
+        <>
+            <div className="flex-1 overflow-y-auto px-4 py-8 pb-48 scroll-smooth custom-scrollbar relative z-10">
+                <div className="max-w-[800px] mx-auto flex flex-col gap-10">
+                    {/* User Message */}
+                    {(result?.prompt || inputContent?.text || result?.image_url || inputContent?.image) && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            className="flex justify-end"
+                        >
+                            <div className="glass-panel px-6 py-4 rounded-[26px] rounded-tr-md max-w-[85%]">
+                                {(result?.image_url || inputContent?.image) && (
+                                    <div
+                                        className="cursor-zoom-in relative group"
+                                        onClick={() => setViewImage(result?.image_url || inputContent?.image || null)}
+                                    >
+                                        <img
+                                            src={result?.image_url || inputContent?.image || undefined}
+                                            alt="Upload"
+                                            className="max-h-[300px] rounded-xl mb-3 shadow-lg transition-transform group-hover:scale-[1.02]"
+                                        />
+                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-xl transition-colors" />
+                                    </div>
+                                )}
+                                {(result?.prompt || inputContent?.text) && (
+                                    <p className="text-white/90 text-lg leading-relaxed">{result?.prompt || inputContent?.text}</p>
+                                )}
+                                {(result?.style || inputContent?.style) && (
+                                    <div className="mt-2 flex justify-end">
+                                        <span className="text-xs font-medium text-white/50 bg-white/10 px-2 py-1 rounded-md">
+                                            {result?.style || inputContent?.style}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {/* AI Response */}
+                    {(result || loading) && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="flex gap-6 items-start"
+                        >
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shrink-0 shadow-lg shadow-purple-500/20 mt-1">
+                                <Sparkles size={20} className="text-white" />
+                            </div>
+
+                            <div className="flex-1 space-y-4">
+                                {loading ? (
+                                    <div className="space-y-3">
+                                        <motion.div
+                                            animate={{ opacity: [0.3, 0.7, 0.3] }}
+                                            transition={{ repeat: Infinity, duration: 1.5 }}
+                                            className="h-4 bg-white/10 rounded-full w-3/4"
+                                        />
+                                        <motion.div
+                                            animate={{ opacity: [0.3, 0.7, 0.3] }}
+                                            transition={{ repeat: Infinity, duration: 1.5, delay: 0.2 }}
+                                            className="h-4 bg-white/10 rounded-full w-1/2"
+                                        />
+                                    </div>
+                                ) : (
+                                    <>
+                                        <motion.div
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            transition={{ duration: 0.8 }}
+                                            className="text-lg text-white/90 leading-relaxed whitespace-pre-line font-light tracking-wide"
+                                        >
+                                            {result?.description}
+                                        </motion.div>
+
+                                        {/* Action Chips */}
+                                        <div className="flex flex-wrap gap-2 pt-2">
+                                            <button onClick={() => onRead(result?.description || "")} className="glass-button px-4 py-2 rounded-full flex items-center gap-2 text-sm text-white/70 hover:text-white">
+                                                {isReading ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                                                <span>Đọc to</span>
+                                            </button>
+                                            <button onClick={onShareFacebook} className="glass-button px-4 py-2 rounded-full flex items-center gap-2 text-sm text-white/70 hover:text-blue-400">
+                                                <Facebook size={16} />
+                                                <span>Facebook</span>
+                                            </button>
+                                            <button onClick={onShareTikTok} className="glass-button px-4 py-2 rounded-full flex items-center gap-2 text-sm text-white/70 hover:text-pink-400">
+                                                <Music size={16} />
+                                                <span>TikTok</span>
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </motion.div>
+                    )}
+                </div>
+            </div>
+
+            {/* Lightbox / Image Modal */}
+            <AnimatePresence>
+                {viewImage && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="flex gap-6 items-start"
+                        exit={{ opacity: 0 }}
+                        onClick={() => setViewImage(null)}
+                        className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 cursor-zoom-out"
                     >
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shrink-0 shadow-lg shadow-purple-500/20 mt-1">
-                            <Sparkles size={20} className="text-white" />
-                        </div>
-
-                        <div className="flex-1 space-y-4">
-                            {loading ? (
-                                <div className="space-y-3">
-                                    <motion.div
-                                        animate={{ opacity: [0.3, 0.7, 0.3] }}
-                                        transition={{ repeat: Infinity, duration: 1.5 }}
-                                        className="h-4 bg-white/10 rounded-full w-3/4"
-                                    />
-                                    <motion.div
-                                        animate={{ opacity: [0.3, 0.7, 0.3] }}
-                                        transition={{ repeat: Infinity, duration: 1.5, delay: 0.2 }}
-                                        className="h-4 bg-white/10 rounded-full w-1/2"
-                                    />
-                                </div>
-                            ) : (
-                                <>
-                                    <motion.div
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        transition={{ duration: 0.8 }}
-                                        className="text-lg text-white/90 leading-relaxed whitespace-pre-line font-light tracking-wide"
-                                    >
-                                        {result?.description}
-                                    </motion.div>
-
-                                    {/* Action Chips */}
-                                    <div className="flex flex-wrap gap-2 pt-2">
-                                        <button onClick={() => onRead(result?.description || "")} className="glass-button px-4 py-2 rounded-full flex items-center gap-2 text-sm text-white/70 hover:text-white">
-                                            {isReading ? <VolumeX size={16} /> : <Volume2 size={16} />}
-                                            <span>Đọc to</span>
-                                        </button>
-                                        <button onClick={onShareFacebook} className="glass-button px-4 py-2 rounded-full flex items-center gap-2 text-sm text-white/70 hover:text-blue-400">
-                                            <Facebook size={16} />
-                                            <span>Facebook</span>
-                                        </button>
-                                        <button onClick={onShareTikTok} className="glass-button px-4 py-2 rounded-full flex items-center gap-2 text-sm text-white/70 hover:text-pink-400">
-                                            <Music size={16} />
-                                            <span>TikTok</span>
-                                        </button>
-                                    </div>
-                                </>
-                            )}
-                        </div>
+                        <motion.img
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            src={viewImage}
+                            alt="Full View"
+                            className="max-w-full max-h-[90vh] rounded-2xl shadow-2xl object-contain pointer-events-auto"
+                        />
+                        <button
+                            className="absolute top-6 right-6 text-white/50 hover:text-white bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors"
+                            onClick={() => setViewImage(null)}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
                     </motion.div>
                 )}
-            </div>
-        </div>
+            </AnimatePresence>
+        </>
     );
 };

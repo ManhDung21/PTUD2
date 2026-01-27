@@ -51,21 +51,21 @@ def _image_prompt(style: str, product_info: Optional[str] = None) -> str:
 
 Trả về theo định dạng:
 
-🎯 [Tiêu đề ngắn gọn, có từ khóa SEO]
-✨ [Slogan 1 câu ấn tượng]
-📝 Mô tả:
+[Tiêu đề ngắn gọn, có từ khóa SEO]
+[Slogan 1 câu ấn tượng]
+Mô tả:
 [20-30 từ sinh động về trải nghiệm, nguồn gốc, hương vị và lợi ích]
-💎 Điểm nổi bật:
+Điểm nổi bật:
 • [Chất lượng/quy trình - ngắn gọn 15-20 từ]
 • [Hương vị đặc trưng]
 • [Giá trị dinh dưỡng]
-🌟 Lợi ích:
+Lợi ích:
 [1-2 lợi ích thực tế - ngắn gọn súc tích khoảng 10-15 từ]
-🎁 Cam kết:
+Cam kết:
 [Chất lượng, giao hàng, hỗ trợ - ngắn gọn 10-15 từ khoá]
-🍽️ Gợi ý:
+Gợi ý:
 [1-2 cách sử dụng - ngắn gọn 10-15 từ]
-#️⃣ Từ khóa:
+Từ khóa:
 [1-2 hashtag/từ khóa]
 Viết TIẾNG VIỆT tự nhiên, giàu cảm xúc. Không dùng dấu *.
 TUYỆT ĐỐI KHÔNG có câu dẫn dắt (ví dụ: "Chắc chắn rồi...", "Dưới đây là..."). Chỉ trả về kết quả đúng định dạng.
@@ -78,21 +78,21 @@ def _text_prompt(product_info: str, style: str) -> str:
 
 Trả về theo định dạng:
 
-🎯 [Tiêu đề ngắn gọn, có từ khóa SEO]
-✨ [Slogan 1 câu sáng tạo]
-📝 Mô tả:
+[Tiêu đề ngắn gọn, có từ khóa SEO]
+[Slogan 1 câu sáng tạo]
+Mô tả:
 [20-30 từ khơi gợi cảm xúc về nguồn gốc, hương vị, giá trị và lợi ích]
-💎 Điểm nổi bật:
+Điểm nổi bật:
 • [Chất lượng/quy trình - ngắn gọn 15-20 từ]
 • [Hương vị đặc trưng]
 • [Giá trị dinh dưỡng]
-🌟 Lợi ích:
+Lợi ích:
 [1-2 lợi ích thực tế - ngắn gọn súc tích khoảng 10-15 từ]
-🎁 Cam kết:
+Cam kết:
 [Chất lượng, giao hàng, hỗ trợ - ngắn gọn 10-15 từ khoá]
-🍽️ Gợi ý:
+Gợi ý:
 [1-2 cách sử dụng - ngắn gọn 10-15 từ]
-#️⃣ Từ khóa:
+Từ khóa:
 [1-2 hashtag/từ khóa]
 Viết TIẾNG VIỆT tự nhiên, giàu cảm xúc. Không dùng dấu *.
 TUYỆT ĐỐI KHÔNG có câu dẫn dắt (ví dụ: "Chắc chắn rồi...", "Dưới đây là..."). Chỉ trả về kết quả đúng định dạng.

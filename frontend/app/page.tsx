@@ -6,6 +6,7 @@ import { Sidebar } from "../components/Sidebar";
 import { ChatContainer } from "../components/ChatContainer";
 import { InputBar } from "../components/InputBar";
 import { AuthModal } from "../components/AuthModal";
+import { ProfileModal } from "../components/ProfileModal";
 import { AuthMode, DescriptionResponse, HistoryItem, User, ToastState } from "../types";
 import { Sparkles } from "lucide-react";
 
@@ -26,6 +27,7 @@ export default function HomePage() {
   const [authVisible, setAuthVisible] = useState(false);
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [authLoading, setAuthLoading] = useState(false);
+  const [profileVisible, setProfileVisible] = useState(false);
 
   // Camera & Image State
   const [cameraActive, setCameraActive] = useState(false);
@@ -178,10 +180,20 @@ export default function HomePage() {
     }
   };
 
+  const handleLogout = () => {
+    setToken(null);
+    setUser(null);
+    setHistory([]);
+    sessionStorage.removeItem("token");
+    setProfileVisible(false);
+    showToast("success", "Đã đăng xuất");
+  };
+
   const handleDeleteHistory = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!token) return;
-    if (!window.confirm("Bạn có chắc muốn xoá mục này?")) return;
+    // Confirmation handled in UI
+    // if (!window.confirm("Bạn có chắc muốn xoá mục này?")) return;
 
     try {
       await axios.delete(`${API_BASE_URL}/api/history/${id}`, {
@@ -324,6 +336,7 @@ export default function HomePage() {
         user={user}
         onAuthClick={() => setAuthVisible(true)}
         onDeleteHistory={handleDeleteHistory}
+        onProfileClick={() => setProfileVisible(true)}
       />
 
       <main className="flex-1 flex flex-col relative w-full h-full z-10 transition-all duration-300">
@@ -369,6 +382,13 @@ export default function HomePage() {
         onRegister={handleRegister}
         onForgot={async () => { }}
         onReset={async () => { }}
+      />
+
+      <ProfileModal
+        isOpen={profileVisible}
+        onClose={() => setProfileVisible(false)}
+        user={user}
+        onLogout={handleLogout}
       />
     </div>
   );

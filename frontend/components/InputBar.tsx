@@ -59,6 +59,22 @@ export const InputBar: React.FC<InputBarProps> = ({
         }
     };
 
+    const handlePaste = (e: React.ClipboardEvent) => {
+        if (e.clipboardData.items) {
+            for (let i = 0; i < e.clipboardData.items.length; i++) {
+                const item = e.clipboardData.items[i];
+                if (item.type.indexOf("image") !== -1) {
+                    e.preventDefault();
+                    const file = item.getAsFile();
+                    if (file) {
+                        onImageSelect(file);
+                    }
+                    break;
+                }
+            }
+        }
+    };
+
     return (
         <div
             className={clsx(
@@ -204,6 +220,7 @@ export const InputBar: React.FC<InputBarProps> = ({
                         }}
                         onFocus={() => setIsFocused(true)}
                         onBlur={() => setIsFocused(false)}
+                        onPaste={handlePaste}
                         placeholder={`Hỏi (${selectedStyle})...`}
                         rows={1}
                         className="flex-1 bg-transparent border-none outline-none text-white placeholder-white/40 resize-none py-3.5 px-2 max-h-[120px] custom-scrollbar text-[16px] leading-relaxed"

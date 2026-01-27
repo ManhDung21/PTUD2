@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { AuthMode } from "../types";
-import { X, ArrowRight, Loader2 } from "lucide-react";
+import { X, ArrowRight, Loader2, Eye, EyeOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import clsx from "clsx";
 
@@ -29,6 +29,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     onForgot,
     onReset,
 }) => {
+    const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
         identifier: "",
         password: "",
@@ -114,15 +115,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                                         className="ios-input w-full rounded-2xl px-4 py-3.5 placeholder:text-white/30"
                                         required
                                     />
-                                    <input
-                                        type="password"
-                                        name="password"
-                                        placeholder="Mật khẩu"
-                                        value={formData.password}
-                                        onChange={handleChange}
-                                        className="ios-input w-full rounded-2xl px-4 py-3.5 placeholder:text-white/30"
-                                        required
-                                    />
+                                    <div className="relative">
+                                        <input
+                                            type={showPassword ? "text" : "password"}
+                                            name="password"
+                                            placeholder="Mật khẩu"
+                                            value={formData.password}
+                                            onChange={handleChange}
+                                            className="ios-input w-full rounded-2xl px-4 py-3.5 placeholder:text-white/30 pr-12"
+                                            required
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors"
+                                        >
+                                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                        </button>
+                                    </div>
                                     <div className="flex justify-end">
                                         <button
                                             type="button"
@@ -140,7 +150,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                                     <input type="text" name="full_name" placeholder="Họ và tên" value={formData.full_name} onChange={handleChange} className="ios-input w-full rounded-2xl px-4 py-3.5 placeholder:text-white/30" />
                                     <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} className="ios-input w-full rounded-2xl px-4 py-3.5 placeholder:text-white/30" required />
                                     <input type="text" name="phone_number" placeholder="Số điện thoại" value={formData.phone_number} onChange={handleChange} className="ios-input w-full rounded-2xl px-4 py-3.5 placeholder:text-white/30" />
-                                    <input type="password" name="password" placeholder="Mật khẩu" value={formData.password} onChange={handleChange} className="ios-input w-full rounded-2xl px-4 py-3.5 placeholder:text-white/30" required />
+                                    <div className="relative">
+                                        <input
+                                            type={showPassword ? "text" : "password"}
+                                            name="password"
+                                            placeholder="Mật khẩu"
+                                            value={formData.password}
+                                            onChange={handleChange}
+                                            className="ios-input w-full rounded-2xl px-4 py-3.5 placeholder:text-white/30 pr-12"
+                                            required
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors"
+                                        >
+                                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                        </button>
+                                    </div>
                                 </>
                             )}
 

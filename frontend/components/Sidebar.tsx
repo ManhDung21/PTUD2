@@ -15,6 +15,7 @@ interface SidebarProps {
     user: User | null;
     onAuthClick: () => void;
     onDeleteHistory: (id: string, e: React.MouseEvent) => void;
+    onProfileClick: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -25,8 +26,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
     onNewChat,
     user,
     onAuthClick,
-    onDeleteHistory
+    onDeleteHistory,
+    onProfileClick
 }) => {
+    const [deleteId, setDeleteId] = React.useState<string | null>(null);
+
+    const confirmDelete = (e: React.MouseEvent) => {
+        if (deleteId) {
+            onDeleteHistory(deleteId, e);
+            setDeleteId(null);
+        }
+    };
+
     return (
         <>
             <AnimatePresence>
@@ -38,6 +49,48 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         onClick={onClose}
                         className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[190] md:hidden"
                     />
+                )}
+                {/* Delete Confirmation Modal */}
+                {deleteId && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
+                        onClick={() => setDeleteId(null)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-[#1E1E1E] border border-white/10 p-6 rounded-[24px] max-w-sm w-full shadow-2xl relative overflow-hidden"
+                        >
+                            {/* Decorative Blob */}
+                            <div className="absolute -top-10 -right-10 w-32 h-32 bg-red-500/20 blur-3xl rounded-full pointer-events-none" />
+
+                            <h3 className="text-xl font-bold text-white mb-2">Xoá cuộc trò chuyện?</h3>
+                            <p className="text-white/60 text-sm mb-6 leading-relaxed">
+                                Hành động này không thể hoàn tác. Bạn có chắc chắn muốn xoá mục lịch sử này không?
+                            </p>
+
+                            <div className="flex gap-3 justify-end">
+                                <button
+                                    onClick={() => setDeleteId(null)}
+                                    className="px-5 py-2.5 rounded-xl text-white/70 hover:bg-white/10 hover:text-white transition-colors text-sm font-medium"
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    onClick={confirmDelete}
+                                    className="px-5 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/20 transition-all transform hover:scale-105 text-sm font-medium flex items-center gap-2"
+                                >
+                                    <Trash2 size={16} />
+                                    <span>Xoá ngay</span>
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
                 )}
             </AnimatePresence>
 
@@ -92,7 +145,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                     </span>
                                 </div>
                                 <button
-                                    onClick={(e) => onDeleteHistory(item.id, e)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setDeleteId(item.id);
+                                    }}
                                     className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-500/20 hover:text-red-400 rounded-full transition-all"
                                 >
                                     <Trash2 size={14} />
@@ -105,8 +161,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 {/* Footer / User */}
                 <div className="p-4 border-t border-white/10">
                     {user ? (
-                        <div className="flex items-center gap-3 p-3 rounded-[20px] bg-white/5 border border-white/10">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-inner">
+                        <div
+                            onClick={onProfileClick}
+                            className="flex items-center gap-3 p-3 rounded-[20px] bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-colors group"
+                        >
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-inner group-hover:scale-105 transition-transform">
                                 {user.full_name?.charAt(0) || "U"}
                             </div>
                             <div className="flex-1 min-w-0">
@@ -114,7 +173,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                 <div className="text-xs text-white/50 truncate flex items-center justify-between">
                                     <span>Thành viên Pro</span>
                                     {user.role === 'admin' && (
-                                        <a href="/admin" className="text-purple-400 hover:text-purple-300 font-bold ml-2">Admin</a>
+                                        <div onClick={(e) => e.stopPropagation()}>
+                                            <a href="/admin" className="text-purple-400 hover:text-purple-300 font-bold ml-2">Admin</a>
+                                        </div>
                                     )}
                                 </div>
                             </div>
