@@ -545,6 +545,7 @@ def _store_description(
 async def generate_description_from_image(
     file: UploadFile = File(...),
     style: str = Form("Tiếp thị"),
+    prompt: Optional[str] = Form(None),
     current_user: Optional[UserDocument] = Depends(get_current_user_optional),
     db: Database = Depends(get_database),
 ) -> DescriptionResponse:
@@ -593,7 +594,7 @@ async def generate_description_from_image(
             pass
 
     try:
-        description_text = content.generate_from_image(settings.gemini_api_key, image, style)
+        description_text = content.generate_from_image(settings.gemini_api_key, image, style, prompt)
     except Exception as e:
         print(f"Gemini Image Generation Error: {e}")
         raise HTTPException(status_code=500, detail=f"Lỗi tạo mô tả từ ảnh: {str(e)}")
@@ -612,7 +613,7 @@ async def generate_description_from_image(
             "style": style,
             "content": description_text,
             "image_path": stored_image_path,
-            "prompt": None,
+            "prompt": prompt,
         }
         stored = _store_description(_descriptions_collection(db), description_doc)
         history_payload = history_service.history_item_from_doc(stored)

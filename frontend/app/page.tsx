@@ -100,6 +100,9 @@ export default function HomePage() {
         const formData = new FormData();
         formData.append("file", selectedImageFile);
         formData.append("style", selectedStyle);
+        if (input.trim()) {
+          formData.append("prompt", input.trim());
+        }
         payload = formData;
         // Axios handles content-type for FormData automatically
       } else {

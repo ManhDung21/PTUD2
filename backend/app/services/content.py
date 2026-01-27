@@ -44,8 +44,9 @@ def get_style_prompt(style: str) -> str:
     return STYLE_PROMPTS.get(style, STYLE_PROMPTS["Tiếp thị"])
 
 
-def _image_prompt(style: str) -> str:
-    return f"""Viết mô tả bán hàng cho sản phẩm TRÁI CÂY trong hình ảnh.(nhận diện hình ảnh nếu không phải hình ảnh hãy trả lại cho tôi câu nói"Ảnh bạn cung cấp không phải là trái cây tôi không thể tạo mô tả!!") ( nằm trong khoảng 10-100 chữ cho 1 bài mô tả)
+def _image_prompt(style: str, product_info: Optional[str] = None) -> str:
+    user_context = f'\nThông tin bổ sung từ người dùng: "{product_info}"' if product_info else ""
+    return f"""Viết mô tả bán hàng cho sản phẩm TRÁI CÂY trong hình ảnh.{user_context}(nhận diện hình ảnh nếu không phải hình ảnh hãy trả lại cho tôi câu nói"Ảnh bạn cung cấp không phải là trái cây tôi không thể tạo mô tả!!") ( nằm trong khoảng 10-100 chữ cho 1 bài mô tả)
 {get_style_prompt(style)}
 
 Trả về theo định dạng:
@@ -103,10 +104,10 @@ def _sanitize_output(text: str) -> str:
     return text.replace("*", "")
 
 
-def generate_from_image(api_key: str, image: Image.Image, style: str) -> str:
+def generate_from_image(api_key: str, image: Image.Image, style: str, product_info: Optional[str] = None) -> str:
     """Generate a product description from an image."""
     model = get_model(api_key)
-    response = model.generate_content([_image_prompt(style), image])
+    response = model.generate_content([_image_prompt(style, product_info), image])
     return _sanitize_output(response.text) if response and response.text else ""
 
 
