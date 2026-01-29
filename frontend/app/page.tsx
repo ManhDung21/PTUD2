@@ -237,6 +237,26 @@ export default function HomePage() {
     }
   };
 
+  const handleUpdateAvatar = async (file: File) => {
+    try {
+      if (!token) return;
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await axios.post(`${API_BASE_URL}/auth/avatar`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data"
+        }
+      });
+
+      setUser(prev => prev ? { ...prev, avatar_url: res.data.url } : null);
+      showToast("success", "Cập nhật ảnh đại diện thành công");
+    } catch (err: any) {
+      showToast("error", "Lỗi khi cập nhật ảnh đại diện");
+    }
+  };
+
   const handleDeleteConversation = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!token) return;
@@ -466,6 +486,7 @@ export default function HomePage() {
           onClose={() => setProfileVisible(false)}
           user={user}
           onLogout={handleLogout}
+          onUpdateAvatar={handleUpdateAvatar}
         />
 
         <SettingsModal

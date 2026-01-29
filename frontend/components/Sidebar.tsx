@@ -210,7 +210,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                 <div className="flex-1 min-w-0">
                                     <div className="font-medium text-sm text-app-text truncate">{user.full_name}</div>
                                     <div className="text-xs text-app-muted truncate flex items-center justify-between">
-                                        <span>Thành viên Pro</span>
+                                        <span className={clsx(
+                                            "font-medium",
+                                            user.role === 'admin' ? "text-purple-400" :
+                                                user.role === 'user_pro' ? "text-yellow-400" :
+                                                    "text-gray-400"
+                                        )}>
+                                            {user.role === 'admin' ? 'Admin System' :
+                                                user.role === 'user_pro' ? 'Thành viên PRO' :
+                                                    user.role === 'user_free' ? 'Thành viên FREE' :
+                                                        'Thành viên'}
+                                        </span>
                                     </div>
                                 </div>
                             </div>

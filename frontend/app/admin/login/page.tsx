@@ -32,7 +32,8 @@ export default function AdminLoginPage() {
             if (meRes.data.role === "admin") {
                 router.push("/admin");
             } else {
-                setError("Authorized, but not an Admin.");
+                console.log("Login failed. Role:", meRes.data.role);
+                setError(`Authorized, but not an Admin. (Current role: ${meRes.data.role})`);
                 sessionStorage.removeItem("token");
             }
         } catch (err: any) {

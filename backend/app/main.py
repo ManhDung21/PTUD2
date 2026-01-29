@@ -110,6 +110,7 @@ def _user_out(user: UserDocument) -> UserOut:
         email=user.get("email"),
         phone_number=user.get("phone_number"),
         full_name=user.get("full_name"),
+        role=user.get("role", "user"),
         avatar_url=user.get("avatar_url"),
         created_at=created_at.isoformat(),
     )
@@ -482,6 +483,7 @@ def change_password(
 
 @app.get("/auth/me", response_model=UserOut)
 def me(current_user: UserDocument = Depends(get_current_user)) -> UserOut:
+    print(f"DEBUG: /auth/me called. User: {current_user.get('email')}, Role: {current_user.get('role')}")
     return _user_out(current_user)
 
 

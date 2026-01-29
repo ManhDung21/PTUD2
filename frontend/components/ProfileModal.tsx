@@ -11,15 +11,29 @@ interface ProfileModalProps {
     onClose: () => void;
     user: User | null;
     onLogout: () => void;
+    onUpdateAvatar: (file: File) => Promise<void>;
 }
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({
     isOpen,
     onClose,
     user,
-    onLogout
+    onLogout,
+    onUpdateAvatar
 }) => {
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+    const [uploading, setUploading] = useState(false);
+
     if (!user) return null;
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setUploading(true);
+            await onUpdateAvatar(file);
+            setUploading(false);
+        }
+    };
 
     return (
         <AnimatePresence>
@@ -54,10 +68,35 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                         </button>
 
                         <div className="flex flex-col items-center mb-8 relative z-10">
-                            <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-4xl shadow-lg mb-4 cursor-default">
-                                {user.full_name?.charAt(0).toUpperCase() || "U"}
+                            <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    className="hidden"
+                                    accept="image/*"
+                                    onChange={handleFileChange}
+                                />
+                                {user.avatar_url ? (
+                                    <img
+                                        src={user.avatar_url}
+                                        alt="Avatar"
+                                        className="w-24 h-24 rounded-full object-cover shadow-lg border-4 border-transparent group-hover:border-purple-500/50 transition-all"
+                                    />
+                                ) : (
+                                    <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-4xl shadow-lg border-4 border-transparent group-hover:border-purple-500/50 transition-all">
+                                        {user.full_name?.charAt(0).toUpperCase() || "U"}
+                                    </div>
+                                )}
+                                <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                    {uploading ? (
+                                        <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                    ) : (
+                                        <span className="text-white text-xs font-bold">Edit</span>
+                                    )}
+                                </div>
                             </div>
-                            <h2 className="text-2xl font-bold text-app-text tracking-tight">{user.full_name}</h2>
+
+                            <h2 className="text-2xl font-bold text-app-text tracking-tight mt-4">{user.full_name}</h2>
                             <div className="flex items-center gap-2 mt-1">
                                 <span className={clsx(
                                     "px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider",
