@@ -243,3 +243,158 @@ async def delete_description(
         raise HTTPException(status_code=404, detail="Description not found")
         
     return {"message": "Description deleted successfully"}
+
+
+from datetime import datetime, timedelta
+from ..schemas import TimeSeriesResponse, TimeSeriesDataPoint
+
+@router.get("/analytics/timeseries", response_model=TimeSeriesResponse)
+async def get_timeseries_analytics(
+    granularity: str = "day",
+    start_date: str = None,
+    end_date: str = None,
+    db: Database = Depends(get_database),
+    admin: UserDocument = Depends(get_admin_user)
+):
+    """
+    Get time series analytics data for:
+    - New user registrations
+    - Description creations
+    - Active users (based on last_login or description activity)
+    
+    Granularity: hour, day, week, month, year
+    """
+    # Validate granularity
+    valid_granularities = ["hour", "day", "week", "month", "year"]
+    if granularity not in valid_granularities:
+        raise HTTPException(status_code=400, detail=f"Invalid granularity. Must be one of: {valid_granularities}")
+    
+    # Parse dates
+    if end_date:
+        end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+    else:
+        end_dt = datetime.utcnow()
+    
+    if start_date:
+        start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+    else:
+        # Default to 30 days ago for day/hour, more for larger granularities
+        if granularity == "hour":
+            start_dt = end_dt - timedelta(days=7)
+        elif granularity == "day":
+            start_dt = end_dt - timedelta(days=30)
+        elif granularity == "week":
+            start_dt = end_dt - timedelta(weeks=12)
+        elif granularity == "month":
+            start_dt = end_dt - timedelta(days=365)
+        else:  # year
+            start_dt = end_dt - timedelta(days=365 * 3)
+    
+    # Date format strings for MongoDB
+    format_map = {
+        "hour": "%Y-%m-%dT%H:00:00",
+        "day": "%Y-%m-%d",
+        "week": "%Y-W%U",  # Year-Week
+        "month": "%Y-%m",
+        "year": "%Y"
+    }
+    date_format = format_map[granularity]
+    
+    # Aggregation for new registrations
+    registrations_pipeline = [
+        {
+            "$match": {
+                "created_at": {"$gte": start_dt, "$lte": end_dt}
+            }
+        },
+        {
+            "$group": {
+                "_id": {
+                    "$dateToString": {
+                        "format": date_format,
+                        "date": "$created_at"
+                    }
+                },
+                "count": {"$sum": 1}
+            }
+        },
+        {"$sort": {"_id": 1}}
+    ]
+    
+    # Aggregation for descriptions created
+    descriptions_pipeline = [
+        {
+            "$match": {
+                "timestamp": {"$gte": start_dt, "$lte": end_dt}
+            }
+        },
+        {
+            "$group": {
+                "_id": {
+                    "$dateToString": {
+                        "format": date_format,
+                        "date": "$timestamp"
+                    }
+                },
+                "count": {"$sum": 1}
+            }
+        },
+        {"$sort": {"_id": 1}}
+    ]
+    
+    # Aggregation for active users (users who created descriptions)
+    active_users_pipeline = [
+        {
+            "$match": {
+                "timestamp": {"$gte": start_dt, "$lte": end_dt}
+            }
+        },
+        {
+            "$group": {
+                "_id": {
+                    "period": {
+                        "$dateToString": {
+                            "format": date_format,
+                            "date": "$timestamp"
+                        }
+                    },
+                    "user_id": "$user_id"
+                }
+            }
+        },
+        {
+            "$group": {
+                "_id": "$_id.period",
+                "count": {"$sum": 1}
+            }
+        },
+        {"$sort": {"_id": 1}}
+    ]
+    
+    # Execute aggregations
+    registrations_data = list(db.users.aggregate(registrations_pipeline))
+    descriptions_data = list(db.descriptions.aggregate(descriptions_pipeline))
+    active_users_data = list(db.descriptions.aggregate(active_users_pipeline))
+    
+    # Convert to dictionaries for easy lookup
+    registrations_dict = {item["_id"]: item["count"] for item in registrations_data}
+    descriptions_dict = {item["_id"]: item["count"] for item in descriptions_data}
+    active_users_dict = {item["_id"]: item["count"] for item in active_users_data}
+    
+    # Get all unique timestamps
+    all_timestamps = set(registrations_dict.keys()) | set(descriptions_dict.keys()) | set(active_users_dict.keys())
+    
+    # Build response data
+    result_data = []
+    for timestamp in sorted(all_timestamps):
+        result_data.append(TimeSeriesDataPoint(
+            timestamp=timestamp,
+            new_registrations=registrations_dict.get(timestamp, 0),
+            descriptions_created=descriptions_dict.get(timestamp, 0),
+            active_users=active_users_dict.get(timestamp, 0)
+        ))
+    
+    return TimeSeriesResponse(
+        data=result_data,
+        granularity=granularity
+    )

@@ -109,18 +109,18 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
                         <div className="space-y-4 relative z-10">
                             <div className="glass-button p-3 rounded-2xl flex items-center gap-3">
-                                <Mail size={18} className="text-app-muted" />
+                                <Mail size={18} className="text-gray-500" />
                                 <div className="flex-1 min-w-0">
-                                    <div className="text-xs text-app-muted uppercase tracking-wide">Email</div>
-                                    <div className="text-app-text truncate">{user.email || "Chưa cập nhật"}</div>
+                                    <div className="text-xs text-gray-600 font-semibold uppercase tracking-wide">Email</div>
+                                    <div className="text-gray-900 font-medium truncate">{user.email || "Chưa cập nhật"}</div>
                                 </div>
                             </div>
 
                             <div className="glass-button p-3 rounded-2xl flex items-center gap-3">
-                                <Phone size={18} className="text-app-muted" />
+                                <Phone size={18} className="text-gray-500" />
                                 <div className="flex-1 min-w-0">
-                                    <div className="text-xs text-app-muted uppercase tracking-wide">Số điện thoại</div>
-                                    <div className="text-app-text truncate">{user.phone_number || "Chưa cập nhật"}</div>
+                                    <div className="text-xs text-gray-600 font-semibold uppercase tracking-wide">Số điện thoại</div>
+                                    <div className="text-gray-900 font-medium truncate">{user.phone_number || "Chưa cập nhật"}</div>
                                 </div>
                             </div>
 

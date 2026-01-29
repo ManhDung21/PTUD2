@@ -1,6 +1,6 @@
 """Pydantic models for request and response payloads."""
 
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import BaseModel, Field
 
@@ -110,3 +110,15 @@ class AvatarUploadResponse(BaseModel):
 
 class RoleUpdateRequest(BaseModel):
     role: str
+
+
+class TimeSeriesDataPoint(BaseModel):
+    timestamp: str
+    active_users: int = 0
+    descriptions_created: int = 0
+    new_registrations: int = 0
+
+
+class TimeSeriesResponse(BaseModel):
+    data: List[TimeSeriesDataPoint]
+    granularity: str

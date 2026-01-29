@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Sparkles, Trash2, Users, FileText, BarChart3, LogOut, MessageSquare, Shield, ShieldAlert, Image as ImageIcon, Type, Sun, Moon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import clsx from "clsx";
+import { TimeSeriesChart } from "../../components/TimeSeriesChart";
 
 interface Stats {
     total_users: number;
@@ -44,6 +45,11 @@ export default function AdminPage() {
     const [tableLoading, setTableLoading] = useState(false);
     const [error, setError] = useState("");
     const [toast, setToast] = useState<ToastState | null>(null);
+
+    // Analytics states
+    const [analyticsData, setAnalyticsData] = useState<any[]>([]);
+    const [granularity, setGranularity] = useState<"hour" | "day" | "week" | "month" | "year">("day");
+    const [analyticsLoading, setAnalyticsLoading] = useState(false);
 
     const showToast = (type: "success" | "error", message: string) => {
         setToast({ id: Date.now(), type, message });
@@ -89,6 +95,7 @@ export default function AdminPage() {
 
             // Initial fetch for current tab
             fetchTableData();
+            fetchAnalytics();
         } catch (err) {
             console.error(err);
             setError("Failed to load admin data.");
@@ -122,8 +129,28 @@ export default function AdminPage() {
         }
     }
 
+    const fetchAnalytics = async () => {
+        try {
+            setAnalyticsLoading(true);
+            const response = await axios.get(
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/analytics/timeseries`,
+                { params: { granularity } }
+            );
+            setAnalyticsData(response.data.data);
+        } catch (err) {
+            console.error("Failed to fetch analytics:", err);
+        } finally {
+            setAnalyticsLoading(false);
+        }
+    };
+
     useEffect(() => {
         fetchInitialData();
+        // Auto-refresh analytics every 60 seconds
+        const interval = setInterval(() => {
+            fetchAnalytics();
+        }, 60000);
+        return () => clearInterval(interval);
     }, []);
 
     // Effect to refetch table data when params change
@@ -134,6 +161,11 @@ export default function AdminPage() {
         }, 300);
         return () => clearTimeout(timeoutId);
     }, [queryParams]);
+
+    useEffect(() => {
+        // Refetch analytics when granularity changes
+        fetchAnalytics();
+    }, [granularity]);
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setQueryParams(prev => ({ ...prev, search: e.target.value, page: 1 }));
@@ -211,9 +243,14 @@ export default function AdminPage() {
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
-                    className={`fixed top-4 right-4 z-[2000] px-4 py-3 rounded-xl text-white font-medium shadow-2xl backdrop-blur-md border border-white/10 flex items-center gap-3 ${toast.type === 'success' ? 'bg-green-500/20 text-green-200' : 'bg-red-500/20 text-red-200'}`}
+                    className={clsx(
+                        "fixed top-4 right-4 z-[2000] px-5 py-3.5 rounded-xl font-semibold shadow-2xl backdrop-blur-md border flex items-center gap-3",
+                        toast.type === 'success'
+                            ? "bg-green-500/90 text-white border-green-400/30"
+                            : "bg-red-500/90 text-white border-red-400/30"
+                    )}
                 >
-                    {toast.type === 'success' ? <Sparkles size={18} /> : <ShieldAlert size={18} />}
+                    {toast.type === 'success' ? <Sparkles size={20} /> : <ShieldAlert size={20} />}
                     {toast.message}
                 </motion.div>
             )}
@@ -228,7 +265,7 @@ export default function AdminPage() {
                         <Shield size={18} className="text-white" />
                     </div>
                     <div>
-                        <h1 className={clsx("text-lg font-bold tracking-tight", isDarkMode ? "text-white" : "text-gray-900")}>Admin Portal</h1>
+                        <h1 className={clsx("text-lg font-bold tracking-tight", isDarkMode ? "text-white" : "text-gray-900")}>Quản Trị Viên</h1>
                     </div>
                 </div>
 
@@ -237,7 +274,7 @@ export default function AdminPage() {
                     <div className="relative group">
                         <input
                             type="text"
-                            placeholder="Search users, content..."
+                            placeholder="Tìm kiếm người dùng, nội dung..."
                             value={queryParams.search}
                             onChange={handleSearchChange}
                             className={clsx(
@@ -256,10 +293,10 @@ export default function AdminPage() {
                 <div className="flex items-center gap-4">
                     <div className="text-right hidden lg:block">
                         <div className="text-sm font-medium">{user?.full_name}</div>
-                        <div className={clsx("text-xs", isDarkMode ? "text-white/40" : "text-gray-500")}>{user?.role === 'admin' ? 'Administrator' : user?.email}</div>
+                        <div className={clsx("text-xs", isDarkMode ? "text-white/40" : "text-gray-500")}>{user?.role === 'admin' ? 'Quản trị viên' : user?.email}</div>
                     </div>
                     <div className="w-9 h-9 rounded-full bg-gradient-to-br from-gray-700 to-gray-600 flex items-center justify-center text-xs overflow-hidden border border-white/10">
-                        {user?.avatar_url ? <img src={user.avatar_url} alt="" className="w-full h-full object-cover" /> : user?.full_name?.charAt(0)}
+                        {user?.avatar_url ? <img src={`${user.avatar_url}?t=${Date.now()}`} alt="" className="w-full h-full object-cover" /> : user?.full_name?.charAt(0)}
                     </div>
                     <button
                         onClick={toggleTheme}
@@ -288,6 +325,56 @@ export default function AdminPage() {
             <main className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar z-10 relative">
                 <div className="max-w-7xl mx-auto space-y-8">
 
+                    {/* Analytics Chart Section */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={clsx(
+                            "p-6 rounded-2xl border transition-colors",
+                            isDarkMode ? "border-white/5 bg-[#121212]" : "border-gray-200 bg-white"
+                        )}
+                    >
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+                            <div>
+                                <h2 className={clsx("text-xl font-bold flex items-center gap-2", isDarkMode ? "text-white" : "text-gray-900")}>
+                                    <BarChart3 size={24} className="text-purple-400" />
+                                    Tổng Quan Phân Tích
+                                </h2>
+                                <p className={clsx("text-sm mt-1", isDarkMode ? "text-gray-400" : "text-gray-600")}>Chỉ số và xu hướng thời gian thực</p>
+                            </div>
+
+                            {/* Granularity Selector */}
+                            <div className="flex gap-2">
+                                {(["hour", "day", "week", "month", "year"] as const).map((g) => (
+                                    <button
+                                        key={g}
+                                        onClick={() => setGranularity(g)}
+                                        className={clsx(
+                                            "px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
+                                            granularity === g
+                                                ? (isDarkMode ? "bg-purple-500 text-white" : "bg-blue-500 text-white")
+                                                : (isDarkMode ? "bg-white/5 text-gray-400 hover:bg-white/10" : "bg-gray-100 text-gray-600 hover:bg-gray-200")
+                                        )}
+                                    >
+                                        {g.charAt(0).toUpperCase() + g.slice(1)}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {analyticsLoading ? (
+                            <div className="h-[400px] flex items-center justify-center">
+                                <Sparkles className="animate-spin text-purple-500" size={32} />
+                            </div>
+                        ) : analyticsData.length > 0 ? (
+                            <TimeSeriesChart data={analyticsData} isDarkMode={isDarkMode} granularity={granularity} />
+                        ) : (
+                            <div className={clsx("h-[400px] flex items-center justify-center", isDarkMode ? "text-gray-500" : "text-gray-400")}>
+                                Không có dữ liệu cho khoảng thời gian đã chọn
+                            </div>
+                        )}
+                    </motion.div>
+
                     {/* Stats Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className={clsx(
@@ -297,7 +384,7 @@ export default function AdminPage() {
                             <div className={clsx("absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500", isDarkMode ? "from-blue-500/10" : "from-blue-500/5")} />
                             <div className="flex items-center gap-4 mb-3 relative z-10">
                                 <div className={clsx("p-3 rounded-xl text-blue-400 group-hover:scale-110 transition-transform", isDarkMode ? "bg-blue-500/10 shadow-[0_0_15px_rgba(59,130,246,0.1)]" : "bg-blue-100")}><Users size={24} /></div>
-                                <h3 className={clsx("text-base font-semibold", isDarkMode ? "text-gray-200" : "text-gray-700")}>Total Users</h3>
+                                <h3 className={clsx("text-base font-semibold", isDarkMode ? "text-gray-200" : "text-gray-700")}>Tổng Người Dùng</h3>
                             </div>
                             <p className={clsx("text-4xl font-bold relative z-10 tracking-tight", isDarkMode ? "text-white" : "text-gray-900")}>{stats?.total_users}</p>
                         </motion.div>
@@ -309,7 +396,7 @@ export default function AdminPage() {
                             <div className={clsx("absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500", isDarkMode ? "from-purple-500/10" : "from-purple-500/5")} />
                             <div className="flex items-center gap-4 mb-3 relative z-10">
                                 <div className={clsx("p-3 rounded-xl text-purple-400 group-hover:scale-110 transition-transform", isDarkMode ? "bg-purple-500/10 shadow-[0_0_15px_rgba(168,85,247,0.1)]" : "bg-purple-100")}><FileText size={24} /></div>
-                                <h3 className={clsx("text-base font-semibold", isDarkMode ? "text-gray-200" : "text-gray-700")}>Generated Content</h3>
+                                <h3 className={clsx("text-base font-semibold", isDarkMode ? "text-gray-200" : "text-gray-700")}>Nội Dung Đã Tạo</h3>
                             </div>
                             <p className={clsx("text-4xl font-bold relative z-10 tracking-tight", isDarkMode ? "text-white" : "text-gray-900")}>{stats?.total_descriptions}</p>
                         </motion.div>
@@ -321,7 +408,7 @@ export default function AdminPage() {
                             <div className={clsx("absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500", isDarkMode ? "from-green-500/10" : "from-green-500/5")} />
                             <div className="flex items-center gap-4 mb-3 relative z-10">
                                 <div className={clsx("p-3 rounded-xl text-green-400 group-hover:scale-110 transition-transform", isDarkMode ? "bg-green-500/10 shadow-[0_0_15px_rgba(34,197,94,0.1)]" : "bg-green-100")}><BarChart3 size={24} /></div>
-                                <h3 className={clsx("text-base font-semibold", isDarkMode ? "text-gray-200" : "text-gray-700")}>Breakdown</h3>
+                                <h3 className={clsx("text-base font-semibold", isDarkMode ? "text-gray-200" : "text-gray-700")}>Phân Loại</h3>
                             </div>
                             <div className="space-y-3 relative z-10 mt-2">
                                 <div className={clsx("flex justify-between text-sm items-center p-2 rounded-lg border", isDarkMode ? "bg-white/5 border-white/5" : "bg-gray-50 border-gray-200")}>
@@ -349,7 +436,7 @@ export default function AdminPage() {
                                         : (isDarkMode ? "text-white/40 hover:text-white/70" : "text-gray-500 hover:text-gray-700")
                                 )}
                             >
-                                Users
+                                Người Dùng
                                 {activeTab === 'users' && <motion.div layoutId="activeTab" className={clsx("absolute bottom-[-5px] left-0 right-0 h-0.5", isDarkMode ? "bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]" : "bg-blue-500")} />}
                             </button>
                             <button
@@ -361,7 +448,7 @@ export default function AdminPage() {
                                         : (isDarkMode ? "text-white/40 hover:text-white/70" : "text-gray-500 hover:text-gray-700")
                                 )}
                             >
-                                Content Management
+                                Quản Lý Nội Dung
                                 {activeTab === 'content' && <motion.div layoutId="activeTab" className={clsx("absolute bottom-[-5px] left-0 right-0 h-0.5", isDarkMode ? "bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]" : "bg-blue-500")} />}
                             </button>
                         </div>

@@ -91,19 +91,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         </button>
 
                         <div className="mb-8 relative z-10">
-                            <h2 className="text-3xl font-bold text-app-text mb-2 tracking-tight">
+                            <h2 className="text-4xl font-bold text-app-text mb-3 tracking-tight">
                                 {mode === "login" && "Chào mừng trở lại"}
                                 {mode === "register" && "Tạo tài khoản"}
                                 {mode === "forgot" && "Đặt lại mật khẩu"}
                                 {mode === "reset" && "Mật khẩu mới"}
                             </h2>
-                            <p className="text-app-muted text-sm font-light">
+                            <p className="text-gray-700 text-base font-semibold">
                                 {mode === "login" && "Nhập thông tin để truy cập lịch sử."}
                                 {mode === "register" && "Tham gia tương lai của trò chuyện AI."}
                             </p>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="flex flex-col gap-4 relative z-10">
+                        <form onSubmit={handleSubmit} className="flex flex-col gap-5 relative z-10">
                             {mode === "login" && (
                                 <>
                                     <input
@@ -112,7 +112,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                                         placeholder="Email hoặc SĐT"
                                         value={formData.identifier}
                                         onChange={handleChange}
-                                        className="ios-input w-full rounded-2xl px-4 py-3.5 placeholder:text-app-muted/50"
+                                        className="ios-input w-full rounded-2xl px-5 py-4 placeholder:text-gray-400 text-app-text text-base font-medium"
                                         required
                                     />
                                     <div className="relative">
@@ -122,22 +122,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                                             placeholder="Mật khẩu"
                                             value={formData.password}
                                             onChange={handleChange}
-                                            className="ios-input w-full rounded-2xl px-4 py-3.5 placeholder:text-app-muted/50 pr-12"
+                                            className="ios-input w-full rounded-2xl px-5 py-4 placeholder:text-gray-400 pr-12 text-app-text text-base font-medium"
                                             required
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-app-muted hover:text-app-text transition-colors"
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-app-text transition-colors"
                                         >
-                                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                            {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}
                                         </button>
                                     </div>
-                                    <div className="flex justify-end">
+                                    <div className="flex justify-end -mt-2">
                                         <button
                                             type="button"
                                             onClick={() => setMode("forgot")}
-                                            className="text-sm text-purple-400 hover:text-purple-500 transaction-colors"
+                                            className="text-sm font-medium text-purple-400 hover:text-purple-300 transition-colors"
                                         >
                                             Quên mật khẩu?
                                         </button>
@@ -147,9 +147,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
                             {mode === "register" && (
                                 <>
-                                    <input type="text" name="full_name" placeholder="Họ và tên" value={formData.full_name} onChange={handleChange} className="ios-input w-full rounded-2xl px-4 py-3.5 placeholder:text-app-muted/50" />
-                                    <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} className="ios-input w-full rounded-2xl px-4 py-3.5 placeholder:text-app-muted/50" required />
-                                    <input type="text" name="phone_number" placeholder="Số điện thoại" value={formData.phone_number} onChange={handleChange} className="ios-input w-full rounded-2xl px-4 py-3.5 placeholder:text-app-muted/50" />
+                                    <input type="text" name="full_name" placeholder="Họ và tên" value={formData.full_name} onChange={handleChange} className="ios-input w-full rounded-2xl px-5 py-4 placeholder:text-gray-400 text-app-text text-base font-medium" />
+                                    <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} className="ios-input w-full rounded-2xl px-5 py-4 placeholder:text-gray-400 text-app-text text-base font-medium" required />
+                                    <input type="text" name="phone_number" placeholder="Số điện thoại" value={formData.phone_number} onChange={handleChange} className="ios-input w-full rounded-2xl px-5 py-4 placeholder:text-gray-400 text-app-text text-base font-medium" />
                                     <div className="relative">
                                         <input
                                             type={showPassword ? "text" : "password"}
@@ -157,42 +157,41 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                                             placeholder="Mật khẩu"
                                             value={formData.password}
                                             onChange={handleChange}
-                                            className="ios-input w-full rounded-2xl px-4 py-3.5 placeholder:text-app-muted/50 pr-12"
+                                            className="ios-input w-full rounded-2xl px-5 py-4 placeholder:text-gray-400 pr-12 text-app-text text-base font-medium"
                                             required
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-app-muted hover:text-app-text transition-colors"
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-app-text transition-colors"
                                         >
-                                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                            {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}
                                         </button>
                                     </div>
                                 </>
                             )}
 
                             {mode === "forgot" && (
-                                <input type="email" name="email" placeholder="Email đăng ký" value={formData.email} onChange={handleChange} className="ios-input w-full rounded-2xl px-4 py-3.5 placeholder:text-app-muted/50" required />
+                                <input type="email" name="email" placeholder="Email đăng ký" value={formData.email} onChange={handleChange} className="ios-input w-full rounded-2xl px-5 py-4 placeholder:text-gray-400 text-app-text text-base font-medium" required />
                             )}
 
-                            {/* Submit Button */}
                             {/* Submit Button */}
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full bg-app-text text-app h-[52px] rounded-full font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all mt-4 flex items-center justify-center gap-2 shadow-lg shadow-black/10"
+                                className="w-full bg-white text-black h-[56px] rounded-full font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all mt-2 flex items-center justify-center gap-2 shadow-xl shadow-black/20"
                             >
-                                {loading && <Loader2 size={20} className="animate-spin" />}
+                                {loading && <Loader2 size={22} className="animate-spin" />}
                                 {mode === "login" ? "Đăng nhập" : mode === "register" ? "Đăng ký" : "Gửi liên kết"}
-                                {!loading && <ArrowRight size={20} />}
+                                {!loading && <ArrowRight size={22} />}
                             </button>
                         </form>
 
-                        <div className="mt-8 text-center text-sm text-app-muted relative z-10">
+                        <div className="mt-8 text-center text-base text-gray-300 relative z-10 font-medium">
                             {mode === "login" ? (
-                                <>Chưa có tài khoản? <button onClick={() => setMode("register")} className="text-app-text font-medium hover:underline">Đăng ký</button></>
+                                <>Chưa có tài khoản? <button onClick={() => setMode("register")} className="text-app-text font-semibold hover:underline">Đăng ký</button></>
                             ) : (
-                                <><button onClick={() => setMode("login")} className="text-app-text font-medium hover:underline">Quay lại Đăng nhập</button></>
+                                <><button onClick={() => setMode("login")} className="text-app-text font-semibold hover:underline">Quay lại Đăng nhập</button></>
                             )}
                         </div>
                     </motion.div>

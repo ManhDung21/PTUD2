@@ -8,16 +8,16 @@
   /* --- Semantic Theme Variables (Light Mode Default) --- */
   --bg-app: #F0F4F8;
   --text-app: #111827;
-  --text-muted: #4B5563;
-  --text-light: #F9FAFB;
-  /* Always light text */
+  --text-muted: #6B7280;
+  --text-light: #111827;
+  /* Text color for light mode - should be dark */
 
-  --panel-bg: rgba(255, 255, 255, 0.75);
-  --panel-border: rgba(0, 0, 0, 0.05);
-  --glass-highlight: rgba(255, 255, 255, 0.5);
+  --panel-bg: rgba(255, 255, 255, 0.95);
+  --panel-border: rgba(0, 0, 0, 0.15);
+  --glass-highlight: rgba(59, 130, 246, 0.08);
 
-  --input-bg: rgba(255, 255, 255, 0.8);
-  --input-border: rgba(0, 0, 0, 0.1);
+  --input-bg: rgba(255, 255, 255, 0.9);
+  --input-border: rgba(0, 0, 0, 0.15);
 
   --primary-gradient-start: #3B82F6;
   --primary-gradient-end: #8B5CF6;
@@ -103,12 +103,14 @@ body {
   border: 1px solid var(--panel-border);
   color: var(--text-app);
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .glass-button:hover {
   background: var(--glass-highlight);
-  border-color: var(--panel-border);
+  border-color: rgba(59, 130, 246, 0.3);
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .glass-button:active {

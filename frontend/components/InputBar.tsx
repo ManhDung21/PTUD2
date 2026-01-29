@@ -188,12 +188,19 @@ export const InputBar: React.FC<InputBarProps> = ({
                         >
                             <div className="relative inline-block">
                                 <img src={selectedImagePreview} alt="Preview" className="h-24 rounded-xl object-cover border border-panel-border" />
-                                <button
-                                    onClick={onClearImage}
-                                    className="absolute -top-2 -right-2 bg-panel text-app-text rounded-full p-1 backdrop-blur-md hover:bg-glass-highlight transition-colors"
-                                >
-                                    <X size={12} />
-                                </button>
+                                {!loading && (
+                                    <button
+                                        onClick={onClearImage}
+                                        className="absolute -top-2 -right-2 bg-panel text-app-text rounded-full p-1 backdrop-blur-md hover:bg-glass-highlight transition-colors"
+                                    >
+                                        <X size={12} />
+                                    </button>
+                                )}
+                                {loading && (
+                                    <div className="absolute -top-2 -right-2 bg-panel/50 text-app-muted rounded-full p-1 backdrop-blur-md cursor-not-allowed">
+                                        <X size={12} />
+                                    </div>
+                                )}
                             </div>
                         </motion.div>
                     )}
