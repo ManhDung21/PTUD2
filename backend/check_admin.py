@@ -14,29 +14,60 @@ os.environ.setdefault("GEMINI_API_KEY", "dummy")
 os.environ.setdefault("JWT_SECRET", "dummy")
 
 def fix_admin():
-    # Get URI from env or default
-    uri = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
-    client = MongoClient(uri)
-    db = client["fruit_text_db"]  # Adjust db name if different
+    # Add backend directory to sys.path to allow imports
+    sys.path.append(os.path.dirname(os.path.abspath(__file__))) # backend
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # root
     
-    # Check users collection
-    users = db.users
+    uri = None
+    try:
+        from app.core.config import settings
+        uri = settings.MONGODB_URI
+        print(f"Loaded URI from app settings: {uri}")
+    except ImportError as e:
+        print(f"Failed to import settings: {e}")
+        # Fallback manual load
+        dotenv_path = r"C:\Users\vinht\PTUD2\.env"
+        dotenv.load_dotenv(dotenv_path)
+        uri = os.getenv("MONGODB_URI")
+
+    if not uri:
+        print("URI not found in env/settings. Using Default 127.0.0.1.")
+        uri = "mongodb://127.0.0.1:27017"
+
+    print(f"Connecting to MongoDB...")
+    try:
+        client = MongoClient(uri, serverSelectionTimeoutMS=5000)
+        # Force a connection check
+        client.admin.command('ping')
+        print("Connected successfully!")
+    except Exception as e:
+        print(f"Connection failed: {e}")
+        return
+
+    # Potential DB names
+    db_names = ["ptud2", "fruit_text_db", "test_db"]
     
-    target_email = "admin@gmail.com"
-    user = users.find_one({"email": target_email})
-    
-    if user:
-        print(f"User found: {target_email}")
-        print(f"Current role: {user.get('role')}")
+    for db_name in db_names:
+        print(f"\n--- Checking database: {db_name} ---")
+        db = client[db_name]
         
-        if user.get("role") != "admin":
-            print("Updating role to 'admin'...")
-            users.update_one({"email": target_email}, {"$set": {"role": "admin"}})
-            print("Update complete.")
+        # Check users collection
+        users = db.users
+        target_email = "admin@gmail.com"
+        user = users.find_one({"email": target_email})
+        
+        if user:
+            print(f"User found: {target_email} in {db_name}")
+            print(f"Current role: {user.get('role')}")
+            
+            if user.get("role") != "admin":
+                print("Updating role to 'admin'...")
+                users.update_one({"email": target_email}, {"$set": {"role": "admin"}})
+                print("Update complete.")
+            else:
+                print("User is already admin.")
         else:
-            print("User is already admin.")
-    else:
-        print(f"User {target_email} NOT found in database.")
+            print(f"User {target_email} NOT found in {db_name}.")
         
     # List all admins for verification
     print("\nCurrent Admins:")

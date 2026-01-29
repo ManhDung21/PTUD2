@@ -60,7 +60,7 @@ export default function AdminLoginPage() {
 
                     <form onSubmit={handleLogin} className="space-y-4">
                         {error && (
-                            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-200 text-sm text-center">
+                            <div className="p-3 rounded-lg bg-red-600 border border-red-500/20 text-white text-sm text-center">
                                 {error}
                             </div>
                         )}
