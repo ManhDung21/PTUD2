@@ -17,6 +17,14 @@ class UserDocument(TypedDict, total=False):
     created_at: datetime
 
 
+class ConversationDocument(TypedDict, total=False):
+    _id: ObjectId
+    user_id: ObjectId
+    title: str
+    created_at: datetime
+    updated_at: datetime
+
+
 class DescriptionDocument(TypedDict, total=False):
     _id: ObjectId
     user_id: Optional[ObjectId]
@@ -25,7 +33,10 @@ class DescriptionDocument(TypedDict, total=False):
     style: str
     content: str
     image_path: Optional[str]
+    content: str
+    image_path: Optional[str]
     prompt: Optional[str]
+    conversation_id: Optional[ObjectId]
 
 
 class PasswordResetTokenDocument(TypedDict, total=False):

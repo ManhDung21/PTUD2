@@ -14,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from PIL import Image, ImageDraw, ImageFont, UnidentifiedImageError
 from pymongo.collection import Collection
 from pymongo.database import Database
+from bson import ObjectId
 
 from .config import Settings, get_settings
 from .db.models import DescriptionDocument, PasswordResetTokenDocument, UserDocument
@@ -33,7 +34,7 @@ from .schemas import (
     UpdateProfileRequest,
     UserOut,
 )
-from .services import auth, content, email as email_service, history as history_service, tts
+from .services import auth, content, email as email_service, history as history_service, tts, conversations as conversation_service
 from .services import cloudinary_service
 from .services.auth import (
     get_current_user, 
@@ -44,7 +45,7 @@ from .services.auth import (
     is_phone_number,
     hash_password
 )
-from .routers import admin
+from .routers import admin, conversations
 
 
 
@@ -518,6 +519,7 @@ async def generate_description_from_image(
     file: UploadFile = File(...),
     style: str = Form("Tiếp thị"),
     prompt: Optional[str] = Form(None),
+    conversation_id: Optional[str] = Form(None),
     current_user: Optional[UserDocument] = Depends(get_current_user_optional),
     db: Database = Depends(get_database),
 ) -> DescriptionResponse:
@@ -577,7 +579,34 @@ async def generate_description_from_image(
     description_text = _append_user_info(description_text, current_user)
 
     history_payload = None
+    final_conversation_id = None
+    
     if current_user:
+        # Conversation Logic
+        conv_oid = None
+        if conversation_id and ObjectId.is_valid(conversation_id):
+            # Check existence/ownership
+            conv = conversation_service.get_conversation(db.get_collection("conversations"), conversation_id, current_user["_id"])
+            if conv:
+                conv_oid = conv["_id"]
+                # Update timestamp
+                db.get_collection("conversations").update_one(
+                    {"_id": conv_oid},
+                    {"$set": {"updated_at": utc_now()}}
+                )
+        
+        if not conv_oid:
+            # Create new
+            title = (prompt or "New Image Chat")[:50]
+            new_conv = conversation_service.create_conversation(
+                db.get_collection("conversations"),
+                current_user["_id"],
+                title
+            )
+            conv_oid = new_conv["_id"]
+        
+        final_conversation_id = str(conv_oid)
+
         description_doc: DescriptionDocument = {
             "user_id": current_user["_id"],
             "timestamp": utc_now(),
@@ -586,6 +615,7 @@ async def generate_description_from_image(
             "content": description_text,
             "image_path": stored_image_path,
             "prompt": prompt,
+            "conversation_id": conv_oid
         }
         stored = _store_description(_descriptions_collection(db), description_doc)
         history_payload = history_service.history_item_from_doc(stored)
@@ -598,6 +628,7 @@ async def generate_description_from_image(
         source="image",
         image_url=history_payload.get("image_url") if history_payload else image_url,
         prompt=history_payload.get("prompt") if history_payload else None,
+        conversation_id=final_conversation_id
     )
 
 
@@ -621,7 +652,34 @@ async def generate_description_from_text(
     description_text = _append_user_info(description_text, current_user)
 
     history_payload = None
+    final_conversation_id = None
+
     if current_user:
+        # Conversation Logic
+        conv_oid = None
+        if payload.conversation_id and ObjectId.is_valid(payload.conversation_id):
+            # Check existence
+            conv = conversation_service.get_conversation(db.get_collection("conversations"), payload.conversation_id, current_user["_id"])
+            if conv:
+                conv_oid = conv["_id"]
+                # Update timestamp
+                db.get_collection("conversations").update_one(
+                    {"_id": conv_oid},
+                    {"$set": {"updated_at": utc_now()}}
+                )
+        
+        if not conv_oid:
+            # Create new
+            title = (payload.product_info or "New Text Chat")[:50]
+            new_conv = conversation_service.create_conversation(
+                db.get_collection("conversations"),
+                current_user["_id"],
+                title
+            )
+            conv_oid = new_conv["_id"]
+        
+        final_conversation_id = str(conv_oid)
+
         description_doc: DescriptionDocument = {
             "user_id": current_user["_id"],
             "timestamp": utc_now(),
@@ -630,6 +688,7 @@ async def generate_description_from_text(
             "content": description_text,
             "image_path": None,
             "prompt": payload.product_info,
+            "conversation_id": conv_oid
         }
         stored = _store_description(_descriptions_collection(db), description_doc)
         history_payload = history_service.history_item_from_doc(stored)
@@ -642,6 +701,7 @@ async def generate_description_from_text(
         source="text",
         image_url=history_payload.get("image_url") if history_payload else None,
         prompt=payload.product_info,
+        conversation_id=final_conversation_id
     )
 
 
@@ -733,6 +793,7 @@ def delete_all_history(
 
 
 app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
+app.include_router(conversations.router, prefix="/api/conversations", tags=["conversations"])
 
 
 @app.on_event("startup")

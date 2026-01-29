@@ -6,8 +6,9 @@ from pydantic import BaseModel, Field
 
 
 class GenerateTextRequest(BaseModel):
-    product_info: str = Field(..., min_length=3)
+    product_info: str = Field(..., min_length=1)
     style: str = Field(default="Tiếp thị")
+    conversation_id: Optional[str] = None
 
 
 class DescriptionResponse(BaseModel):
@@ -17,7 +18,9 @@ class DescriptionResponse(BaseModel):
     style: str
     source: str
     image_url: Optional[str]
+    image_url: Optional[str]
     prompt: Optional[str] = None
+    conversation_id: Optional[str] = None
 
 
 class HistoryItem(BaseModel):
@@ -28,7 +31,24 @@ class HistoryItem(BaseModel):
     summary: str
     full_description: str
     image_url: Optional[str]
+    image_url: Optional[str]
     prompt: Optional[str] = None
+    conversation_id: Optional[str] = None
+
+
+class Conversation(BaseModel):
+    id: str
+    title: str
+    created_at: str
+    updated_at: str
+
+
+class ConversationCreate(BaseModel):
+    title: Optional[str] = None
+
+
+class ConversationUpdate(BaseModel):
+    title: str
 
 
 class RegisterRequest(BaseModel):

@@ -1,20 +1,21 @@
 "use client";
 
 import React from "react";
-import { HistoryItem, User } from "../types";
+import { Conversation, User } from "../types";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus, MessageSquare, Trash2, LogIn, User as UserIcon, Sun, Moon } from "lucide-react";
 import clsx from "clsx";
+import { useRef, useEffect } from 'react';
 
 interface SidebarProps {
     isOpen: boolean;
     onClose: () => void;
-    history: HistoryItem[];
-    onSelectHistory: (item: HistoryItem) => void;
+    conversations: Conversation[];
+    onSelectConversation: (item: Conversation) => void;
     onNewChat: () => void;
     user: User | null;
     onAuthClick: () => void;
-    onDeleteHistory: (id: string, e: React.MouseEvent) => void;
+    onDeleteConversation: (id: string, e: React.MouseEvent) => void;
     onProfileClick: () => void;
     isDarkMode: boolean;
     onToggleTheme: () => void;
@@ -23,12 +24,12 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({
     isOpen,
     onClose,
-    history,
-    onSelectHistory,
+    conversations,
+    onSelectConversation,
     onNewChat,
     user,
     onAuthClick,
-    onDeleteHistory,
+    onDeleteConversation,
     onProfileClick,
     isDarkMode,
     onToggleTheme
@@ -37,10 +38,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
     const confirmDelete = (e: React.MouseEvent) => {
         if (deleteId) {
-            onDeleteHistory(deleteId, e);
+            onDeleteConversation(deleteId, e);
             setDeleteId(null);
         }
     };
+
+
+
+
+
+
+
+
+
+    const sidebarRef = useRef<HTMLElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (isOpen && sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
+                onClose();
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isOpen, onClose]);
 
     return (
         <>
@@ -99,15 +123,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </AnimatePresence>
 
             <motion.aside
+                ref={sidebarRef}
                 initial={false}
                 animate={{
                     x: isOpen ? 0 : -320
                 }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
                 className={clsx(
-                    "fixed inset-y-4 left-4 z-[200] w-[280px] rounded-[32px] overflow-hidden flex flex-col",
+                    "fixed inset-y-4 left-4 z-[200] w-[280px] rounded-[32px] overflow-hidden flex flex-col  ",
                     "glass-panel-heavy"
-                    // Removed desktop overrides to allow toggling on all screens
                 )}
             >
                 {/* Header */}
@@ -139,21 +163,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                 {/* History List */}
                 <div className="flex-1 overflow-y-auto px-4 py-2 space-y-2 custom-scrollbar">
-                    <div className="text-xs font-medium text-app-muted mb-3 px-2 uppercase tracking-wider">Gần đây</div>
-                    {history.length === 0 ? (
-                        <div className="text-app-muted text-center py-8 text-sm">Chưa có lịch sử</div>
+                    <div className="text-xs font-medium text-app-muted mb-3 px-2 uppercase tracking-wider">Trò chuyện gần đây</div>
+                    {conversations.length === 0 ? (
+                        <div className="text-app-muted text-center py-8 text-sm">Chưa có cuộc trò chuyện</div>
                     ) : (
-                        history.map((item) => (
+                        conversations.map((item) => (
                             <motion.div
                                 key={item.id}
                                 layoutId={item.id}
-                                onClick={() => onSelectHistory(item)}
+                                onClick={() => onSelectConversation(item)}
                                 className="group flex items-center justify-between p-3 rounded-[18px] hover:bg-panel cursor-pointer transition-colors border border-transparent hover:border-panel-border"
                             >
                                 <div className="flex items-center gap-3 overflow-hidden">
                                     <MessageSquare size={16} className="text-app-muted min-w-[16px]" />
                                     <span className="truncate text-sm text-app-text group-hover:text-primary-gradient-start transition-colors">
-                                        {item.full_description.substring(0, 30)}...
+                                        {item.title}
                                     </span>
                                 </div>
                                 <button

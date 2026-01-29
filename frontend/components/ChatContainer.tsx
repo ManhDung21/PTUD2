@@ -29,7 +29,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
 }) => {
 
     // Welcome Screen
-    if (session.length === 0 && !loading && !inputContent?.text && !inputContent?.image) {
+    // Only hide if we have history (session.length > 0) or if we are actively loading (sent a message)
+    if (session.length === 0 && !loading) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center relative z-10">
                 <motion.div
@@ -41,7 +42,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                     <div className="inline-block p-4 rounded-full bg-panel backdrop-blur-xl border border-panel-border mb-6 shadow-2xl">
                         <Sparkles size={48} className="text-app-text/80" />
                     </div>
-                    <h1 className="text-5xl md:text-6xl font-thin tracking-tighter mb-4 text-app-text drop-shadow-xl">
+                    <h1 className="text-3xl md:text-6xl font-thin tracking-tighter mb-4 text-app-text drop-shadow-xl">
                         FruitText Xin Chào !
                     </h1>
                     <p className="text-xl text-app-muted font-light tracking-wide">Bạn đã sẵn sàng tạo ra những mô tả cho sản phẩm tuyệt vời của bạn chưa?</p>
@@ -57,10 +58,10 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.3 + (i * 0.1) }}
-                            className="glass-button p-5 rounded-[24px] text-left cursor-pointer group"
+                            className="glass-button p-4 md:p-5 rounded-[20px] md:rounded-[24px] text-left cursor-pointer group"
                         >
-                            <span className="block text-app-text font-medium text-lg">{item.title}</span>
-                            <span className="block text-app-muted text-sm mt-1">{item.desc}</span>
+                            <span className="block text-app-text font-medium text-base md:text-lg">{item.title}</span>
+                            <span className="block text-app-muted text-xs md:text-sm mt-1">{item.desc}</span>
                         </motion.div>
                     ))}
                 </div>
@@ -80,18 +81,18 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     return (
         <>
             <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-8 pb-48 scroll-smooth custom-scrollbar relative z-10">
-                <div className="max-w-[800px] mx-auto flex flex-col gap-10">
+                <div className="max-w-[800px] mx-auto flex flex-col gap-6 md:gap-10">
 
                     {/* Render History Messages */}
                     {session.map((item, index) => (
-                        <div key={item.history_id || index} className="flex flex-col gap-10">
+                        <div key={item.history_id || index} className="flex flex-col gap-6 md:gap-10">
                             {/* User Message */}
                             <motion.div
                                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 className="flex justify-end"
                             >
-                                <div className="glass-panel px-6 py-4 rounded-[26px] rounded-tr-md max-w-[85%]">
+                                <div className="glass-panel px-4 py-3 md:px-6 md:py-4 rounded-[20px] md:rounded-[26px] rounded-tr-md max-w-[90%] md:max-w-[85%]">
                                     {(item.image_url) && (
                                         <div
                                             className="cursor-zoom-in relative group"
@@ -100,17 +101,17 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                                             <img
                                                 src={item.image_url}
                                                 alt="Upload"
-                                                className="max-h-[300px] rounded-xl mb-3 shadow-lg transition-transform group-hover:scale-[1.02]"
+                                                className="max-h-[200px] md:max-h-[300px] rounded-xl mb-3 shadow-lg transition-transform group-hover:scale-[1.02]"
                                             />
                                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-xl transition-colors" />
                                         </div>
                                     )}
                                     {(item.prompt) && (
-                                        <p className="text-app-text text-lg leading-relaxed">{item.prompt}</p>
+                                        <p className="text-app-text text-base md:text-lg leading-relaxed">{item.prompt}</p>
                                     )}
                                     {(item.style) && (
                                         <div className="mt-2 flex justify-end">
-                                            <span className="text-xs font-medium text-app-muted bg-panel px-2 py-1 rounded-md">
+                                            <span className="text-[10px] md:text-xs font-medium text-app-muted bg-panel px-2 py-1 rounded-md">
                                                 {item.style}
                                             </span>
                                         </div>
@@ -122,34 +123,35 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
-                                className="flex gap-6 items-start"
+                                className="flex gap-4 md:gap-6 items-start"
                             >
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shrink-0 shadow-lg shadow-purple-500/20 mt-1">
-                                    <Sparkles size={20} className="text-white" />
+                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shrink-0 shadow-lg shadow-purple-500/20 mt-1">
+                                    <Sparkles size={16} className="text-white md:hidden" />
+                                    <Sparkles size={20} className="text-white hidden md:block" />
                                 </div>
 
-                                <div className="flex-1 space-y-4">
+                                <div className="flex-1 space-y-3 md:space-y-4">
                                     <motion.div
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         transition={{ duration: 0.8 }}
-                                        className="text-lg text-app-text leading-relaxed whitespace-pre-line font-light tracking-wide"
+                                        className="text-[15px] md:text-base text-app-text leading-relaxed whitespace-pre-line font-light tracking-wide"
                                     >
                                         {item.description}
                                     </motion.div>
 
                                     {/* Action Chips */}
-                                    <div className="flex flex-wrap gap-2 pt-2">
-                                        <button onClick={() => onRead(item.description || "")} className="glass-button px-4 py-2 rounded-full flex items-center gap-2 text-sm text-app-muted hover:text-app-text">
-                                            {isReading ? <VolumeX size={16} /> : <Volume2 size={16} />}
-                                            <span>Đọc to</span>
+                                    <div className="flex flex-wrap gap-2 pt-1 md:pt-2">
+                                        <button onClick={() => onRead(item.description || "")} className="glass-button px-3 py-1.5 md:px-4 md:py-2 rounded-full flex items-center gap-2 text-xs md:text-sm text-app-muted hover:text-app-text">
+                                            {isReading ? <VolumeX size={14} className="md:w-4 md:h-4" /> : <Volume2 size={14} className="md:w-4 md:h-4" />}
+                                            <span>Đọc</span>
                                         </button>
-                                        <button onClick={onShareFacebook} className="glass-button px-4 py-2 rounded-full flex items-center gap-2 text-sm text-app-muted hover:text-blue-400">
-                                            <Facebook size={16} />
-                                            <span>Facebook</span>
+                                        <button onClick={onShareFacebook} className="glass-button px-3 py-1.5 md:px-4 md:py-2 rounded-full flex items-center gap-2 text-xs md:text-sm text-app-muted hover:text-blue-400">
+                                            <Facebook size={14} className="md:w-4 md:h-4" />
+                                            <span>Face</span>
                                         </button>
-                                        <button onClick={onShareTikTok} className="glass-button px-4 py-2 rounded-full flex items-center gap-2 text-sm text-app-muted hover:text-pink-400">
-                                            <Music size={16} />
+                                        <button onClick={onShareTikTok} className="glass-button px-3 py-1.5 md:px-4 md:py-2 rounded-full flex items-center gap-2 text-xs md:text-sm text-app-muted hover:text-pink-400">
+                                            <Music size={14} className="md:w-4 md:h-4" />
                                             <span>TikTok</span>
                                         </button>
                                     </div>

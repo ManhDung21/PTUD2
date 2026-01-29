@@ -6,6 +6,7 @@ export interface DescriptionResponse {
     source: string;
     image_url?: string | null;
     prompt?: string | null;
+    conversation_id?: string | null;
 }
 
 export interface HistoryItem {
@@ -17,6 +18,14 @@ export interface HistoryItem {
     full_description: string;
     image_url?: string | null;
     prompt?: string | null;
+    conversation_id?: string | null;
+}
+
+export interface Conversation {
+    id: string;
+    title: string;
+    created_at: string;
+    updated_at: string;
 }
 
 export interface ImageItem {

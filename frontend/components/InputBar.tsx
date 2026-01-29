@@ -22,6 +22,7 @@ interface InputBarProps {
     isSidebarOpen: boolean;
     selectedStyle: string;
     onStyleChange: (style: string) => void;
+    cameraStream: MediaStream | null;
 }
 
 export const InputBar: React.FC<InputBarProps> = ({
@@ -38,13 +39,28 @@ export const InputBar: React.FC<InputBarProps> = ({
     videoRef,
     isSidebarOpen,
     selectedStyle,
-    onStyleChange
+    onStyleChange,
+    cameraStream
 }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const mobileCameraRef = useRef<HTMLInputElement>(null);
     const [isFocused, setIsFocused] = useState(false);
     const [showStyles, setShowStyles] = useState(false);
 
     const styles = ["Tiếp thị", "Sáng tạo", "Chuyên nghiệp", "Hài hước"];
+
+    const handleCameraClick = () => {
+        // Simple check for mobile/tablet screen width (md breakpoint is usually 768px in Tailwind)
+        // If window innerWidth is less than 768px, we assume it's a mobile device and use native camera.
+        // For a more robust check, we could inspect navigator.userAgent, but width is often sufficient for layout-based decisions.
+        const isMobile = window.innerWidth < 768;
+
+        if (isMobile) {
+            mobileCameraRef.current?.click();
+        } else {
+            onToggleCamera();
+        }
+    };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === "Enter" && !e.shiftKey) {
@@ -78,7 +94,7 @@ export const InputBar: React.FC<InputBarProps> = ({
     return (
         <div
             className={clsx(
-                "fixed bottom-6 z-[100] flex justify-center px-4 pointer-events-auto transition-all duration-300 ease-in-out",
+                "fixed bottom-2 md:bottom-6 z-[100] flex justify-center px-2 md:px-4 pointer-events-auto transition-all duration-300 ease-in-out",
                 "left-0 right-0" // Always centered, does not shift with sidebar
             )}
         >
@@ -90,7 +106,24 @@ export const InputBar: React.FC<InputBarProps> = ({
                         exit={{ opacity: 0, scale: 0.9 }}
                         className="absolute bottom-24 bg-black rounded-3xl overflow-hidden shadow-2xl pointer-events-auto border border-white/20"
                     >
-                        <video ref={videoRef} autoPlay playsInline className="w-[300px] h-[400px] object-cover" />
+                        <video
+                            ref={(el) => {
+                                // Assign to the forwarded ref
+                                if (videoRef) {
+                                    // Cast because RefObject is technically readonly but we need to assign it here for the DOM ref pattern
+                                    (videoRef as React.MutableRefObject<HTMLVideoElement | null>).current = el;
+                                }
+                                // Attach stream
+                                if (el && cameraStream) {
+                                    el.srcObject = cameraStream;
+                                    el.play().catch(e => console.error("Error playing video:", e));
+                                }
+                            }}
+                            autoPlay
+                            playsInline
+                            muted
+                            className="w-[300px] h-[400px] object-cover"
+                        />
                         <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
                             <button onClick={onCapture} className="w-16 h-16 rounded-full border-4 border-white bg-white/20 backdrop-blur-sm"></button>
                             <button onClick={onToggleCamera} className="absolute right-4 top-4 p-2 bg-black/50 rounded-full text-white">
@@ -110,7 +143,7 @@ export const InputBar: React.FC<InputBarProps> = ({
                 }}
                 transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                 className={clsx(
-                    "pointer-events-auto relative flex flex-col gap-2 p-2 rounded-[32px] transition-colors duration-300",
+                    "pointer-events-auto relative flex flex-col gap-2 p-1.5 md:p-2 rounded-[24px] md:rounded-[32px] transition-colors duration-300",
                     "ios-input"
                 )}
             >
@@ -197,8 +230,18 @@ export const InputBar: React.FC<InputBarProps> = ({
                             className="hidden"
                         />
 
+                        {/* Hidden Native Camera Input for Mobile */}
+                        <input
+                            type="file"
+                            ref={mobileCameraRef}
+                            onChange={handleFileChange}
+                            accept="image/*"
+                            capture="environment"
+                            className="hidden"
+                        />
+
                         <button
-                            onClick={onToggleCamera}
+                            onClick={handleCameraClick}
                             className={clsx(
                                 "p-2.5 rounded-full transition-colors",
                                 cameraActive ? "text-red-400 bg-glass-highlight" : "text-app-muted hover:bg-glass-highlight hover:text-app-text"

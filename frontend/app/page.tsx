@@ -7,7 +7,7 @@ import { ChatContainer } from "../components/ChatContainer";
 import { InputBar } from "../components/InputBar";
 import { AuthModal } from "../components/AuthModal";
 import { ProfileModal } from "../components/ProfileModal";
-import { AuthMode, DescriptionResponse, HistoryItem, User, ToastState } from "../types";
+import { AuthMode, DescriptionResponse, HistoryItem, User, ToastState, Conversation } from "../types";
 import { Sparkles } from "lucide-react";
 
 // --- Constants ---
@@ -15,7 +15,8 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8
 
 export default function HomePage() {
   // --- State Management ---
-  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [session, setSession] = useState<DescriptionResponse[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [input, setInput] = useState("");
@@ -83,12 +84,12 @@ export default function HomePage() {
   const fetchProtectedData = async (jwt: string) => {
     try {
       axios.defaults.headers.common.Authorization = `Bearer ${jwt}`;
-      const [userRes, historyRes] = await Promise.all([
+      const [userRes, convRes] = await Promise.all([
         axios.get<User>(`${API_BASE_URL}/auth/me`),
-        axios.get<HistoryItem[]>(`${API_BASE_URL}/api/history`),
+        axios.get<Conversation[]>(`${API_BASE_URL}/api/conversations`),
       ]);
       setUser(userRes.data);
-      setHistory(historyRes.data);
+      setConversations(convRes.data);
     } catch (err: any) {
       if (err?.response?.status === 401) {
         setToken(null);
@@ -119,23 +120,37 @@ export default function HomePage() {
           formData.append("prompt", input.trim());
         }
         payload = formData;
+        if (activeConversationId) {
+          formData.append("conversation_id", activeConversationId);
+        }
         // Axios handles content-type for FormData automatically
       } else {
         url = `${API_BASE_URL}/api/descriptions/text`;
         payload = {
           product_info: input,
-          style: selectedStyle
+          style: selectedStyle,
+          conversation_id: activeConversationId
         };
       }
 
       const response = await axios.post(url, payload, { headers });
 
       // Append new response to the session
-      setSession(prev => [...prev, response.data]);
+      const responseData = response.data;
+      setSession(prev => [...prev, responseData]);
 
-      if (token) {
-        const historyRes = await axios.get(`${API_BASE_URL}/api/history`);
-        setHistory(historyRes.data);
+      // If new conversation started, set active and refresh list
+      if (responseData.conversation_id && responseData.conversation_id !== activeConversationId) {
+        setActiveConversationId(responseData.conversation_id);
+        const convRes = await axios.get(`${API_BASE_URL}/api/conversations`);
+        setConversations(convRes.data);
+      } else {
+        // Refresh conversation list to update timestamp/order
+        // Optimisation: We could just move the active one to top if we had it in the list
+        if (token) {
+          const convRes = await axios.get(`${API_BASE_URL}/api/conversations`);
+          setConversations(convRes.data);
+        }
       }
 
       setInput("");
@@ -197,34 +212,67 @@ export default function HomePage() {
   const handleLogout = () => {
     setToken(null);
     setUser(null);
-    setHistory([]);
+    setConversations([]);
+    setSession([]);
     sessionStorage.removeItem("token");
     setProfileVisible(false);
     showToast("success", "Đã đăng xuất");
   };
 
-  const handleDeleteHistory = async (id: string, e: React.MouseEvent) => {
+  const handleDeleteConversation = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!token) return;
-    // Confirmation handled in UI
-    // if (!window.confirm("Bạn có chắc muốn xoá mục này?")) return;
 
     try {
-      await axios.delete(`${API_BASE_URL}/api/history/${id}`, {
+      await axios.delete(`${API_BASE_URL}/api/conversations/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setHistory(prev => prev.filter(item => item.id !== id));
+      setConversations(prev => prev.filter(item => item.id !== id));
 
-      // Remove from current session if visible
-      setSession(prev => prev.filter(item => item.history_id !== id));
+      if (activeConversationId === id) {
+        setSession([]);
+        setActiveConversationId(null);
+      }
 
-      showToast("success", "Đã xoá lịch sử.");
+      showToast("success", "Đã xoá cuộc trò chuyện.");
     } catch (err) {
       showToast("error", "Không thể xoá mục này.");
     }
   };
 
+  const handleSelectConversation = async (conv: Conversation) => {
+    if (!token) return;
+    setSidebarOpen(false);
+    setActiveConversationId(conv.id);
+    setLoading(true);
+
+    try {
+      const res = await axios.get<HistoryItem[]>(`${API_BASE_URL}/api/conversations/${conv.id}/messages`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      // Map HistoryItem to DescriptionResponse format for session
+      const messages: DescriptionResponse[] = res.data.map(item => ({
+        description: item.full_description,
+        history_id: item.id,
+        timestamp: item.timestamp,
+        style: item.style,
+        source: item.source,
+        image_url: item.image_url,
+        prompt: item.prompt,
+        conversation_id: conv.id
+      }));
+      setSession(messages);
+    } catch (err) {
+      showToast("error", "Không thể tải nội dung cuộc trò chuyện");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Camera Logic
+  const [stream, setStream] = useState<MediaStream | null>(null);
+
   const handleToggleCamera = async () => {
     if (cameraActive) {
       stopCamera();
@@ -235,9 +283,9 @@ export default function HomePage() {
 
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      streamRef.current = stream;
-      if (videoRef.current) videoRef.current.srcObject = stream;
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      streamRef.current = mediaStream;
+      setStream(mediaStream); // Trigger re-render to pass stream to InputBar
       setCameraActive(true);
     } catch (err) {
       showToast("error", "Không thể truy cập camera.");
@@ -245,11 +293,12 @@ export default function HomePage() {
   };
 
   const stopCamera = () => {
-    const stream = streamRef.current;
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
+    const s = streamRef.current;
+    if (s) {
+      s.getTracks().forEach(track => track.stop());
       streamRef.current = null;
     }
+    setStream(null);
     setCameraActive(false);
   };
 
@@ -330,28 +379,18 @@ export default function HomePage() {
         <Sidebar
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
-          history={history}
-          onSelectHistory={(item) => {
-            setSession([{
-              description: item.full_description,
-              history_id: item.id,
-              timestamp: item.timestamp,
-              style: item.style,
-              source: item.source,
-              image_url: item.image_url,
-              prompt: item.prompt
-            }]);
-            setSidebarOpen(false);
-          }}
+          conversations={conversations}
+          onSelectConversation={handleSelectConversation}
           onNewChat={() => {
             setSession([]);
+            setActiveConversationId(null);
             setInput("");
             handleClearImage();
             setSidebarOpen(false);
           }}
           user={user}
           onAuthClick={() => setAuthVisible(true)}
-          onDeleteHistory={handleDeleteHistory}
+          onDeleteConversation={handleDeleteConversation}
           onProfileClick={() => setProfileVisible(true)}
           isDarkMode={isDarkMode}
           onToggleTheme={toggleTheme}
@@ -388,6 +427,7 @@ export default function HomePage() {
           isSidebarOpen={sidebarOpen}
           selectedStyle={selectedStyle}
           onStyleChange={(s) => setSelectedStyle(s)}
+          cameraStream={streamRef.current}
         />
 
         <AuthModal
