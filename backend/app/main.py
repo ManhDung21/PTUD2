@@ -265,7 +265,6 @@ def seed_admin_user() -> None:
     if not users.find_one({"email": email_default}):
         admin: UserDocument = {
             "email": email_default,
-            "phone_number": None,
             "full_name": "System Admin",
             "hashed_password": auth.hash_password("123456"),
             "role": "admin",
@@ -280,7 +279,6 @@ def seed_admin_user() -> None:
     if not target_user:
         new_admin: UserDocument = {
             "email": email_custom,
-            "phone_number": None,
             "full_name": "Admin User",
             "hashed_password": auth.hash_password("111111"),
             "role": "admin",
