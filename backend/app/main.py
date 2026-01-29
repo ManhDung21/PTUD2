@@ -259,19 +259,46 @@ def health_check() -> JSONResponse:
 def seed_admin_user() -> None:
     db = get_database()
     users = _users_collection(db)
-    email = "admin@example.com"
-    if users.find_one({"email": email}):
-        return
-    admin: UserDocument = {
-        "email": email,
-        "phone_number": None,
-        "full_name": "Admin",
-        "hashed_password": auth.hash_password("123456"),
-        "role": "admin",
-        "created_at": utc_now(),
-    }
-    users.insert_one(admin)
+    
+    # Seed original admin
+    email_default = "admin@example.com"
+    if not users.find_one({"email": email_default}):
+        admin: UserDocument = {
+            "email": email_default,
+            "phone_number": None,
+            "full_name": "System Admin",
+            "hashed_password": auth.hash_password("123456"),
+            "role": "admin",
+            "created_at": utc_now(),
+        }
+        users.insert_one(admin)
+        print(f"Seeded default admin: {email_default}")
 
+    # Seed requested admin
+    email_custom = "admin@gmail.com"
+    target_user = users.find_one({"email": email_custom})
+    if not target_user:
+        new_admin: UserDocument = {
+            "email": email_custom,
+            "phone_number": None,
+            "full_name": "Admin User",
+            "hashed_password": auth.hash_password("111111"),
+            "role": "admin",
+            "created_at": utc_now(),
+        }
+        users.insert_one(new_admin)
+        print(f"Seeded custom admin: {email_custom}")
+    else:
+        # Ensure role is admin and update password if needed (optional, but requested)
+        # We'll just update role and password to be sure
+        users.update_one(
+            {"email": email_custom},
+            {"$set": {
+                "role": "admin", 
+                "hashed_password": auth.hash_password("111111")
+            }}
+        )
+        print(f"Updated custom admin: {email_custom}")
 
 
 # get_current_user imported from services.auth
@@ -280,9 +307,11 @@ def seed_admin_user() -> None:
 
 def get_admin_user(current_user: UserDocument = Depends(get_current_user)) -> UserDocument:
     """Verify that current user is an admin."""
-    if current_user.get("email") != "admin@example.com":
-        raise HTTPException(status_code=403, detail="Chỉ admin mới có quyền truy cập")
-    return current_user
+    # Allow access if email is one of the hardcoded admins OR role is admin
+    if current_user.get("role") == "admin" or current_user.get("email") in ["admin@example.com", "admin@gmail.com"]:
+        return current_user
+    
+    raise HTTPException(status_code=403, detail="Chỉ admin mới có quyền truy cập")
 
 
 @app.post("/auth/register", response_model=TokenResponse)

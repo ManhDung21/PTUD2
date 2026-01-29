@@ -3,6 +3,13 @@ import os
 
 # Ensure the backend directory is in sys.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Inject dummy env vars for pydantic validation if missing
+if "GEMINI_API_KEY" not in os.environ:
+    os.environ["GEMINI_API_KEY"] = "dummy_key_for_script"
+if "JWT_SECRET" not in os.environ:
+    os.environ["JWT_SECRET"] = "dummy_secret_for_script"
+
 sys.path.append(current_dir)
 
 from app.db.session import get_database, init_db
