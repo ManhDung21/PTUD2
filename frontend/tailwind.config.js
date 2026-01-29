@@ -5,7 +5,18 @@ module.exports = {
         "./components/**/*.{js,ts,jsx,tsx,mdx}",
     ],
     theme: {
-        extend: {},
+        extend: {
+            colors: {
+                app: 'var(--bg-app)',
+                'app-text': 'var(--text-app)',
+                'app-muted': 'var(--text-muted)',
+                'app-light': 'var(--text-light)',
+                panel: 'var(--panel-bg)',
+                'panel-border': 'var(--panel-border)',
+                input: 'var(--input-bg)',
+                'input-border': 'var(--input-border)',
+            }
+        },
     },
     plugins: [],
 };

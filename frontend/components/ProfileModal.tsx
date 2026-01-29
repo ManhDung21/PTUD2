@@ -48,7 +48,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
                         <button
                             onClick={onClose}
-                            className="absolute top-5 right-5 text-white/50 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
+                            className="absolute top-5 right-5 text-app-muted hover:text-app-text transition-colors p-1 rounded-full hover:bg-glass-highlight"
                         >
                             <X size={20} />
                         </button>
@@ -57,11 +57,11 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                             <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-4xl shadow-lg mb-4 cursor-default">
                                 {user.full_name?.charAt(0).toUpperCase() || "U"}
                             </div>
-                            <h2 className="text-2xl font-bold text-white tracking-tight">{user.full_name}</h2>
+                            <h2 className="text-2xl font-bold text-app-text tracking-tight">{user.full_name}</h2>
                             <div className="flex items-center gap-2 mt-1">
                                 <span className={clsx(
                                     "px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider",
-                                    user.role === 'admin' ? "bg-purple-500/20 text-purple-300" : "bg-white/10 text-white/50"
+                                    user.role === 'admin' ? "bg-purple-500/20 text-purple-300" : "bg-glass-highlight text-app-muted"
                                 )}>
                                     {user.role === 'admin' ? "Administrator" : "Thành viên"}
                                 </span>
@@ -70,28 +70,28 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
                         <div className="space-y-4 relative z-10">
                             <div className="glass-button p-3 rounded-2xl flex items-center gap-3">
-                                <Mail size={18} className="text-white/50" />
+                                <Mail size={18} className="text-app-muted" />
                                 <div className="flex-1 min-w-0">
-                                    <div className="text-xs text-white/40 uppercase tracking-wide">Email</div>
-                                    <div className="text-white/90 truncate">{user.email || "Chưa cập nhật"}</div>
+                                    <div className="text-xs text-app-muted uppercase tracking-wide">Email</div>
+                                    <div className="text-app-text truncate">{user.email || "Chưa cập nhật"}</div>
                                 </div>
                             </div>
 
                             <div className="glass-button p-3 rounded-2xl flex items-center gap-3">
-                                <Phone size={18} className="text-white/50" />
+                                <Phone size={18} className="text-app-muted" />
                                 <div className="flex-1 min-w-0">
-                                    <div className="text-xs text-white/40 uppercase tracking-wide">Số điện thoại</div>
-                                    <div className="text-white/90 truncate">{user.phone_number || "Chưa cập nhật"}</div>
+                                    <div className="text-xs text-app-muted uppercase tracking-wide">Số điện thoại</div>
+                                    <div className="text-app-text truncate">{user.phone_number || "Chưa cập nhật"}</div>
                                 </div>
                             </div>
 
-                            <div className="pt-4 mt-4 border-t border-white/10">
+                            <div className="pt-4 mt-4 border-t border-panel-border">
                                 <button
                                     onClick={() => {
                                         onLogout();
                                         onClose();
                                     }}
-                                    className="w-full bg-white/5 hover:bg-red-500/10 hover:border-red-500/30 border border-white/10 text-white hover:text-red-400 h-[52px] rounded-full font-bold text-lg transition-all flex items-center justify-center gap-2 group"
+                                    className="w-full bg-glass-highlight hover:bg-red-500/10 hover:border-red-500/30 border border-panel-border text-app-text hover:text-red-400 h-[52px] rounded-full font-bold text-lg transition-all flex items-center justify-center gap-2 group"
                                 >
                                     <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
                                     Đăng xuất

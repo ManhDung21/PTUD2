@@ -121,7 +121,7 @@ export const InputBar: React.FC<InputBarProps> = ({
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 10 }}
-                            className="absolute bottom-full left-4 mb-2 p-2 rounded-[20px] bg-[#1a1a1a] shadow-2xl border border-white/10 flex flex-col gap-1 min-w-[140px] z-[110]"
+                            className="absolute bottom-full left-4 mb-2 p-2 rounded-[20px] bg-panel shadow-2xl border border-panel-border flex flex-col gap-1 min-w-[140px] z-[110]"
                         >
                             {styles.map((s) => (
                                 <button
@@ -133,8 +133,8 @@ export const InputBar: React.FC<InputBarProps> = ({
                                     className={clsx(
                                         "px-4 py-2 rounded-[12px] text-sm text-left transition-colors",
                                         selectedStyle === s
-                                            ? "bg-white/20 text-white font-medium"
-                                            : "text-white/70 hover:bg-white/10 hover:text-white"
+                                            ? "bg-glass-highlight text-app-text font-medium"
+                                            : "text-app-muted hover:bg-glass-highlight hover:text-app-text"
                                     )}
                                 >
                                     {s}
@@ -154,10 +154,10 @@ export const InputBar: React.FC<InputBarProps> = ({
                             className="relative px-2 pt-2"
                         >
                             <div className="relative inline-block">
-                                <img src={selectedImagePreview} alt="Preview" className="h-24 rounded-xl object-cover border border-white/10" />
+                                <img src={selectedImagePreview} alt="Preview" className="h-24 rounded-xl object-cover border border-panel-border" />
                                 <button
                                     onClick={onClearImage}
-                                    className="absolute -top-2 -right-2 bg-black/50 text-white rounded-full p-1 backdrop-blur-md"
+                                    className="absolute -top-2 -right-2 bg-panel text-app-text rounded-full p-1 backdrop-blur-md hover:bg-glass-highlight transition-colors"
                                 >
                                     <X size={12} />
                                 </button>
@@ -174,18 +174,18 @@ export const InputBar: React.FC<InputBarProps> = ({
                             onClick={() => setShowStyles(!showStyles)}
                             className={clsx(
                                 "p-2.5 rounded-full transition-colors flex items-center gap-1",
-                                showStyles ? "bg-white/20 text-white" : "text-white/70 hover:bg-white/10 hover:text-white"
+                                showStyles ? "bg-glass-highlight text-app-text" : "text-app-muted hover:bg-glass-highlight hover:text-app-text"
                             )}
                             title="Change Style"
                         >
                             <Sparkles size={20} strokeWidth={1.5} />
                         </button>
 
-                        <div className="w-[1px] h-6 bg-white/10 mx-1"></div>
+                        <div className="w-[1px] h-6 bg-panel-border mx-1"></div>
 
                         <button
                             onClick={() => fileInputRef.current?.click()}
-                            className="p-2.5 rounded-full text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                            className="p-2.5 rounded-full text-app-muted hover:bg-glass-highlight hover:text-app-text transition-colors"
                         >
                             <Image size={24} strokeWidth={1.5} />
                         </button>
@@ -201,7 +201,7 @@ export const InputBar: React.FC<InputBarProps> = ({
                             onClick={onToggleCamera}
                             className={clsx(
                                 "p-2.5 rounded-full transition-colors",
-                                cameraActive ? "text-red-400 bg-white/10" : "text-white/70 hover:bg-white/10 hover:text-white"
+                                cameraActive ? "text-red-400 bg-glass-highlight" : "text-app-muted hover:bg-glass-highlight hover:text-app-text"
                             )}
                         >
                             <Camera size={24} strokeWidth={1.5} />
@@ -223,7 +223,7 @@ export const InputBar: React.FC<InputBarProps> = ({
                         onPaste={handlePaste}
                         placeholder={`Hỏi (${selectedStyle})...`}
                         rows={1}
-                        className="flex-1 bg-transparent border-none outline-none text-white placeholder-white/40 resize-none py-3.5 px-2 max-h-[120px] custom-scrollbar text-[16px] leading-relaxed"
+                        className="flex-1 bg-transparent border-none outline-none text-app-text placeholder-app-muted resize-none py-3.5 px-2 max-h-[120px] custom-scrollbar text-[16px] leading-relaxed"
                         style={{ minHeight: "24px" }}
                     />
 
@@ -235,7 +235,7 @@ export const InputBar: React.FC<InputBarProps> = ({
                             className={clsx(
                                 "p-3 rounded-full transition-all duration-300 flex items-center justify-center",
                                 loading || (!input.trim() && !selectedImagePreview)
-                                    ? "bg-white/5 text-white/20 cursor-not-allowed"
+                                    ? "bg-panel text-app-muted cursor-not-allowed"
                                     : "bg-blue-600 text-white shadow-lg shadow-blue-500/30 hover:bg-blue-500 hover:scale-105"
                             )}
                         >

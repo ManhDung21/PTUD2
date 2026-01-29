@@ -5,37 +5,63 @@
 @tailwind utilities;
 
 :root {
-  /* iOS 26 Futuristic Palette */
-  --bg-deep: #000000;
+  /* --- Semantic Theme Variables (Light Mode Default) --- */
+  --bg-app: #F0F4F8;
+  --text-app: #111827;
+  --text-muted: #4B5563;
+  --text-light: #F9FAFB;
+  /* Always light text */
 
-  /* Aurora Colors */
-  --aurora-1: #2E1065;
-  /* Deep Purple */
-  --aurora-2: #0F172A;
-  /* Slate */
-  --aurora-3: #1E3A8A;
-  /* Blue */
-  --aurora-accent: #7C3AED;
-  /* Violet */
+  --panel-bg: rgba(255, 255, 255, 0.75);
+  --panel-border: rgba(0, 0, 0, 0.05);
+  --glass-highlight: rgba(255, 255, 255, 0.5);
 
-  --text-primary: #FFFFFF;
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --text-tertiary: rgba(255, 255, 255, 0.4);
+  --input-bg: rgba(255, 255, 255, 0.8);
+  --input-border: rgba(0, 0, 0, 0.1);
 
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-surface: rgba(255, 255, 255, 0.05);
-  --glass-highlight: rgba(255, 255, 255, 0.1);
+  --primary-gradient-start: #3B82F6;
+  --primary-gradient-end: #8B5CF6;
+
+  /* Aurora Colors (Light) */
+  --aurora-1: #E0E7FF;
+  --aurora-2: #DBEAFE;
+  --aurora-3: #EDE9FE;
+  --aurora-accent: #C4B5FD;
 
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
+.dark {
+  /* --- Dark Mode Overrides --- */
+  --bg-app: #000000;
+  --text-app: #FFFFFF;
+  --text-muted: rgba(255, 255, 255, 0.5);
+  --text-light: #FFFFFF;
+
+  --panel-bg: rgba(255, 255, 255, 0.05);
+  --panel-border: rgba(255, 255, 255, 0.1);
+  --glass-highlight: rgba(255, 255, 255, 0.1);
+
+  --input-bg: rgba(30, 30, 30, 0.6);
+  --input-border: rgba(255, 255, 255, 0.2);
+
+  --primary-gradient-start: #3B82F6;
+  --primary-gradient-end: #8B5CF6;
+
+  /* Aurora Colors (Dark) */
+  --aurora-1: #2E1065;
+  --aurora-2: #0F172A;
+  --aurora-3: #1E3A8A;
+  --aurora-accent: #7C3AED;
+}
+
 body {
-  background-color: var(--bg-deep);
-  color: var(--text-primary);
+  background-color: var(--bg-app);
+  color: var(--text-app);
   margin: 0;
   font-family: var(--font-family);
   overflow: hidden;
-  /* Prevent body scroll, handle in components */
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* --- Aurora Background Animation --- */
@@ -46,90 +72,42 @@ body {
   width: 100vw;
   height: 100vh;
   z-index: -1;
-  background: var(--bg-deep);
+  background: var(--bg-app);
   overflow: hidden;
+  transition: background 0.5s ease;
 }
 
-.aurora-blob {
-  position: absolute;
-  filter: blur(80px);
-  opacity: 0.6;
-  border-radius: 50%;
-  animation: float 20s infinite ease-in-out;
-}
-
-.blob-1 {
-  top: -10%;
-  left: -10%;
-  width: 50vw;
-  height: 50vw;
-  background: var(--aurora-1);
-  animation-delay: 0s;
-}
-
-.blob-2 {
-  bottom: -10%;
-  right: -10%;
-  width: 60vw;
-  height: 60vw;
-  background: var(--aurora-3);
-  animation-delay: -5s;
-}
-
-.blob-3 {
-  top: 40%;
-  left: 40%;
-  width: 40vw;
-  height: 40vw;
-  background: var(--aurora-accent);
-  opacity: 0.3;
-  animation-delay: -10s;
-}
-
-@keyframes float {
-  0% {
-    transform: translate(0, 0) scale(1);
-  }
-
-  33% {
-    transform: translate(30px, -50px) scale(1.1);
-  }
-
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
-  }
-
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-}
+/* ... blob animations ... */
 
 /* --- Glass Utilities --- */
 .glass-panel {
-  background: var(--glass-surface);
+  background: var(--panel-bg);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--panel-border);
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .glass-panel-heavy {
-  background: rgba(20, 20, 20, 0.6);
+  background: var(--panel-bg);
+  /* Unified heavy panel too for simplicity, or define specific if needed */
   backdrop-filter: blur(40px);
   -webkit-backdrop-filter: blur(40px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--panel-border);
 }
 
 .glass-button {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--panel-bg);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--panel-border);
+  color: var(--text-app);
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .glass-button:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.25);
+  background: var(--glass-highlight);
+  border-color: var(--panel-border);
   transform: translateY(-1px);
 }
 
@@ -139,22 +117,18 @@ body {
 
 /* --- Inputs --- */
 .ios-input {
-  background: rgba(30, 30, 30, 0.6);
-  /* Lighter background */
+  background: var(--input-bg);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  /* Stronger border */
-  color: white;
+  border: 1px solid var(--input-border);
+  color: var(--text-app);
   transition: all 0.3s ease;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-  /* Add shadow for lift */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
 .ios-input:focus-within {
-  /* Use focus-within if the container has the class */
-  background: rgba(40, 40, 40, 0.8);
-  border-color: rgba(255, 255, 255, 0.4);
-  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
+  background: var(--input-bg);
+  border-color: var(--primary-gradient-start);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
 /* --- Text Gradients --- */

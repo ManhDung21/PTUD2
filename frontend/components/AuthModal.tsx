@@ -85,19 +85,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
                         <button
                             onClick={onClose}
-                            className="absolute top-5 right-5 text-white/50 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
+                            className="absolute top-5 right-5 text-app-muted hover:text-app-text transition-colors p-1 rounded-full hover:bg-glass-highlight"
                         >
                             <X size={20} />
                         </button>
 
                         <div className="mb-8 relative z-10">
-                            <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">
+                            <h2 className="text-3xl font-bold text-app-text mb-2 tracking-tight">
                                 {mode === "login" && "Chào mừng trở lại"}
                                 {mode === "register" && "Tạo tài khoản"}
                                 {mode === "forgot" && "Đặt lại mật khẩu"}
                                 {mode === "reset" && "Mật khẩu mới"}
                             </h2>
-                            <p className="text-white/60 text-sm font-light">
+                            <p className="text-app-muted text-sm font-light">
                                 {mode === "login" && "Nhập thông tin để truy cập lịch sử."}
                                 {mode === "register" && "Tham gia tương lai của trò chuyện AI."}
                             </p>
@@ -112,7 +112,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                                         placeholder="Email hoặc SĐT"
                                         value={formData.identifier}
                                         onChange={handleChange}
-                                        className="ios-input w-full rounded-2xl px-4 py-3.5 placeholder:text-white/30"
+                                        className="ios-input w-full rounded-2xl px-4 py-3.5 placeholder:text-app-muted/50"
                                         required
                                     />
                                     <div className="relative">
@@ -122,13 +122,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                                             placeholder="Mật khẩu"
                                             value={formData.password}
                                             onChange={handleChange}
-                                            className="ios-input w-full rounded-2xl px-4 py-3.5 placeholder:text-white/30 pr-12"
+                                            className="ios-input w-full rounded-2xl px-4 py-3.5 placeholder:text-app-muted/50 pr-12"
                                             required
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors"
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-app-muted hover:text-app-text transition-colors"
                                         >
                                             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                         </button>
@@ -137,7 +137,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                                         <button
                                             type="button"
                                             onClick={() => setMode("forgot")}
-                                            className="text-sm text-purple-300 hover:text-purple-200 transaction-colors"
+                                            className="text-sm text-purple-400 hover:text-purple-500 transaction-colors"
                                         >
                                             Quên mật khẩu?
                                         </button>
@@ -147,9 +147,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
                             {mode === "register" && (
                                 <>
-                                    <input type="text" name="full_name" placeholder="Họ và tên" value={formData.full_name} onChange={handleChange} className="ios-input w-full rounded-2xl px-4 py-3.5 placeholder:text-white/30" />
-                                    <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} className="ios-input w-full rounded-2xl px-4 py-3.5 placeholder:text-white/30" required />
-                                    <input type="text" name="phone_number" placeholder="Số điện thoại" value={formData.phone_number} onChange={handleChange} className="ios-input w-full rounded-2xl px-4 py-3.5 placeholder:text-white/30" />
+                                    <input type="text" name="full_name" placeholder="Họ và tên" value={formData.full_name} onChange={handleChange} className="ios-input w-full rounded-2xl px-4 py-3.5 placeholder:text-app-muted/50" />
+                                    <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} className="ios-input w-full rounded-2xl px-4 py-3.5 placeholder:text-app-muted/50" required />
+                                    <input type="text" name="phone_number" placeholder="Số điện thoại" value={formData.phone_number} onChange={handleChange} className="ios-input w-full rounded-2xl px-4 py-3.5 placeholder:text-app-muted/50" />
                                     <div className="relative">
                                         <input
                                             type={showPassword ? "text" : "password"}
@@ -157,13 +157,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                                             placeholder="Mật khẩu"
                                             value={formData.password}
                                             onChange={handleChange}
-                                            className="ios-input w-full rounded-2xl px-4 py-3.5 placeholder:text-white/30 pr-12"
+                                            className="ios-input w-full rounded-2xl px-4 py-3.5 placeholder:text-app-muted/50 pr-12"
                                             required
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors"
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-app-muted hover:text-app-text transition-colors"
                                         >
                                             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                         </button>
@@ -172,14 +172,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                             )}
 
                             {mode === "forgot" && (
-                                <input type="email" name="email" placeholder="Email đăng ký" value={formData.email} onChange={handleChange} className="ios-input w-full rounded-2xl px-4 py-3.5 placeholder:text-white/30" required />
+                                <input type="email" name="email" placeholder="Email đăng ký" value={formData.email} onChange={handleChange} className="ios-input w-full rounded-2xl px-4 py-3.5 placeholder:text-app-muted/50" required />
                             )}
 
+                            {/* Submit Button */}
                             {/* Submit Button */}
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full bg-white text-black h-[52px] rounded-full font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all mt-4 flex items-center justify-center gap-2 shadow-lg shadow-white/10"
+                                className="w-full bg-app-text text-app h-[52px] rounded-full font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all mt-4 flex items-center justify-center gap-2 shadow-lg shadow-black/10"
                             >
                                 {loading && <Loader2 size={20} className="animate-spin" />}
                                 {mode === "login" ? "Đăng nhập" : mode === "register" ? "Đăng ký" : "Gửi liên kết"}
@@ -187,11 +188,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                             </button>
                         </form>
 
-                        <div className="mt-8 text-center text-sm text-white/50 relative z-10">
+                        <div className="mt-8 text-center text-sm text-app-muted relative z-10">
                             {mode === "login" ? (
-                                <>Chưa có tài khoản? <button onClick={() => setMode("register")} className="text-white font-medium hover:underline">Đăng ký</button></>
+                                <>Chưa có tài khoản? <button onClick={() => setMode("register")} className="text-app-text font-medium hover:underline">Đăng ký</button></>
                             ) : (
-                                <><button onClick={() => setMode("login")} className="text-white font-medium hover:underline">Quay lại Đăng nhập</button></>
+                                <><button onClick={() => setMode("login")} className="text-app-text font-medium hover:underline">Quay lại Đăng nhập</button></>
                             )}
                         </div>
                     </motion.div>

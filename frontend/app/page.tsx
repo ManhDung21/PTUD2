@@ -16,7 +16,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8
 export default function HomePage() {
   // --- State Management ---
   const [history, setHistory] = useState<HistoryItem[]>([]);
-  const [result, setResult] = useState<DescriptionResponse | null>(null);
+  const [session, setSession] = useState<DescriptionResponse[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [input, setInput] = useState("");
   const [selectedStyle, setSelectedStyle] = useState("Tiếp thị");
@@ -42,6 +42,27 @@ export default function HomePage() {
   // Sidebar State
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Theme State
+  const [isDarkMode, setIsDarkMode] = useState(true); // Default to dark for "Gemini" feel initially
+
+  useEffect(() => {
+    // Check local storage or system preference
+    const storedTheme = localStorage.getItem("theme");
+    if (storedTheme) {
+      setIsDarkMode(storedTheme === "dark");
+    } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      setIsDarkMode(true);
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    setIsDarkMode(prev => {
+      const newMode = !prev;
+      localStorage.setItem("theme", newMode ? "dark" : "light");
+      return newMode;
+    });
+  };
+
   // Toast
   const [toast, setToast] = useState<ToastState | null>(null);
 
@@ -49,15 +70,6 @@ export default function HomePage() {
     setToast({ id: Date.now(), type, message });
     setTimeout(() => setToast(null), 4000);
   }, []);
-
-  // Ensure Sparkles is available or reuse if already imported (it's not in the snippet view imports but commonly used)
-  // Checking imports...
-  // Actually, I should check the imports at top of file. 
-  // View file showed: import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-  // import axios from "axios";
-  // ...
-  // It relies on implicit view. I'll check if I need to add import.
-
 
   // --- Initial Data Loading ---
   useEffect(() => {
@@ -90,7 +102,8 @@ export default function HomePage() {
   const handleSend = async () => {
     if (!input.trim() && !selectedImageFile) return;
     setLoading(true);
-    setResult(null);
+
+    // Note: session is NOT cleared here to allow continuous chat
 
     try {
       let url = "";
@@ -117,7 +130,8 @@ export default function HomePage() {
 
       const response = await axios.post(url, payload, { headers });
 
-      setResult(response.data);
+      // Append new response to the session
+      setSession(prev => [...prev, response.data]);
 
       if (token) {
         const historyRes = await axios.get(`${API_BASE_URL}/api/history`);
@@ -200,9 +214,10 @@ export default function HomePage() {
         headers: { Authorization: `Bearer ${token}` }
       });
       setHistory(prev => prev.filter(item => item.id !== id));
-      if (result?.history_id === id) {
-        setResult(null);
-      }
+
+      // Remove from current session if visible
+      setSession(prev => prev.filter(item => item.history_id !== id));
+
       showToast("success", "Đã xoá lịch sử.");
     } catch (err) {
       showToast("error", "Không thể xoá mục này.");
@@ -278,118 +293,122 @@ export default function HomePage() {
   };
 
   return (
-    <div className="relative h-screen w-full overflow-hidden text-white flex">
-      {/* Aurora Background */}
-      <div className="aurora-bg">
-        <div className="aurora-blob blob-1"></div>
-        <div className="aurora-blob blob-2"></div>
-        <div className="aurora-blob blob-3"></div>
-      </div>
-
-      {toast && (
-        <div className={`fixed top-4 right-4 z-[2000] px-4 py-2 rounded-lg text-white font-medium shadow-lg backdrop-blur-md ${toast.type === 'success' ? 'bg-green-500/50' : 'bg-red-500/50'}`}>
-          {toast.message}
+    <div className={isDarkMode ? "dark" : ""}>
+      <div className="relative h-screen w-full overflow-hidden text-app-text flex bg-app transition-colors duration-300">
+        {/* Aurora Background */}
+        <div className="aurora-bg">
+          <div className="aurora-blob blob-1"></div>
+          <div className="aurora-blob blob-2"></div>
+          <div className="aurora-blob blob-3"></div>
         </div>
-      )}
 
-      {/* Header: Menu Button & Brand (Visible when sidebar is closed) */}
-      {!sidebarOpen && (
-        <div className="fixed top-4 left-4 z-50 flex items-center gap-4">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="p-2 glass-button rounded-full hover:bg-white/10 transition-colors"
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
-          </button>
-
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
-              <Sparkles size={20} className="text-white" />
-            </div>
-            <span className="font-bold text-xl text-white/90 tracking-tight drop-shadow-md">FruitText AI</span>
+        {toast && (
+          <div className={`fixed top-4 right-4 z-[2000] px-4 py-2 rounded-lg text-white font-medium shadow-lg backdrop-blur-md ${toast.type === 'success' ? 'bg-green-500/50' : 'bg-red-500/50'}`}>
+            {toast.message}
           </div>
-        </div>
-      )}
+        )}
 
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        history={history}
-        onSelectHistory={(item) => {
-          setResult({
-            description: item.full_description,
-            history_id: item.id,
-            timestamp: item.timestamp,
-            style: item.style,
-            source: item.source,
-            image_url: item.image_url,
-            prompt: item.prompt
-          });
-          setSidebarOpen(false);
-        }}
-        onNewChat={() => {
-          setResult(null);
-          setInput("");
-          handleClearImage();
-          setSidebarOpen(false);
-        }}
-        user={user}
-        onAuthClick={() => setAuthVisible(true)}
-        onDeleteHistory={handleDeleteHistory}
-        onProfileClick={() => setProfileVisible(true)}
-      />
+        {/* Header: Menu Button & Brand (Visible when sidebar is closed) */}
+        {!sidebarOpen && (
+          <div className="fixed top-4 left-4 z-50 flex items-center gap-4">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="p-2 glass-button rounded-full hover:bg-panel transition-colors"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-app-text"><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
+            </button>
 
-      <main className="flex-1 flex flex-col relative w-full h-full z-10 transition-all duration-300">
-        <ChatContainer
-          result={result}
-          loading={loading}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+                <Sparkles size={20} className="text-white" />
+              </div>
+              <span className="font-bold text-xl text-app-text tracking-tight drop-shadow-md">FruitText AI</span>
+            </div>
+          </div>
+        )}
+
+        <Sidebar
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          history={history}
+          onSelectHistory={(item) => {
+            setSession([{
+              description: item.full_description,
+              history_id: item.id,
+              timestamp: item.timestamp,
+              style: item.style,
+              source: item.source,
+              image_url: item.image_url,
+              prompt: item.prompt
+            }]);
+            setSidebarOpen(false);
+          }}
+          onNewChat={() => {
+            setSession([]);
+            setInput("");
+            handleClearImage();
+            setSidebarOpen(false);
+          }}
           user={user}
-          onRead={handleRead}
-          isReading={isReading}
-          onShareFacebook={() => showToast("success", "Tính năng chia sẻ đang được cập nhật")}
-          onShareTikTok={() => showToast("success", "Tính năng chia sẻ đang được cập nhật")}
-          inputContent={{ text: input, image: selectedImagePreview, style: selectedStyle }}
+          onAuthClick={() => setAuthVisible(true)}
+          onDeleteHistory={handleDeleteHistory}
+          onProfileClick={() => setProfileVisible(true)}
+          isDarkMode={isDarkMode}
+          onToggleTheme={toggleTheme}
         />
 
-      </main>
+        <main className="flex-1 flex flex-col relative w-full h-full z-10 transition-all duration-300">
+          <ChatContainer
+            session={session}
+            loading={loading}
+            user={user}
+            onRead={handleRead}
+            isReading={isReading}
+            onShareFacebook={() => showToast("success", "Tính năng chia sẻ đang được cập nhật")}
+            onShareTikTok={() => showToast("success", "Tính năng chia sẻ đang được cập nhật")}
+            inputContent={{ text: input, image: selectedImagePreview, style: selectedStyle }}
+          />
 
-      <InputBar
-        input={input}
-        setInput={setInput}
-        onSend={handleSend}
-        loading={loading}
-        onImageSelect={handleImageSelect}
-        selectedImagePreview={selectedImagePreview}
-        onClearImage={handleClearImage}
-        cameraActive={cameraActive}
-        onToggleCamera={handleToggleCamera}
-        onCapture={handleCapture}
-        videoRef={videoRef}
-        isReading={isReading}
-        onToggleSpeech={() => { }}
-        isSidebarOpen={sidebarOpen}
-        selectedStyle={selectedStyle}
-        onStyleChange={(s) => setSelectedStyle(s)}
-      />
+        </main>
 
-      <AuthModal
-        isOpen={authVisible}
-        onClose={() => setAuthVisible(false)}
-        mode={authMode}
-        setMode={setAuthMode}
-        loading={authLoading}
-        onLogin={handleLogin}
-        onRegister={handleRegister}
-        onForgot={async () => { }}
-        onReset={async () => { }}
-      />
+        <InputBar
+          input={input}
+          setInput={setInput}
+          onSend={handleSend}
+          loading={loading}
+          onImageSelect={handleImageSelect}
+          selectedImagePreview={selectedImagePreview}
+          onClearImage={handleClearImage}
+          cameraActive={cameraActive}
+          onToggleCamera={handleToggleCamera}
+          onCapture={handleCapture}
+          videoRef={videoRef}
+          isReading={isReading}
+          onToggleSpeech={() => { }}
+          isSidebarOpen={sidebarOpen}
+          selectedStyle={selectedStyle}
+          onStyleChange={(s) => setSelectedStyle(s)}
+        />
 
-      <ProfileModal
-        isOpen={profileVisible}
-        onClose={() => setProfileVisible(false)}
-        user={user}
-        onLogout={handleLogout}
-      />
+        <AuthModal
+          isOpen={authVisible}
+          onClose={() => setAuthVisible(false)}
+          mode={authMode}
+          setMode={setAuthMode}
+          loading={authLoading}
+          onLogin={handleLogin}
+          onRegister={handleRegister}
+          onForgot={async () => { }}
+          onReset={async () => { }}
+        />
+
+        <ProfileModal
+          isOpen={profileVisible}
+          onClose={() => setProfileVisible(false)}
+          user={user}
+          onLogout={handleLogout}
+        />
+      </div>
     </div>
   );
 }

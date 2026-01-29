@@ -3,7 +3,7 @@
 import React from "react";
 import { HistoryItem, User } from "../types";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Plus, MessageSquare, Trash2, LogIn, User as UserIcon } from "lucide-react";
+import { X, Plus, MessageSquare, Trash2, LogIn, User as UserIcon, Sun, Moon } from "lucide-react";
 import clsx from "clsx";
 
 interface SidebarProps {
@@ -16,6 +16,8 @@ interface SidebarProps {
     onAuthClick: () => void;
     onDeleteHistory: (id: string, e: React.MouseEvent) => void;
     onProfileClick: () => void;
+    isDarkMode: boolean;
+    onToggleTheme: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -27,7 +29,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     user,
     onAuthClick,
     onDeleteHistory,
-    onProfileClick
+    onProfileClick,
+    isDarkMode,
+    onToggleTheme
 }) => {
     const [deleteId, setDeleteId] = React.useState<string | null>(null);
 
@@ -107,11 +111,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 )}
             >
                 {/* Header */}
-                <div className="p-6 flex justify-between items-center border-b border-white/10">
-                    <span className="font-bold text-xl tracking-tight text-white/90">FruitText AI</span>
-                    <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-                        <X size={20} className="text-white/70" />
-                    </button>
+                <div className="p-6 flex justify-between items-center border-b border-panel-border">
+                    <span className="font-bold text-xl tracking-tight text-app-text">FruitText AI</span>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={onToggleTheme}
+                            className="p-2 hover:bg-panel rounded-full transition-colors text-app-muted hover:text-app-text"
+                        >
+                            {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+                        </button>
+                        <button onClick={onClose} className="p-2 hover:bg-panel rounded-full transition-colors md:hidden">
+                            <X size={20} className="text-app-text" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* New Chat Button */}
@@ -120,27 +132,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         onClick={onNewChat}
                         className="w-full flex items-center justify-center gap-3 py-3.5 glass-button rounded-[20px] group"
                     >
-                        <Plus size={20} className="text-white/90 group-hover:rotate-90 transition-transform duration-300" />
-                        <span className="font-medium text-white/90">Cuộc trò chuyện mới</span>
+                        <Plus size={20} className="text-app-text group-hover:rotate-90 transition-transform duration-300" />
+                        <span className="font-medium text-app-text">Cuộc trò chuyện mới</span>
                     </button>
                 </div>
 
                 {/* History List */}
                 <div className="flex-1 overflow-y-auto px-4 py-2 space-y-2 custom-scrollbar">
-                    <div className="text-xs font-medium text-white/40 mb-3 px-2 uppercase tracking-wider">Gần đây</div>
+                    <div className="text-xs font-medium text-app-muted mb-3 px-2 uppercase tracking-wider">Gần đây</div>
                     {history.length === 0 ? (
-                        <div className="text-white/30 text-center py-8 text-sm">Chưa có lịch sử</div>
+                        <div className="text-app-muted text-center py-8 text-sm">Chưa có lịch sử</div>
                     ) : (
                         history.map((item) => (
                             <motion.div
                                 key={item.id}
                                 layoutId={item.id}
                                 onClick={() => onSelectHistory(item)}
-                                className="group flex items-center justify-between p-3 rounded-[18px] hover:bg-white/10 cursor-pointer transition-colors border border-transparent hover:border-white/5"
+                                className="group flex items-center justify-between p-3 rounded-[18px] hover:bg-panel cursor-pointer transition-colors border border-transparent hover:border-panel-border"
                             >
                                 <div className="flex items-center gap-3 overflow-hidden">
-                                    <MessageSquare size={16} className="text-white/50 min-w-[16px]" />
-                                    <span className="truncate text-sm text-white/80 group-hover:text-white transition-colors">
+                                    <MessageSquare size={16} className="text-app-muted min-w-[16px]" />
+                                    <span className="truncate text-sm text-app-text group-hover:text-primary-gradient-start transition-colors">
                                         {item.full_description.substring(0, 30)}...
                                     </span>
                                 </div>
@@ -159,22 +171,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
 
                 {/* Footer / User */}
-                <div className="p-4 border-t border-white/10">
+                <div className="p-4 border-t border-panel-border">
                     {user ? (
                         <div
                             onClick={onProfileClick}
-                            className="flex items-center gap-3 p-3 rounded-[20px] bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-colors group"
+                            className="flex items-center gap-3 p-3 rounded-[20px] bg-panel border border-panel-border cursor-pointer hover:border-app-text/20 transition-colors group"
                         >
                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-inner group-hover:scale-105 transition-transform">
                                 {user.full_name?.charAt(0) || "U"}
                             </div>
                             <div className="flex-1 min-w-0">
-                                <div className="font-medium text-sm text-white truncate">{user.full_name}</div>
-                                <div className="text-xs text-white/50 truncate flex items-center justify-between">
+                                <div className="font-medium text-sm text-app-text truncate">{user.full_name}</div>
+                                <div className="text-xs text-app-muted truncate flex items-center justify-between">
                                     <span>Thành viên Pro</span>
                                     {user.role === 'admin' && (
                                         <div onClick={(e) => e.stopPropagation()}>
-                                            <a href="/admin" className="text-purple-400 hover:text-purple-300 font-bold ml-2">Admin</a>
+                                            <a href="/admin" className="text-purple-500 hover:text-purple-600 font-bold ml-2">Admin</a>
                                         </div>
                                     )}
                                 </div>
@@ -183,7 +195,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     ) : (
                         <button
                             onClick={onAuthClick}
-                            className="w-full flex items-center justify-center gap-2 py-3 glass-button rounded-[20px] text-white/90 font-medium"
+                            className="w-full flex items-center justify-center gap-2 py-3 glass-button rounded-[20px] text-app-text font-medium"
                         >
                             <LogIn size={18} />
                             <span>Đăng nhập</span>
