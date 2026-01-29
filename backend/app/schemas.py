@@ -106,3 +106,7 @@ class MessageResponse(BaseModel):
 
 class AvatarUploadResponse(BaseModel):
     url: str
+
+
+class RoleUpdateRequest(BaseModel):
+    role: str
