@@ -30,6 +30,7 @@ export default function HomePage() {
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [authLoading, setAuthLoading] = useState(false);
   const [profileVisible, setProfileVisible] = useState(false);
+  const [settingsVisible, setSettingsVisible] = useState(false); // Controls Settings Modal
 
   // Camera & Image State
   const [cameraActive, setCameraActive] = useState(false);
@@ -465,6 +466,15 @@ export default function HomePage() {
           onClose={() => setProfileVisible(false)}
           user={user}
           onLogout={handleLogout}
+        />
+
+        <SettingsModal
+          isOpen={settingsVisible}
+          onClose={() => setSettingsVisible(false)}
+          user={user}
+          onUpdateProfile={handleUpdateProfile}
+          isDarkMode={isDarkMode}
+          onToggleTheme={toggleTheme}
         />
       </div>
     </div>

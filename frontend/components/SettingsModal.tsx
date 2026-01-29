@@ -117,6 +117,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         <div className="p-6 overflow-y-auto custom-scrollbar flex-1 bg-panel font-sans">
                             {activeTab === "profile" && (
                                 <div className="space-y-6">
+                                    {/* ... existing fields ... */}
                                     <div className="flex items-center gap-4 mb-6">
                                         <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-2xl shadow-lg">
                                             {user.full_name?.charAt(0).toUpperCase() || "U"}
@@ -126,6 +127,27 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                             <div className="text-sm text-app-muted">{user.email}</div>
                                         </div>
                                     </div>
+
+                                    {/* Admin Access Link */}
+                                    {user.role === 'admin' && (
+                                        <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-between mb-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-purple-500/20 rounded-lg text-purple-400">
+                                                    <Lock size={18} />
+                                                </div>
+                                                <div>
+                                                    <div className="font-bold text-app-text text-sm">Trang Quản Trị</div>
+                                                    <div className="text-xs text-app-muted">Truy cập bảng điều khiển Admin</div>
+                                                </div>
+                                            </div>
+                                            <a
+                                                href="/admin"
+                                                className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold transition-colors"
+                                            >
+                                                Truy cập
+                                            </a>
+                                        </div>
+                                    )}
 
                                     <div className="space-y-4">
                                         <div className="space-y-2">

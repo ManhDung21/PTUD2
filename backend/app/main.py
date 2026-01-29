@@ -267,6 +267,7 @@ def seed_admin_user() -> None:
         "phone_number": None,
         "full_name": "Admin",
         "hashed_password": auth.hash_password("123456"),
+        "role": "admin",
         "created_at": utc_now(),
     }
     users.insert_one(admin)
