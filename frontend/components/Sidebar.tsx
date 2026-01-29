@@ -19,6 +19,7 @@ interface SidebarProps {
     onProfileClick: () => void;
     isDarkMode: boolean;
     onToggleTheme: () => void;
+    onSettingsClick: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -32,7 +33,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     onDeleteConversation,
     onProfileClick,
     isDarkMode,
-    onToggleTheme
+    onToggleTheme,
+    onSettingsClick
 }) => {
     const [deleteId, setDeleteId] = React.useState<string | null>(null);
 
@@ -197,24 +199,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 {/* Footer / User */}
                 <div className="p-4 border-t border-panel-border">
                     {user ? (
-                        <div
-                            onClick={onProfileClick}
-                            className="flex items-center gap-3 p-3 rounded-[20px] bg-panel border border-panel-border cursor-pointer hover:border-app-text/20 transition-colors group"
-                        >
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-inner group-hover:scale-105 transition-transform">
-                                {user.full_name?.charAt(0) || "U"}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <div className="font-medium text-sm text-app-text truncate">{user.full_name}</div>
-                                <div className="text-xs text-app-muted truncate flex items-center justify-between">
-                                    <span>Thành viên Pro</span>
-                                    {user.role === 'admin' && (
-                                        <div onClick={(e) => e.stopPropagation()}>
-                                            <a href="/admin" className="text-purple-500 hover:text-purple-600 font-bold ml-2">Admin</a>
-                                        </div>
-                                    )}
+                        <div className="flex items-center gap-2 group">
+                            <div
+                                onClick={onProfileClick}
+                                className="flex-1 flex items-center gap-3 p-3 rounded-[20px] bg-panel border border-panel-border cursor-pointer hover:border-app-text/20 transition-colors"
+                            >
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-inner group-hover:scale-105 transition-transform">
+                                    {user.full_name?.charAt(0) || "U"}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="font-medium text-sm text-app-text truncate">{user.full_name}</div>
+                                    <div className="text-xs text-app-muted truncate flex items-center justify-between">
+                                        <span>Thành viên Pro</span>
+                                    </div>
                                 </div>
                             </div>
+                            <button
+                                onClick={onSettingsClick}
+                                className="p-3 rounded-[20px] bg-panel border border-panel-border hover:bg-glass-highlight hover:text-primary-gradient-start transition-colors"
+                            >
+                                <div className="animate-spin-slow-hover">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></svg>
+                                </div>
+                            </button>
                         </div>
                     ) : (
                         <button

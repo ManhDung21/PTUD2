@@ -7,6 +7,7 @@ import { ChatContainer } from "../components/ChatContainer";
 import { InputBar } from "../components/InputBar";
 import { AuthModal } from "../components/AuthModal";
 import { ProfileModal } from "../components/ProfileModal";
+import { SettingsModal } from "../components/SettingsModal";
 import { AuthMode, DescriptionResponse, HistoryItem, User, ToastState, Conversation } from "../types";
 import { Sparkles } from "lucide-react";
 
@@ -219,6 +220,22 @@ export default function HomePage() {
     showToast("success", "Đã đăng xuất");
   };
 
+  const handleUpdateProfile = async (data: { full_name?: string; phone_number?: string }) => {
+    try {
+      if (!token) return;
+
+      const res = await axios.put<{ full_name: string; phone_number: string; email: string }>(`${API_BASE_URL}/auth/profile`, data, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setUser(prev => prev ? { ...prev, full_name: res.data.full_name, phone_number: res.data.phone_number } : null);
+      showToast("success", "Cập nhật thông tin thành công");
+    } catch (err: any) {
+      showToast("error", err.response?.data?.detail || "Không thể cập nhật thông tin");
+      throw err; // Re-throw so modal handles loading state
+    }
+  };
+
   const handleDeleteConversation = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!token) return;
@@ -394,6 +411,7 @@ export default function HomePage() {
           onProfileClick={() => setProfileVisible(true)}
           isDarkMode={isDarkMode}
           onToggleTheme={toggleTheme}
+          onSettingsClick={() => setSettingsVisible(true)}
         />
 
         <main className="flex-1 flex flex-col relative w-full h-full z-10 transition-all duration-300">
