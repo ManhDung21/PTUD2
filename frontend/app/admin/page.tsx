@@ -51,7 +51,7 @@ export default function AdminPage() {
         try {
             const token = sessionStorage.getItem("token");
             if (!token) {
-                router.push("/");
+                router.push("/admin/login");
                 return;
             }
             axios.defaults.headers.common.Authorization = `Bearer ${token}`;
@@ -59,6 +59,7 @@ export default function AdminPage() {
             const meRes = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/me`);
             if (meRes.data.role !== "admin") {
                 setError("Access Denied");
+                router.push("/admin/login");
                 setLoading(false);
                 return;
             }
@@ -177,27 +178,60 @@ export default function AdminPage() {
                 </motion.div>
             )}
 
-            {/* Header */}
-            <header className="flex justify-between items-center mb-10">
+            {/* Sticky Glass Header */}
+            <header className="sticky top-0 z-50 flex justify-between items-center mb-8 px-6 py-4 -mx-8 bg-[#0a0a0a]/95 backdrop-blur-md border-b border-white/20 shadow-xl transition-all">
                 <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
-                        <Shield size={24} className="text-white" />
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
+                        <Shield size={20} className="text-white" />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">Admin Portal</h1>
-                        <p className="text-white/40 text-sm">Manage users and content</p>
+                        <h1 className="text-xl font-bold tracking-tight text-white">Admin Portal</h1>
+                        <p className="text-white/40 text-xs hidden md:block">Manage users and content</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-4">
-                    <div className="text-right hidden md:block">
-                        <div className="text-sm font-medium">{user?.full_name}</div>
-                        <div className="text-xs text-white/40">{user?.email}</div>
+
+                {/* Search Bar in Header */}
+                <div className="flex-1 max-w-md mx-8 hidden md:block">
+                    <div className="relative group">
+                        <input
+                            type="text"
+                            placeholder="Search users, content..."
+                            value={queryParams.search}
+                            onChange={handleSearchChange}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pl-4 pr-10 text-sm text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50 focus:bg-white/10 transition-all"
+                        />
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        </div>
                     </div>
-                    <button onClick={() => router.push("/")} className="glass-button px-4 py-2 rounded-lg text-sm hover:bg-white/10 transition-colors border border-white/10 flex items-center gap-2">
-                        <LogOut size={16} /> Exit
+                </div>
+
+                <div className="flex items-center gap-4">
+                    <div className="text-right hidden lg:block">
+                        <div className="text-sm font-medium">{user?.full_name}</div>
+                        <div className="text-xs text-white/40">{user?.role === 'admin' ? 'Administrator' : user?.email}</div>
+                    </div>
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-600 flex items-center justify-center text-xs overflow-hidden border border-white/10">
+                        {user?.avatar_url ? <img src={user.avatar_url} alt="" className="w-full h-full object-cover" /> : user?.full_name?.charAt(0)}
+                    </div>
+                    <button onClick={() => router.push("/")} className="p-2 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors" title="Exit">
+                        <LogOut size={20} />
                     </button>
                 </div>
             </header>
+
+            {/* Mobile Search (Visible on small screens) */}
+            <div className="md:hidden mb-6">
+                <div className="relative group">
+                    <input
+                        type="text"
+                        placeholder="Search..."
+                        value={queryParams.search}
+                        onChange={handleSearchChange}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pl-4 text-sm text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50 transition-all"
+                    />
+                </div>
+            </div>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
@@ -238,16 +272,6 @@ export default function AdminPage() {
                 </motion.div>
             </div>
 
-            {/* Controls */}
-            <div className="flex justify-end mb-4">
-                <input
-                    type="text"
-                    placeholder="Search..."
-                    value={queryParams.search}
-                    onChange={handleSearchChange}
-                    className="glass-input px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:border-purple-500 transition-all w-64"
-                />
-            </div>
 
             {/* Main Content Area */}
             <div className="flex flex-col gap-6">
@@ -323,10 +347,14 @@ export default function AdminPage() {
                                                             onChange={(e) => handleUpdateRole(u.id, e.target.value)}
                                                             className={clsx(
                                                                 "bg-transparent border border-white/10 rounded px-2 py-1 text-xs font-bold uppercase cursor-pointer outline-none focus:border-purple-500 transition-colors",
-                                                                u.role === 'admin' ? "text-purple-300 bg-purple-500/10" : "text-gray-300"
+                                                                u.role === 'admin' ? "text-purple-300 bg-purple-500/10" :
+                                                                    u.role === 'user_pro' ? "text-yellow-300 bg-yellow-500/10" :
+                                                                        "text-gray-300"
                                                             )}
                                                         >
-                                                            <option value="user" className="bg-[#1a1a1a] text-gray-300">USER</option>
+                                                            <option value="user" className="bg-[#1a1a1a] text-gray-300">USER (Legacy)</option>
+                                                            <option value="user_free" className="bg-[#1a1a1a] text-gray-300">FREE</option>
+                                                            <option value="user_pro" className="bg-[#1a1a1a] text-yellow-400">PRO</option>
                                                             <option value="admin" className="bg-[#1a1a1a] text-purple-400">ADMIN</option>
                                                         </select>
                                                     </td>

@@ -211,7 +211,7 @@ async def update_user_role(
     if not ObjectId.is_valid(user_id):
         raise HTTPException(status_code=400, detail="Invalid ID")
     
-    if role_update.role not in ["user", "admin"]:
+    if role_update.role not in ["user", "user_free", "user_pro", "admin"]:
         raise HTTPException(status_code=400, detail="Invalid role")
 
     result = db.users.update_one(
