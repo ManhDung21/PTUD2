@@ -205,9 +205,11 @@ export const InputBar: React.FC<InputBarProps> = ({
                         {/* Style Toggle Button */}
                         <button
                             onClick={() => setShowStyles(!showStyles)}
+                            disabled={loading}
                             className={clsx(
                                 "p-2.5 rounded-full transition-colors flex items-center gap-1",
-                                showStyles ? "bg-glass-highlight text-app-text" : "text-app-muted hover:bg-glass-highlight hover:text-app-text"
+                                showStyles ? "bg-glass-highlight text-app-text" : "text-app-muted hover:bg-glass-highlight hover:text-app-text",
+                                loading && "opacity-50 cursor-not-allowed"
                             )}
                             title="Change Style"
                         >
@@ -218,7 +220,11 @@ export const InputBar: React.FC<InputBarProps> = ({
 
                         <button
                             onClick={() => fileInputRef.current?.click()}
-                            className="p-2.5 rounded-full text-app-muted hover:bg-glass-highlight hover:text-app-text transition-colors"
+                            disabled={loading}
+                            className={clsx(
+                                "p-2.5 rounded-full text-app-muted hover:bg-glass-highlight hover:text-app-text transition-colors",
+                                loading && "opacity-50 cursor-not-allowed"
+                            )}
                         >
                             <Image size={24} strokeWidth={1.5} />
                         </button>
@@ -228,6 +234,7 @@ export const InputBar: React.FC<InputBarProps> = ({
                             onChange={handleFileChange}
                             accept="image/*"
                             className="hidden"
+                            disabled={loading}
                         />
 
                         {/* Hidden Native Camera Input for Mobile */}
@@ -238,13 +245,16 @@ export const InputBar: React.FC<InputBarProps> = ({
                             accept="image/*"
                             capture="environment"
                             className="hidden"
+                            disabled={loading}
                         />
 
                         <button
                             onClick={handleCameraClick}
+                            disabled={loading}
                             className={clsx(
                                 "p-2.5 rounded-full transition-colors",
-                                cameraActive ? "text-red-400 bg-glass-highlight" : "text-app-muted hover:bg-glass-highlight hover:text-app-text"
+                                cameraActive ? "text-red-400 bg-glass-highlight" : "text-app-muted hover:bg-glass-highlight hover:text-app-text",
+                                loading && "opacity-50 cursor-not-allowed"
                             )}
                         >
                             <Camera size={24} strokeWidth={1.5} />
@@ -264,9 +274,13 @@ export const InputBar: React.FC<InputBarProps> = ({
                         onFocus={() => setIsFocused(true)}
                         onBlur={() => setIsFocused(false)}
                         onPaste={handlePaste}
-                        placeholder={`Hỏi (${selectedStyle})...`}
+                        placeholder={loading ? "Đang gửi..." : `Hỏi (${selectedStyle})...`}
                         rows={1}
-                        className="flex-1 bg-transparent border-none outline-none text-app-text placeholder-app-muted resize-none py-3.5 px-2 max-h-[120px] custom-scrollbar text-[16px] leading-relaxed"
+                        disabled={loading}
+                        className={clsx(
+                            "flex-1 bg-transparent border-none outline-none text-app-text placeholder-app-muted resize-none py-3.5 px-2 max-h-[120px] custom-scrollbar text-[16px] leading-relaxed",
+                            loading && "opacity-50 cursor-not-allowed"
+                        )}
                         style={{ minHeight: "24px" }}
                     />
 

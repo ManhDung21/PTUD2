@@ -68,7 +68,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 10 }}
                         className={clsx(
-                            "w-full max-w-[500px] rounded-[32px] overflow-hidden flex flex-col max-h-[85vh]",
+                            "relative z-10 w-full max-w-[500px] rounded-[32px] overflow-hidden flex flex-col max-h-[85vh]",
                             "glass-panel-heavy",
                             "shadow-2xl shadow-purple-900/20"
                         )}

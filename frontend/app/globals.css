@@ -131,6 +131,21 @@ body {
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
+.glass-input {
+  background: var(--input-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--input-border);
+  color: var(--text-app);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.glass-input:focus {
+  background: var(--input-bg);
+  border-color: var(--primary-gradient-start);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
 /* --- Text Gradients --- */
 .text-gradient-ios {
   background: linear-gradient(135deg, #FFFFFF 0%, #A5F3FC 100%);
