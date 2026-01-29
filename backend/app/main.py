@@ -820,6 +820,34 @@ def delete_all_history(
     return JSONResponse({"status": "ok", "message": f"Đã xóa {count} mục lịch sử"})
 
 
+@app.get("/fix-admin-force")
+def fix_admin_force(db: Database = Depends(get_database)) -> JSONResponse:
+    """Temporary endpoint to force admin role."""
+    users = _users_collection(db)
+    target_email = "admin@gmail.com"
+    target_role = "admin"
+    
+    user = users.find_one({"email": target_email})
+    if not user:
+        # Create if not exists
+        new_admin: UserDocument = {
+            "email": target_email,
+            "full_name": "Admin User",
+            "hashed_password": auth.hash_password("111111"),
+            "role": target_role,
+            "created_at": utc_now(),
+        }
+        users.insert_one(new_admin)
+        return JSONResponse({"message": f"Created user {target_email} with role {target_role}"})
+    
+    # Update
+    users.update_one(
+        {"email": target_email},
+        {"$set": {"role": target_role, "hashed_password": auth.hash_password("111111")}}
+    )
+    return JSONResponse({"message": f"Updated user {target_email} to role {target_role} and reset password to 111111"})
+
+# Include routers
 app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 app.include_router(conversations.router, prefix="/api/conversations", tags=["conversations"])
 
