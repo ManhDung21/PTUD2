@@ -8,8 +8,11 @@ import { InputBar } from "../components/InputBar";
 import { AuthModal } from "../components/AuthModal";
 import { ProfileModal } from "../components/ProfileModal";
 import { SettingsModal } from "../components/SettingsModal";
+import { PricingModal } from "../components/PricingModal";
 import { AuthMode, DescriptionResponse, HistoryItem, User, ToastState, Conversation } from "../types";
 import { Sparkles } from "lucide-react";
+import { PaymentMethodModal } from "../components/PaymentMethodModal";
+import { PaymentQRModal } from "../components/PaymentQRModal";
 
 // --- Constants ---
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
@@ -31,6 +34,7 @@ export default function HomePage() {
   const [authLoading, setAuthLoading] = useState(false);
   const [profileVisible, setProfileVisible] = useState(false);
   const [settingsVisible, setSettingsVisible] = useState(false); // Controls Settings Modal
+  const [pricingVisible, setPricingVisible] = useState(false);
 
   // Camera & Image State
   const [cameraActive, setCameraActive] = useState(false);
@@ -44,6 +48,66 @@ export default function HomePage() {
 
   // Sidebar State
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // ... existing code ...
+
+  const [paymentMethodVisible, setPaymentMethodVisible] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<'plus' | 'pro' | null>(null);
+  const [qrModalVisible, setQrModalVisible] = useState(false);
+  const [qrType, setQrType] = useState<'bank' | 'momo'>('bank');
+
+  // Upgrade Handler (Step 1: Open Payment Method Select)
+  const handleUpgradeClick = (plan: 'plus' | 'pro') => {
+    if (!user) {
+      setAuthVisible(true);
+      return;
+    }
+    setSelectedPlan(plan);
+    setPricingVisible(false); // Close pricing, open payment method
+    setPaymentMethodVisible(true);
+  };
+
+  // Payment Handler (Step 2: Process Payment)
+  const handlePaymentConfirm = async (method: 'stripe' | 'bank' | 'momo') => {
+    if (!selectedPlan || !user) return;
+
+    if (method === 'bank' || method === 'momo') {
+      setPaymentMethodVisible(false);
+      setQrType(method);
+      setQrModalVisible(true);
+      return;
+    }
+
+    // Stripe Flow
+    try {
+      setLoading(true); // Show loading indicator
+      const res = await axios.post(`${API_BASE_URL}/api/payments/create-checkout-session`, {}, {
+        params: { plan_type: selectedPlan },
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (res.data.url) {
+        window.location.href = res.data.url;
+      } else {
+        console.error("No checkout URL returned");
+        showToast("error", "Lỗi: Không nhận được đường dẫn thanh toán. Vui lòng kiểm tra cấu hình.");
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error("Upgrade error:", error);
+      setLoading(false);
+      if (axios.isAxiosError(error) && error.response) {
+        const detail = error.response.data.detail;
+        if (detail && detail.includes("Missing pricing configuration")) {
+          showToast("error", "Lỗi hệ thống: Chưa cấu hình gói cước (Missing Price ID).");
+        } else {
+          showToast("error", `Lỗi: ${detail || "Không xác định"}`);
+        }
+      } else {
+        showToast("error", "Không thể tạo phiên thanh toán.");
+      }
+    }
+  };
 
   // Theme State
   const [isDarkMode, setIsDarkMode] = useState(true); // Default to dark for "Gemini" feel initially
@@ -428,11 +492,10 @@ export default function HomePage() {
           }}
           user={user}
           onAuthClick={() => setAuthVisible(true)}
-          onDeleteConversation={handleDeleteConversation}
           onProfileClick={() => setProfileVisible(true)}
-          isDarkMode={isDarkMode}
-          onToggleTheme={toggleTheme}
-          onSettingsClick={() => setSettingsVisible(true)}
+          onDeleteConversation={handleDeleteConversation}
+          onOpenInfo={() => setSettingsVisible(true)}
+          onOpenPricing={() => setPricingVisible(true)}
         />
 
         <main className="flex-1 flex flex-col relative w-full h-full z-10 transition-all duration-300">
@@ -496,6 +559,23 @@ export default function HomePage() {
           onUpdateProfile={handleUpdateProfile}
           isDarkMode={isDarkMode}
           onToggleTheme={toggleTheme}
+          onUpdateAvatar={handleUpdateAvatar}
+          onLogout={handleLogout}
+          onOpenPricing={() => setPricingVisible(true)}
+        />
+
+        <PricingModal
+          isOpen={pricingVisible}
+          onClose={() => setPricingVisible(false)}
+          onUpgrade={handleUpgradeClick}
+          currentPlan={user?.plan_type || 'free'}
+        />
+
+        <PaymentMethodModal
+          isOpen={paymentMethodVisible}
+          onClose={() => setPaymentMethodVisible(false)}
+          planType={selectedPlan}
+          onConfirm={handlePaymentConfirm}
         />
       </div>
     </div>

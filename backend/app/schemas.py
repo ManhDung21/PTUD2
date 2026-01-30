@@ -80,7 +80,11 @@ class UserOut(BaseModel):
     email: Optional[str] = None
     phone_number: Optional[str] = None
     full_name: Optional[str] = None
-    role: str = "user"
+    full_name: Optional[str] = None
+    role: str = "free"
+    subscription_status: Optional[str] = "none"
+    plan_type: Optional[str] = "free"
+    stripe_customer_id: Optional[str] = None
     avatar_url: Optional[str] = None
     created_at: str
 

@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Conversation, User } from "../types";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Plus, MessageSquare, Trash2, LogIn, User as UserIcon, Sun, Moon } from "lucide-react";
+import { Plus, MessageSquare, Trash2, Settings, User as UserIcon, LogOut, Info, Sparkles, Crown, LogIn } from "lucide-react";
 import clsx from "clsx";
 import { useRef, useEffect } from 'react';
 
@@ -17,9 +17,8 @@ interface SidebarProps {
     onAuthClick: () => void;
     onDeleteConversation: (id: string, e: React.MouseEvent) => void;
     onProfileClick: () => void;
-    isDarkMode: boolean;
-    onToggleTheme: () => void;
-    onSettingsClick: () => void;
+    onOpenInfo: () => void;
+    onOpenPricing: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -32,11 +31,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     onAuthClick,
     onDeleteConversation,
     onProfileClick,
-    isDarkMode,
-    onToggleTheme,
-    onSettingsClick
+    onOpenInfo,
+    onOpenPricing
 }) => {
-    const [deleteId, setDeleteId] = React.useState<string | null>(null);
+    const [deleteId, setDeleteId] = useState<string | null>(null);
 
     const confirmDelete = (e: React.MouseEvent) => {
         if (deleteId) {
@@ -44,14 +42,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
             setDeleteId(null);
         }
     };
-
-
-
-
-
-
-
-
 
     const sidebarRef = useRef<HTMLElement>(null);
 
@@ -94,20 +84,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="bg-[#1E1E1E] border border-white/10 p-6 rounded-[24px] max-w-sm w-full shadow-2xl relative overflow-hidden"
+                            className="bg-panel border border-panel-border p-6 rounded-[24px] max-w-sm w-full shadow-2xl relative overflow-hidden"
                         >
                             {/* Decorative Blob */}
                             <div className="absolute -top-10 -right-10 w-32 h-32 bg-red-500/20 blur-3xl rounded-full pointer-events-none" />
 
-                            <h3 className="text-xl font-bold text-white mb-2">Xoá cuộc trò chuyện?</h3>
-                            <p className="text-white/60 text-sm mb-6 leading-relaxed">
+                            <h3 className="text-xl font-bold text-app-text mb-2">Xoá cuộc trò chuyện?</h3>
+                            <p className="text-app-muted text-sm mb-6 leading-relaxed">
                                 Hành động này không thể hoàn tác. Bạn có chắc chắn muốn xoá mục lịch sử này không?
                             </p>
 
                             <div className="flex gap-3 justify-end">
                                 <button
                                     onClick={() => setDeleteId(null)}
-                                    className="px-5 py-2.5 rounded-xl text-white/70 hover:bg-white/10 hover:text-white transition-colors text-sm font-medium"
+                                    className="px-5 py-2.5 rounded-xl text-app-muted hover:bg-glass-highlight hover:text-app-text transition-colors text-sm font-medium"
                                 >
                                     Hủy
                                 </button>
@@ -140,14 +130,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <div className="p-6 flex justify-between items-center border-b border-panel-border">
                     <span className="font-bold text-xl tracking-tight text-app-text">FruitText AI</span>
                     <div className="flex items-center gap-2">
-                        <button
-                            onClick={onToggleTheme}
-                            className="p-2 hover:bg-panel rounded-full transition-colors text-app-muted hover:text-app-text"
-                        >
-                            {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-                        </button>
                         <button onClick={onClose} className="p-2 hover:bg-panel rounded-full transition-colors md:hidden">
-                            <X size={20} className="text-app-text" />
+                            <Plus size={20} className="text-app-text" />
                         </button>
                     </div>
                 </div>
@@ -199,39 +183,53 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 {/* Footer / User */}
                 <div className="p-4 border-t border-panel-border">
                     {user ? (
-                        <div className="flex items-center gap-2 group">
-                            <div
-                                onClick={onProfileClick}
-                                className="flex-1 flex items-center gap-3 p-3 rounded-[20px] bg-panel border border-panel-border cursor-pointer hover:border-app-text/20 transition-colors"
+                        <div className="flex flex-col gap-2">
+                            <button
+                                onClick={onOpenInfo}
+                                className="w-full flex items-center gap-3 p-3 rounded-[20px] bg-panel border border-panel-border cursor-pointer hover:border-app-text/20 transition-all hover:bg-glass-highlight group relative overflow-hidden text-left"
                             >
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-inner group-hover:scale-105 transition-transform">
-                                    {user.full_name?.charAt(0) || "U"}
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-inner shrink-0 border border-white/10">
+                                    {user.avatar_url ? (
+                                        <img
+                                            src={`${user.avatar_url}?t=${Date.now()}`}
+                                            alt={user.full_name || ""}
+                                            className="w-full h-full object-cover rounded-full"
+                                        />
+                                    ) : (
+                                        user.full_name?.charAt(0).toUpperCase() || "U"
+                                    )}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className="font-medium text-sm text-app-text truncate">{user.full_name}</div>
-                                    <div className="text-xs text-app-muted truncate flex items-center justify-between">
-                                        <span className={clsx(
-                                            "font-medium",
-                                            user.role === 'admin' ? "text-purple-400" :
-                                                user.role === 'user_pro' ? "text-yellow-400" :
-                                                    "text-gray-400"
-                                        )}>
-                                            {user.role === 'admin' ? 'Admin System' :
-                                                user.role === 'user_pro' ? 'Thành viên PRO' :
-                                                    user.role === 'user_free' ? 'Thành viên FREE' :
-                                                        'Thành viên'}
-                                        </span>
+                                    <div className="font-bold text-sm text-app-text truncate flex items-center gap-2">
+                                        {user.full_name}
+                                        {user.plan_type === 'pro' && <Crown size={12} className="text-purple-500" />}
                                     </div>
+                                    <div className="text-xs text-app-muted truncate">{user.email}</div>
                                 </div>
-                            </div>
-                            <button
-                                onClick={onSettingsClick}
-                                className="p-3 rounded-[20px] bg-panel border border-panel-border hover:bg-glass-highlight hover:text-primary-gradient-start transition-colors"
-                            >
-                                <div className="animate-spin-slow-hover">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></svg>
-                                </div>
+                                <Settings size={18} className="text-app-muted group-hover:text-app-text transition-colors" />
                             </button>
+
+                            {/* Plan Status & Upgrade */}
+                            <div className="flex items-center justify-between px-2">
+                                <span className={clsx(
+                                    "text-[10px] font-bold px-2 py-0.5 rounded-full border",
+                                    (user.plan_type === 'pro') ? "bg-purple-500/10 text-purple-500 border-purple-500/20" :
+                                        (user.plan_type === 'plus') ? "bg-blue-500/10 text-blue-500 border-blue-500/20" :
+                                            "bg-gray-500/10 text-gray-500 border-gray-500/20"
+                                )}>
+                                    {(user.plan_type || 'FREE').toUpperCase()}
+                                </span>
+
+                                {user.plan_type !== 'pro' && (
+                                    <button
+                                        onClick={onOpenPricing}
+                                        className="text-[10px] font-bold text-purple-500 hover:text-purple-400 flex items-center gap-1 transition-colors"
+                                    >
+                                        <Sparkles size={10} />
+                                        Nâng cấp
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     ) : (
                         <button

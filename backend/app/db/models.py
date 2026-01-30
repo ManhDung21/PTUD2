@@ -12,7 +12,12 @@ class UserDocument(TypedDict, total=False):
     phone_number: Optional[str]
     full_name: Optional[str]
     avatar_url: Optional[str]
-    role: Optional[str]  # "user" or "admin"
+    avatar_url: Optional[str]
+    role: Optional[str]  # "free", "plus", "pro", "admin"
+    stripe_customer_id: Optional[str]
+    subscription_status: Optional[str]  # 'active', 'past_due', 'canceled', 'none'
+    subscription_end_date: Optional[datetime]
+    plan_type: Optional[str]  # 'free', 'plus', 'pro'
     hashed_password: str
     created_at: datetime
 
@@ -45,4 +50,15 @@ class PasswordResetTokenDocument(TypedDict, total=False):
     token_hash: str
     created_at: datetime
     expires_at: datetime
+    expires_at: datetime
     used: bool
+
+
+class PaymentDocument(TypedDict, total=False):
+    _id: ObjectId
+    user_id: ObjectId
+    stripe_session_id: str
+    amount: int
+    currency: str
+    status: str
+    created_at: datetime

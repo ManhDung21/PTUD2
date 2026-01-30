@@ -42,6 +42,9 @@ export interface User {
     avatar_url: string | null;
     created_at: string;
     role?: string;
+    plan_type?: 'free' | 'plus' | 'pro';
+    subscription_status?: string;
+    stripe_customer_id?: string | null;
 }
 
 export type AuthMode = "login" | "register" | "forgot" | "reset";

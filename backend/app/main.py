@@ -45,7 +45,7 @@ from .services.auth import (
     is_phone_number,
     hash_password
 )
-from .routers import admin, conversations
+from .routers import admin, conversations, payments
 
 
 
@@ -77,7 +77,9 @@ def _ensure_utc_datetime(value: datetime | str | None) -> datetime:
 app = FastAPI(title="AI Product Description Service")
 
 
-@app.get("/")
+app.include_router(conversations.router, prefix="/api/conversations", tags=["Conversations"])
+app.include_router(admin.router)
+app.include_router(payments.router)
 def root() -> JSONResponse:
     return JSONResponse({"message": "AI Product Description Service đang chạy", "endpoints": ["/health", "/auth", "/api"]})
 
@@ -337,6 +339,9 @@ def register(payload: RegisterRequest, db: Database = Depends(get_database)) -> 
         "email": email,
         "phone_number": phone_number,
         "full_name": full_name,
+        "role": "free",
+        "plan_type": "free",
+        "subscription_status": "none"
     }
     if avatar_url:
         user["avatar_url"] = avatar_url

@@ -64,6 +64,14 @@ export default function AdminPage() {
         }
     }, []);
 
+    useEffect(() => {
+        if (isDarkMode) {
+            document.documentElement.classList.add("dark");
+        } else {
+            document.documentElement.classList.remove("dark");
+        }
+    }, [isDarkMode]);
+
     const toggleTheme = () => {
         setIsDarkMode(prev => {
             const newMode = !prev;
@@ -265,7 +273,7 @@ export default function AdminPage() {
                         <Shield size={18} className="text-white" />
                     </div>
                     <div>
-                        <h1 className={clsx("text-lg font-bold tracking-tight", isDarkMode ? "text-white" : "text-gray-900")}>Quản Trị Viên</h1>
+                        <h1 className="text-lg font-bold tracking-tight text-app-text">Quản Trị Viên</h1>
                     </div>
                 </div>
 
@@ -336,11 +344,11 @@ export default function AdminPage() {
                     >
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
                             <div>
-                                <h2 className={clsx("text-xl font-bold flex items-center gap-2", isDarkMode ? "text-white" : "text-gray-900")}>
+                                <h2 className="text-xl font-bold flex items-center gap-2 text-app-text">
                                     <BarChart3 size={24} className="text-purple-400" />
                                     Tổng Quan Phân Tích
                                 </h2>
-                                <p className={clsx("text-sm mt-1", isDarkMode ? "text-gray-400" : "text-gray-600")}>Chỉ số và xu hướng thời gian thực</p>
+                                <p className="text-sm mt-1 text-app-muted">Chỉ số và xu hướng thời gian thực</p>
                             </div>
 
                             {/* Granularity Selector */}
@@ -386,7 +394,7 @@ export default function AdminPage() {
                                 <div className={clsx("p-3 rounded-xl text-blue-400 group-hover:scale-110 transition-transform", isDarkMode ? "bg-blue-500/10 shadow-[0_0_15px_rgba(59,130,246,0.1)]" : "bg-blue-100")}><Users size={24} /></div>
                                 <h3 className={clsx("text-base font-semibold", isDarkMode ? "text-gray-200" : "text-gray-700")}>Tổng Người Dùng</h3>
                             </div>
-                            <p className={clsx("text-4xl font-bold relative z-10 tracking-tight", isDarkMode ? "text-white" : "text-gray-900")}>{stats?.total_users}</p>
+                            <p className="text-4xl font-bold relative z-10 tracking-tight text-app-text">{stats?.total_users}</p>
                         </motion.div>
 
                         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className={clsx(
@@ -398,7 +406,7 @@ export default function AdminPage() {
                                 <div className={clsx("p-3 rounded-xl text-purple-400 group-hover:scale-110 transition-transform", isDarkMode ? "bg-purple-500/10 shadow-[0_0_15px_rgba(168,85,247,0.1)]" : "bg-purple-100")}><FileText size={24} /></div>
                                 <h3 className={clsx("text-base font-semibold", isDarkMode ? "text-gray-200" : "text-gray-700")}>Nội Dung Đã Tạo</h3>
                             </div>
-                            <p className={clsx("text-4xl font-bold relative z-10 tracking-tight", isDarkMode ? "text-white" : "text-gray-900")}>{stats?.total_descriptions}</p>
+                            <p className="text-4xl font-bold relative z-10 tracking-tight text-app-text">{stats?.total_descriptions}</p>
                         </motion.div>
 
                         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className={clsx(
@@ -468,8 +476,8 @@ export default function AdminPage() {
                                         exit={{ opacity: 0, x: 10 }}
                                         transition={{ duration: 0.2 }}
                                     >
-                                        <div className={clsx("p-6 border-b flex justify-between items-center transition-colors", isDarkMode ? "border-white/5 bg-[#151515]" : "border-gray-200 bg-gray-50")}>
-                                            <h2 className={clsx("text-lg font-bold flex items-center gap-2", isDarkMode ? "text-white" : "text-gray-900")}><Users size={18} className="text-blue-400" /> Registered Users</h2>
+                                        <div className="p-6 border-b border-panel-border flex justify-between items-center bg-panel">
+                                            <h2 className="text-lg font-bold flex items-center gap-2 text-app-text"><Users size={18} className="text-blue-400" /> Registered Users</h2>
                                             <span className={clsx("text-xs uppercase tracking-wider font-bold", isDarkMode ? "text-gray-500" : "text-gray-600")}>{users.length} Records</span>
                                         </div>
                                         <div className="overflow-x-auto">
@@ -550,8 +558,8 @@ export default function AdminPage() {
                                         exit={{ opacity: 0, x: 10 }}
                                         transition={{ duration: 0.2 }}
                                     >
-                                        <div className={clsx("p-6 border-b flex justify-between items-center transition-colors", isDarkMode ? "border-white/5 bg-[#151515]" : "border-gray-200 bg-gray-50")}>
-                                            <h2 className={clsx("text-lg font-bold flex items-center gap-2", isDarkMode ? "text-white" : "text-gray-900")}><MessageSquare size={18} className="text-pink-400" /> Generated Descriptions</h2>
+                                        <div className="p-6 border-b border-panel-border flex justify-between items-center bg-panel">
+                                            <h2 className="text-lg font-bold flex items-center gap-2 text-app-text"><MessageSquare size={18} className="text-pink-400" /> Generated Descriptions</h2>
                                             <span className={clsx("text-xs uppercase tracking-wider font-bold", isDarkMode ? "text-gray-500" : "text-gray-600")}>{descriptions.length} Items</span>
                                         </div>
                                         <div className="overflow-x-auto">
