@@ -5,6 +5,7 @@ import { User } from "../types";
 import { X, LogOut, User as UserIcon, Mail, Phone, Shield } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import clsx from "clsx";
+import { getAvatarUrl } from "../utils/url";
 
 interface ProfileModalProps {
     isOpen: boolean;
@@ -78,7 +79,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                                 />
                                 {user.avatar_url ? (
                                     <img
-                                        src={user.avatar_url}
+                                        src={getAvatarUrl(user.avatar_url) || ""}
                                         alt="Avatar"
                                         className="w-24 h-24 rounded-full object-cover shadow-lg border-4 border-transparent group-hover:border-purple-500/50 transition-all"
                                     />

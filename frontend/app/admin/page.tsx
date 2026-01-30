@@ -7,6 +7,7 @@ import { Sparkles, Trash2, Users, FileText, BarChart3, LogOut, MessageSquare, Sh
 import { motion, AnimatePresence } from "framer-motion";
 import clsx from "clsx";
 import { TimeSeriesChart } from "../../components/TimeSeriesChart";
+import { getAvatarUrl } from "../../utils/url";
 
 interface Stats {
     total_users: number;
@@ -304,7 +305,7 @@ export default function AdminPage() {
                         <div className={clsx("text-xs", isDarkMode ? "text-white/40" : "text-gray-500")}>{user?.role === 'admin' ? 'Quản trị viên' : user?.email}</div>
                     </div>
                     <div className="w-9 h-9 rounded-full bg-gradient-to-br from-gray-700 to-gray-600 flex items-center justify-center text-xs overflow-hidden border border-white/10">
-                        {user?.avatar_url ? <img src={`${user.avatar_url}?t=${Date.now()}`} alt="" className="w-full h-full object-cover" /> : user?.full_name?.charAt(0)}
+                        {user?.avatar_url ? <img src={`${getAvatarUrl(user.avatar_url)}?t=${Date.now()}`} alt="" className="w-full h-full object-cover" /> : user?.full_name?.charAt(0)}
                     </div>
                     <button
                         onClick={toggleTheme}
@@ -497,7 +498,7 @@ export default function AdminPage() {
                                                             <td className="p-4 pl-6 font-medium">
                                                                 <div className="flex items-center gap-3">
                                                                     <div className="w-9 h-9 rounded-full bg-gradient-to-br from-gray-700 to-gray-600 flex items-center justify-center text-xs overflow-hidden border border-white/10 shrink-0">
-                                                                        {u.avatar_url ? <img src={u.avatar_url} alt="" className="w-full h-full object-cover" /> : u.full_name?.charAt(0)}
+                                                                        {u.avatar_url ? <img src={getAvatarUrl(u.avatar_url) || ""} alt="" className="w-full h-full object-cover" /> : u.full_name?.charAt(0)}
                                                                     </div>
                                                                     <div>
                                                                         <div className={clsx("text-sm font-medium", isDarkMode ? "text-gray-200" : "text-gray-900")}>{u.full_name}</div>
