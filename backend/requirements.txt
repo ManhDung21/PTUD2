@@ -21,7 +21,7 @@ python-docx==1.1.0
 
 # --- Cloud storage ---
 cloudinary==1.41.0
-stripe
+stripe>=5.0.0
 
 
 # --- (Optional) PDF generation ---
