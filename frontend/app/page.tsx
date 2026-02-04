@@ -200,12 +200,9 @@ export default function HomePage() {
       }
 
       const response = await axios.post(url, payload, { headers });
-
-      // Append new response to the session
       const responseData = response.data;
       setSession(prev => [...prev, responseData]);
 
-      // If new conversation started, set active and refresh list
       if (responseData.conversation_id && responseData.conversation_id !== activeConversationId) {
         setActiveConversationId(responseData.conversation_id);
         const convRes = await axios.get(`${API_BASE_URL}/api/conversations`);
@@ -223,7 +220,15 @@ export default function HomePage() {
       handleClearImage();
     } catch (error: any) {
       console.error(error);
-      showToast("error", "Có lỗi xảy ra khi tạo mô tả.");
+      if (axios.isAxiosError(error) && error.response) {
+        if (error.response.status === 429 || error.response.data.detail?.includes("quota") || error.response.data.detail?.includes("429")) {
+          showToast("error", "Hệ thống đang bận (Quá tải). Vui lòng thử lại sau 30 giây.");
+        } else {
+          showToast("error", `Lỗi: ${error.response.data.detail || "Không xác định"}`);
+        }
+      } else {
+        showToast("error", "Có lỗi xảy ra khi tạo mô tả.");
+      }
     } finally {
       setLoading(false);
     }
@@ -443,6 +448,45 @@ export default function HomePage() {
     }
   };
 
+  const handleShare = async (platform: 'facebook' | 'tiktok', content: string, url?: string | null) => {
+    // 1. Mobile Native Share
+    if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
+      try {
+        await navigator.share({
+          title: 'FruitText AI Content',
+          text: content,
+          url: url || window.location.href,
+        });
+        return;
+      } catch (err) {
+        // Fallback if native share fails or is cancelled
+      }
+    }
+
+    // 2. Desktop / Fallback Logic
+    if (platform === 'facebook') {
+      if (url) {
+        // Share URL (Image)
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank', 'width=600,height=400');
+      } else {
+        // Share Text -> Copy to clipboard & open FB
+        await navigator.clipboard.writeText(content);
+        showToast("success", "Đã copy nội dung! Hãy dán vào bài viết Facebook.");
+        setTimeout(() => {
+          window.open('https://www.facebook.com', '_blank');
+        }, 1000);
+      }
+    } else if (platform === 'tiktok') {
+      // TikTok doesn't have a simple web share URL for text/images easily
+      // Best approach is typically copy to clipboard
+      await navigator.clipboard.writeText(content);
+      showToast("success", "Đã copy nội dung! Hãy dán vào TikTok.");
+      setTimeout(() => {
+        window.open('https://www.tiktok.com', '_blank');
+      }, 1000);
+    }
+  };
+
   return (
     <div className={isDarkMode ? "dark" : ""}>
       <div className="relative h-screen w-full overflow-hidden text-app-text flex bg-app transition-colors duration-300">
@@ -470,8 +514,8 @@ export default function HomePage() {
             </button>
 
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
-                <Sparkles size={20} className="text-white" />
+              <div className="w-12 h-12 flex items-center justify-center">
+                <img src="/fruittext_logo.svg" alt="Logo" className="w-full h-full object-contain drop-shadow-md hover:scale-110 transition-transform" />
               </div>
               <span className="font-bold text-xl text-app-text tracking-tight drop-shadow-md">FruitText AI</span>
             </div>
@@ -581,3 +625,4 @@ export default function HomePage() {
     </div>
   );
 }
+

@@ -3,7 +3,7 @@
 import React from "react";
 import { DescriptionResponse, User } from "../types";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Share2, Volume2, VolumeX, Facebook, Music } from "lucide-react";
+import { Sparkles, Share2, Volume2, VolumeX, Facebook, Music, Copy } from "lucide-react";
 import clsx from "clsx";
 
 interface ChatContainerProps {
@@ -12,8 +12,8 @@ interface ChatContainerProps {
     user: User | null;
     onRead: (text: string) => void;
     isReading: boolean;
-    onShareFacebook: () => void;
-    onShareTikTok: () => void;
+    onShareFacebook: (content: string, url?: string | null) => void;
+    onShareTikTok: (content: string, url?: string | null) => void;
     inputContent?: { text: string; image?: string | null; style?: string };
 }
 
@@ -33,25 +33,20 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     if (session.length === 0 && !loading) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center relative z-10">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="mb-12"
-                >
-                    <div className="inline-block p-4 rounded-full bg-panel backdrop-blur-xl border border-panel-border mb-6 shadow-2xl">
-                        <Sparkles size={48} className="text-app-text/80" />
+                <div className="mb-12">
+                    <div className="inline-block p-6 rounded-[32px] bg-panel backdrop-blur-xl border border-panel-border mb-6 shadow-2xl">
+                        <img src="/fruittext_logo.svg" alt="App Logo" className="w-20 h-20 object-contain drop-shadow-lg" />
                     </div>
                     <h1 className="text-3xl md:text-6xl font-thin tracking-tighter mb-4 text-app-text drop-shadow-xl">
                         FruitText Xin Chào !
                     </h1>
                     <p className="text-xl text-app-muted font-light tracking-wide">Bạn đã sẵn sàng tạo ra những mô tả cho sản phẩm tuyệt vời của bạn chưa?</p>
-                </motion.div>
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-[700px]">
                     {[
                         { title: "Mô tả hình ảnh", desc: "Phân tích hình ảnh" },
-                        { title: "Caption mạng xã hội", desc: "Cho Instagram & TikTok" }
+                        { title: "Caption mạng xã hội", desc: "Cho Facebook & TikTok" }
                     ].map((item, i) => (
                         <motion.div
                             key={i}
@@ -125,36 +120,73 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                                 animate={{ opacity: 1 }}
                                 className="flex gap-4 md:gap-6 items-start"
                             >
-                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shrink-0 shadow-lg shadow-purple-500/20 mt-1">
-                                    <Sparkles size={16} className="text-white md:hidden" />
-                                    <Sparkles size={20} className="text-white hidden md:block" />
+                                <div className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center shrink-0 mt-1">
+                                    <img src="/fruittext_logo.svg" alt="AI" className="w-full h-full object-contain drop-shadow-md" />
                                 </div>
 
                                 <div className="flex-1 space-y-3 md:space-y-4">
-                                    <motion.div
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        transition={{ duration: 0.8 }}
-                                        className="text-[15px] md:text-base text-app-text leading-relaxed whitespace-pre-line font-light tracking-wide"
-                                    >
-                                        {item.description}
-                                    </motion.div>
+                                    {(() => {
+                                        const parts = (item.description || "").split("|||");
+                                        const intro = parts[0]?.trim();
+                                        const content = parts.length > 1 ? parts.slice(1).join("|||").trim() : "";
 
-                                    {/* Action Chips */}
-                                    <div className="flex flex-wrap gap-2 pt-1 md:pt-2">
-                                        <button onClick={() => onRead(item.description || "")} className="glass-button px-3 py-1.5 md:px-4 md:py-2 rounded-full flex items-center gap-2 text-xs md:text-sm text-app-muted hover:text-app-text">
-                                            {isReading ? <VolumeX size={14} className="md:w-4 md:h-4" /> : <Volume2 size={14} className="md:w-4 md:h-4" />}
-                                            <span>Đọc</span>
-                                        </button>
-                                        <button onClick={onShareFacebook} className="glass-button px-3 py-1.5 md:px-4 md:py-2 rounded-full flex items-center gap-2 text-xs md:text-sm text-app-muted hover:text-blue-400">
-                                            <Facebook size={14} className="md:w-4 md:h-4" />
-                                            <span>Face</span>
-                                        </button>
-                                        <button onClick={onShareTikTok} className="glass-button px-3 py-1.5 md:px-4 md:py-2 rounded-full flex items-center gap-2 text-xs md:text-sm text-app-muted hover:text-pink-400">
-                                            <Music size={14} className="md:w-4 md:h-4" />
-                                            <span>TikTok</span>
-                                        </button>
-                                    </div>
+                                        return (
+                                            <>
+                                                {/* Conversational Intro */}
+                                                <motion.div
+                                                    initial={{ opacity: 0 }}
+                                                    animate={{ opacity: 1 }}
+                                                    transition={{ duration: 0.8 }}
+                                                    className="text-[15px] md:text-base text-app-text leading-relaxed whitespace-pre-line font-light tracking-wide mb-3"
+                                                >
+                                                    {intro}
+                                                </motion.div>
+
+                                                {/* Copyable Content Box */}
+                                                {content && (
+                                                    <div className="bg-white/5 border border-white/10 rounded-xl p-5 backdrop-blur-md shadow-sm hover:bg-white/10 transition-colors">
+                                                        <div className="text-[15px] md:text-base text-app-text leading-relaxed whitespace-pre-line font-sans tracking-wide">
+                                                            {content}
+                                                        </div>
+
+                                                        {/* Actions for Content Only */}
+                                                        <div className="flex flex-wrap gap-2 pt-4 border-t border-white/10 mt-4">
+                                                            <button onClick={() => {
+                                                                navigator.clipboard.writeText(content);
+                                                                // You might want to add a toast here
+                                                            }} className="glass-button px-3 py-1.5 md:px-4 md:py-2 rounded-full flex items-center gap-2 text-xs md:text-sm text-app-muted hover:text-green-400">
+                                                                <Copy size={14} className="md:w-4 md:h-4" />
+                                                                <span>Copy</span>
+                                                            </button>
+                                                            <button onClick={() => onRead(content)} className="glass-button px-3 py-1.5 md:px-4 md:py-2 rounded-full flex items-center gap-2 text-xs md:text-sm text-app-muted hover:text-app-text">
+                                                                {isReading ? <VolumeX size={14} className="md:w-4 md:h-4" /> : <Volume2 size={14} className="md:w-4 md:h-4" />}
+                                                                <span>Đọc</span>
+                                                            </button>
+                                                            <button onClick={() => onShareFacebook(content, item.image_url)} className="glass-button px-3 py-1.5 md:px-4 md:py-2 rounded-full flex items-center gap-2 text-xs md:text-sm text-app-muted hover:text-blue-400">
+                                                                <Facebook size={14} className="md:w-4 md:h-4" />
+                                                                <span>Face</span>
+                                                            </button>
+                                                            <button onClick={() => onShareTikTok(content, item.image_url)} className="glass-button px-3 py-1.5 md:px-4 md:py-2 rounded-full flex items-center gap-2 text-xs md:text-sm text-app-muted hover:text-pink-400">
+                                                                <Music size={14} className="md:w-4 md:h-4" />
+                                                                <span>TikTok</span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Fallback actions if no separator found (old messages) */}
+                                                {!content && (
+                                                    <div className="flex flex-wrap gap-2 pt-1 md:pt-2">
+                                                        <button onClick={() => onRead(item.description || "")} className="glass-button px-3 py-1.5 md:px-4 md:py-2 rounded-full flex items-center gap-2 text-xs md:text-sm text-app-muted hover:text-app-text">
+                                                            {isReading ? <VolumeX size={14} className="md:w-4 md:h-4" /> : <Volume2 size={14} className="md:w-4 md:h-4" />}
+                                                            <span>Đọc</span>
+                                                        </button>
+                                                        {/* Other share buttons... */}
+                                                    </div>
+                                                )}
+                                            </>
+                                        );
+                                    })()}
                                 </div>
                             </motion.div>
                         </div>
@@ -196,8 +228,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                             animate={{ opacity: 1 }}
                             className="flex gap-6 items-start"
                         >
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shrink-0 shadow-lg shadow-purple-500/20 mt-1">
-                                <Sparkles size={20} className="text-white" />
+                            <div className="w-10 h-10 flex items-center justify-center shrink-0 mt-1">
+                                <img src="/fruittext_logo.svg" alt="AI" className="w-full h-full object-contain drop-shadow-md" />
                             </div>
 
                             <div className="flex-1 space-y-3">
@@ -214,36 +246,38 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                             </div>
                         </motion.div>
                     )}
-                </div>
-            </div>
+                </div >
+            </div >
 
             {/* Lightbox / Image Modal */}
             <AnimatePresence>
-                {viewImage && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={() => setViewImage(null)}
-                        className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 cursor-zoom-out"
-                    >
-                        <motion.img
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            src={viewImage}
-                            alt="Full View"
-                            className="max-w-full max-h-[90vh] rounded-2xl shadow-2xl object-contain pointer-events-auto"
-                        />
-                        <button
-                            className="absolute top-6 right-6 text-white/50 hover:text-white bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors"
+                {
+                    viewImage && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
                             onClick={() => setViewImage(null)}
+                            className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 cursor-zoom-out"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                        </button>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                            <motion.img
+                                initial={{ scale: 0.9, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0.9, opacity: 0 }}
+                                src={viewImage}
+                                alt="Full View"
+                                className="max-w-full max-h-[90vh] rounded-2xl shadow-2xl object-contain pointer-events-auto"
+                            />
+                            <button
+                                className="absolute top-6 right-6 text-white/50 hover:text-white bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors"
+                                onClick={() => setViewImage(null)}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                            </button>
+                        </motion.div>
+                    )
+                }
+            </AnimatePresence >
         </>
     );
 };

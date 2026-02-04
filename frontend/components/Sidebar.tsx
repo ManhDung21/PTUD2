@@ -128,7 +128,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
             >
                 {/* Header */}
                 <div className="p-6 flex justify-between items-center border-b border-panel-border">
-                    <span className="font-bold text-xl tracking-tight text-app-text">FruitText AI</span>
+                    <div className="flex items-center gap-3">
+                        <img src="/fruittext_logo.svg" alt="Logo" className="w-10 h-10 object-contain hover:scale-110 transition-transform drop-shadow-md" />
+                        <span className="font-bold text-xl tracking-tight text-app-text">FruitText AI</span>
+                    </div>
                     <div className="flex items-center gap-2">
                         <button onClick={onClose} className="p-2 hover:bg-panel rounded-full transition-colors md:hidden">
                             <Plus size={20} className="text-app-text" />

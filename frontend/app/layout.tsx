@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: "FruitText AI",
   description: "FruitText AI tạo mô tả sản phẩm trái cây bằng FastAPI và Gemini",
   icons: {
-    icon: "/logo.png",
+    icon: "/fruittext_logo.svg",
   },
 };
 

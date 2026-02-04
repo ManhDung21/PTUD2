@@ -1,205 +1,159 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Image from "next/image";
-
-const steps = [
-  {
-    headline: "Chọn phong cách",
-    text: "Tiếp thị / Hài hước / Trang trọng",
-  },
-  {
-    headline: "Tải ảnh",
-    text: "Chụp hoặc tải lên",
-  },
-  {
-    headline: "Sinh mô tả",
-    text: "Copy & đăng ngay",
-  },
-];
-
-const highlights = [
-  { value: "30s", label: "Nhanh", note: "Tiết kiệm 10x thời gian" },
-  { value: "6+", label: "Phong cách", note: "Tùy chỉnh tông giọng" },
-  { value: "AI", label: "Thông minh", note: "Powered by Gemini" },
-];
-
-const features = [
-  {
-    icon: "🎯",
-    title: "Đúng tông giọng",
-    desc: "6+ phong cách viết: Tiếp thị, hài hước, trang trọng, và nhiều hơn nữa.",
-  },
-  {
-    icon: "⚡",
-    title: "Cực nhanh",
-    desc: "Chỉ 30 giây từ ảnh đến mô tả hoàn chỉnh, sẵn sàng chia sẻ.",
-  },
-  {
-    icon: "📱",
-    title: "Đa nền tảng",
-    desc: "Tối ưu cho TikTok, Facebook, Instagram và các platform khác.",
-  },
-  {
-    icon: "🤖",
-    title: "AI thông minh",
-    desc: "Sử dụng Google Gemini AI để tạo nội dung chuyên nghiệp.",
-  },
-];
-
-const teamMembers = [
-  {
-    name: "Phùng Mạnh Dũng",
-    role: "Sinh Viên",
-    imageUrl: "https://res.cloudinary.com/demo/image/upload/w_800,h_900,c_fill,g_face/v169625/sample.jpg",
-  },
-  {
-    name: "Nguyễn Hữu Nhật",
-    role: "Sinh Viên",
-    imageUrl: "https://res.cloudinary.com/demo/image/upload/w_800,h_900,c_fill,g_face/v169625/face_left.jpg",
-  },
-  {
-    name: "Nguyễn Minh Sơn",
-    role: "Giảng  viên",
-    imageUrl: "https://res.cloudinary.com/demo/image/upload/w_800,h_900,c_fill,g_face/v169625/face_center.jpg",
-  },
-];
+import React, { useEffect } from "react";
+import Link from "next/link";
+import { Sparkles, Zap, Image as ImageIcon, MessageCircle, ArrowRight } from "lucide-react";
 
 export default function LandingPage() {
-  const [activeMember, setActiveMember] = useState(0);
-
+  // Force dark mode for landing page to match aesthetic
   useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveMember((prev) => (prev + 1) % teamMembers.length);
-    }, 3200);
-    return () => clearInterval(timer);
+    document.documentElement.classList.add('dark');
   }, []);
 
-  const member = teamMembers[activeMember];
-
   return (
-    <div className="landing-page">
-      <div className="landing-hero-veil" />
+    <div className="dark h-screen bg-app text-app-text font-sans relative overflow-y-auto overflow-x-hidden scroll-smooth">
+      {/* Aurora Background */}
+      <div className="aurora-bg fixed inset-0 z-0">
+        <div className="aurora-blob blob-1"></div>
+        <div className="aurora-blob blob-2"></div>
+        <div className="aurora-blob blob-3"></div>
+      </div>
 
-      <header className="landing-header">
-        <a className="landing-logo" href="https://mdung21.id.vn" aria-label="FruitText AI">
-          <span className="landing-logo__image">
-            <Image src="/logo.jpg" alt="FruitText AI" fill sizes="40px" />
-          </span>
-          <span className="landing-logo__text">FruitText AI</span>
-        </a>
-        <a className="landing-nav__cta" href="https://mdung21.id.vn">
-          Dùng thử ngay
-        </a>
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 glass-panel border-b-0 border-white/5 bg-white/5 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 flex items-center justify-center">
+              <img src="/fruittext_logo.svg" alt="Logo" className="w-full h-full object-contain drop-shadow-md hover:scale-110 transition-transform" />
+            </div>
+            <span className="font-bold text-xl tracking-tight">FruitText AI</span>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <Link href="/" className="px-5 py-2.5 rounded-xl font-medium text-sm text-app-muted hover:text-white hover:bg-white/5 transition-colors">
+              Đăng nhập
+            </Link>
+            <Link href="/" className="px-5 py-2.5 rounded-xl bg-white text-black font-bold text-sm hover:scale-105 transition-transform shadow-lg shadow-white/10">
+              Dùng thử ngay
+            </Link>
+          </div>
+        </div>
       </header>
 
-      <main className="landing-main landing-main--neo">
-        <section className="landing-hero landing-hero--neo">
-          <div className="landing-hero__content landing-hero__content--neo landing-fade-in">
-            <div className="landing-actions">
-              <span className="landing-pill landing-pulse">FruitText AI · 30s</span>
-              <span className="landing-chip landing-chip--soft">iOS & Android</span>
-            </div>
-
-            <h1 className="landing-title landing-gradient-text">Mô tả chốt đơn trong 30 giây</h1>
-            <p className="landing-lead">
-              Tải ảnh, chọn phong cách, nhận caption AI chuyên nghiệp.
-            </p>
-
-            <p className="landing-list__title">3 bước đơn giản</p>
-            <ul className="landing-list">
-              {steps.map((item, idx) => (
-                <li key={item.headline} className="landing-list__item landing-fade-in-delay" style={{ animationDelay: `${idx * 0.1}s` }}>
-                  <span className="landing-list__icon">✓</span>
-                  <div>
-                    <p className="landing-list__headline">{item.headline}</p>
-                    <p className="landing-list__text">{item.text}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-
-            <div className="landing-actions">
-              <a className="landing-button landing-button--primary landing-button-hover" href="https://mdung21.id.vn">
-                Dùng thử miễn phí
-              </a>
-            
-            </div>
-
-            <div className="landing-highlight-grid landing-highlight-grid--inline">
-              {highlights.map((item, idx) => (
-                <div key={item.label} className="landing-highlight landing-highlight-hover landing-fade-in-delay" style={{ animationDelay: `${(idx + 3) * 0.1}s` }}>
-                  <p className="landing-highlight__value">{item.value}</p>
-                  <p className="landing-highlight__label">{item.label}</p>
-                  <p className="landing-highlight__note">{item.note}</p>
-                </div>
-              ))}
-            </div>
+      {/* Hero Section */}
+      <section className="relative z-10 pt-40 pb-20 px-6">
+        <div className="max-w-5xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-300 text-sm font-medium mb-8 backdrop-blur-md animate-fade-in-up">
+            <Sparkles size={16} />
+            <span>AI Assistant for Social Commerce</span>
           </div>
 
-          <div className="landing-visual landing-visual--neo">
-            <span className="landing-media-lines landing-glow" />
-            <div className="landing-phone landing-phone--neo">
-              <div className="landing-member-full" key={member.name}>
-                <p className="landing-phone__title">Đội ngũ</p>
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-8 leading-tight drop-shadow-2xl">
+            Biến ý tưởng thành <br />
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">nội dung bán hàng</span> đỉnh cao
+          </h1>
 
-                <div className="landing-member-full__image">
-                  <Image src={member.imageUrl} alt={member.name} fill sizes="320px" />
-                </div>
+          <p className="text-xl md:text-2xl text-app-muted max-w-3xl mx-auto mb-10 leading-relaxed">
+            Tự động tạo mô tả sản phẩm, caption TikTok/Facebook hấp dẫn chỉ từ một bức ảnh. Tăng tương tác và doanh số ngay hôm nay với FruitText AI.
+          </p>
 
-                <div className="landing-member-full__meta">
-                  <p className="landing-member-full__name">{member.name}</p>
-                  <p className="landing-member-full__role">{member.role}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="landing-float landing-float--love landing-float-animate">🍊</div>
-            <div className="landing-float landing-float--order landing-float-animate" style={{ animationDelay: '0.5s' }}>⭐</div>
-            <div className="landing-float landing-float--spark landing-float-animate" style={{ animationDelay: '1s' }}>🧡</div>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/" className="group px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold text-lg shadow-xl shadow-purple-600/20 hover:scale-105 transition-all flex items-center gap-3">
+              Bắt đầu miễn phí
+              <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+            </Link>
+            <button className="px-8 py-4 rounded-2xl glass-button text-lg font-medium hover:bg-white/10 transition-colors">
+              Xem Demo
+            </button>
           </div>
-        </section>
+        </div>
 
-        <section className="landing-section landing-fade-in" style={{ animationDelay: '0.3s' }}>
-          <div className="landing-section__head">
-            <p className="landing-kicker">Tính năng nổi bật</p>
-            <h2 className="landing-heading">AI viết thay bạn</h2>
-            <p className="landing-lead">
-              Tiết kiệm thời gian, tăng chuyển đổi với nội dung chuyên nghiệp
-            </p>
-          </div>
-
-          <div className="landing-grid landing-grid--features">
-            {features.map((feature, idx) => (
-              <div key={feature.title} className="landing-card landing-card--feature landing-card-hover landing-fade-in-delay" style={{ animationDelay: `${(idx + 5) * 0.1}s` }}>
-                <div className="landing-card__icon-large">{feature.icon}</div>
-                <h3 className="landing-card__title">{feature.title}</h3>
-                <p className="landing-card__text">{feature.desc}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="landing-section landing-cta-section landing-fade-in" style={{ animationDelay: '0.5s' }}>
-          <div className="landing-cta-card">
-            <div className="landing-cta-content">
-              <p className="landing-cta-kicker">Bắt đầu ngay</p>
-              <h3 className="landing-cta-title">Trải nghiệm FruitText AI miễn phí</h3>
-              <p className="landing-cta-text">Không cần đăng ký, không cần thẻ tín dụng. Bắt đầu tạo nội dung ngay.</p>
-
-              <a className="landing-button landing-button--primary landing-button--large landing-button-hover" href="https://mdung21.id.vn">
-                Dùng thử ngay →
-              </a>
-
-              <div className="landing-cta-badges">
-                <span className="landing-badge landing-badge--accent">✓ iOS & Android</span>
-                <span className="landing-badge">✓ TikTok / Facebook</span>
-                <span className="landing-badge">✓ Miễn phí</span>
+        {/* Hero Image / Preview */}
+        <div className="mt-20 max-w-6xl mx-auto relative group perspective-1000">
+          <div className="absolute inset-0 bg-gradient-to-t from-app-bg to-transparent z-20 pointer-events-none"></div>
+          <div className="glass-panel-heavy p-2 rounded-[32px] border border-white/10 shadow-2xl transform rotate-x-12 group-hover:rotate-x-0 transition-transform duration-700">
+            <div className="aspect-[16/9] rounded-[24px] overflow-hidden bg-black/40 flex items-center justify-center relative">
+              {/* Mock UI Representation */}
+              <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-black"></div>
+              <div className="relative z-10 flex flex-col items-center gap-4 opacity-50">
+                <Sparkles size={48} className="text-purple-500 animate-pulse" />
+                <span className="text-lg font-mono text-purple-300">Generating Magic...</span>
               </div>
             </div>
           </div>
-        </section>
-      </main>
+        </div>
+      </section>
+
+      {/* Features Grid */}
+      <section className="relative z-10 py-24 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <FeatureCard
+              icon={<ImageIcon className="text-blue-400" size={32} />}
+              title="Phân tích Hình ảnh"
+              desc="AI nhận diện chi tiết sản phẩm từ màu sắc, kiểu dáng đến chất liệu để đưa ra mô tả chính xác nhất."
+            />
+            <FeatureCard
+              icon={<Zap className="text-yellow-400" size={32} />}
+              title="Tạo Caption Thần tốc"
+              desc="Viết nội dung quảng cáo Facebook, kịch bản TikTok chỉ trong vài giây với văn phong 'chốt đơn' cực cuốn."
+            />
+            <FeatureCard
+              icon={<MessageCircle className="text-pink-400" size={32} />}
+              title="Chat Hội thoại"
+              desc="Trao đổi, chỉnh sửa trực tiếp với AI để tinh chỉnh nội dung theo ý muốn của bạn."
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Stats / Social Proof */}
+      <section className="relative z-10 py-20 border-y border-white/5 bg-white/5 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+          <h2 className="text-3xl font-bold mb-12">Được tin dùng bởi 10,000+ nhà bán hàng</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <StatItem value="1M+" label="Mô tả đã tạo" />
+            <StatItem value="50k+" label="Shop online" />
+            <StatItem value="24/7" label="Hỗ trợ AI" />
+            <StatItem value="4.9/5" label="Đánh giá" />
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="relative z-10 py-12 px-6 border-t border-white/5 mt-10">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-app-muted text-sm">
+          <p>© 2024 FruitText AI. All rights reserved.</p>
+          <div className="flex gap-6">
+            <a href="#" className="hover:text-white transition-colors">Điều khoản</a>
+            <a href="#" className="hover:text-white transition-colors">Bảo mật</a>
+            <a href="#" className="hover:text-white transition-colors">Liên hệ</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+function FeatureCard({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) {
+  return (
+    <div className="glass-panel p-8 rounded-[32px] hover:bg-white/10 transition-all border border-white/5 hover:border-white/20 group">
+      <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+        {icon}
+      </div>
+      <h3 className="text-2xl font-bold mb-4 text-white">{title}</h3>
+      <p className="text-app-muted leading-relaxed text-lg">
+        {desc}
+      </p>
+    </div>
+  );
+}
+
+function StatItem({ value, label }: { value: string, label: string }) {
+  return (
+    <div className="flex flex-col gap-2">
+      <span className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-white/50">{value}</span>
+      <span className="text-app-muted font-medium uppercase tracking-wider text-sm">{label}</span>
     </div>
   );
 }
