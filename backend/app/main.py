@@ -603,7 +603,8 @@ async def generate_description_from_image(
             pass
 
     try:
-        description_text = content.generate_from_image(settings.gemini_api_key, image, style, prompt)
+        user_name = current_user.get("full_name") if current_user else None
+        description_text = content.generate_from_image(settings.gemini_api_key, image, style, prompt, user_name)
     except Exception as e:
         print(f"Gemini Image Generation Error: {e}")
         raise HTTPException(status_code=500, detail=f"Lỗi tạo mô tả từ ảnh: {str(e)}")
@@ -676,7 +677,8 @@ async def generate_description_from_text(
     settings = get_settings()
 
     try:
-        description_text = content.generate_from_text(settings.gemini_api_key, payload.product_info, payload.style)
+        user_name = current_user.get("full_name") if current_user else None
+        description_text = content.generate_from_text(settings.gemini_api_key, payload.product_info, payload.style, user_name)
     except Exception as e:
         print(f"Gemini Text Generation Error: {e}")
         raise HTTPException(status_code=500, detail=f"Lỗi tạo mô tả từ văn bản: {str(e)}")

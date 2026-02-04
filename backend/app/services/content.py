@@ -44,19 +44,33 @@ def get_style_prompt(style: str) -> str:
     return STYLE_PROMPTS.get(style, STYLE_PROMPTS["Tiếp thị"])
 
 
-def _image_prompt(style: str, product_info: Optional[str] = None) -> str:
+def _image_prompt(style: str, product_info: Optional[str] = None, user_name: Optional[str] = None) -> str:
     user_context = f'\nThông tin bổ sung từ người dùng: "{product_info}"' if product_info else ""
+    
+    greeting = "Anh/Chị"
+    if user_name:
+        # Simple heuristic for gender inference based on common Vietnamese names could go here, 
+        # or we just rely on the LLM to pick it up if we say "Greeting User: {user_name}"?
+        # Better approach: explicit instruction to the model.
+        pass
+
     return f"""Bạn là FruitText AI - một trợ lý viết content trái cây tận tâm, lễ phép và có hồn.
 
+Thông tin khách hàng: {user_name if user_name else "Chưa rõ tên"}
+
 Nhiệm vụ 1: Lời chào và dẫn dắt (Lễ phép, ấm áp)
-- Viết một lời nhắn ngắn gọn (2-3 dòng) gửi tới khách hàng.
-- Xưng hô: "Dạ/Em" - "Anh/Chị".
+- Viết một lời nhắn ngắn gọn (2-3 dòng) gửi tới khác hàng.
+- Xưng hô: Dựa vào tên khách hàng "{user_name}" để xưng hô "Anh" hoặc "Chị" cho phù hợp. Nếu không rõ tên hoặc không xác định được giới tính, hãy dùng "Anh/Chị".
 - Thể hiện sự hào hứng, tận tâm với sản phẩm/yêu cầu của khách.
-- Ví dụ: "Dạ, em chào anh/chị! Em đã thấy hình ảnh sản phẩm rất tươi ngon rồi ạ...", "Dạ, với yêu cầu này em xin phép gửi bản mô tả..."
+- Ví dụ: "Dạ, em chào Anh [Tên]!...", "Dạ, em chào Chị [Tên]!..."
 
 Nhiệm vụ 2: Nội dung mô tả (Bán hàng chuyên nghiệp)
 - Viết nội dung mô tả sản phẩm theo phong cách {style}.
 - Tuân thủ các quy tắc SEO, hấp dẫn.
+
+QUAN TRỌNG: Hãy KIỂM TRA KỸ xem hình ảnh có phải là TRÁI CÂY hoặc món ăn/đồ uống từ trái cây không.
+- NẾU KHÔNG PHẢI (ví dụ: người, xe, đồ vật, phong cảnh...), hãy trả lời DUY NHẤT một câu xin lỗi: "Xin lỗi, đây không phải là trái cây nên em không thể hỗ trợ ạ." và dừng lại, KHÔNG tạo nội dung bên dưới.
+- NẾU PHẢI, hãy tiếp tục thực hiện như bình thường.
 
 QUY ĐỊNH QUAN TRỌNG VỀ ĐỊNH DẠNG (BẮT BUỘC):
 [Lời nhắn lễ phép]
@@ -85,14 +99,16 @@ Lưu ý:
 """
 
 
-def _text_prompt(product_info: str, style: str) -> str:
+def _text_prompt(product_info: str, style: str, user_name: Optional[str] = None) -> str:
     return f"""Bạn là FruitText AI - một trợ lý viết content trái cây tận tâm, lễ phép và có hồn.
+
+Thông tin khách hàng: {user_name if user_name else "Chưa rõ tên"}
 
 Nhiệm vụ 1: Lời chào và dẫn dắt (Lễ phép, ấm áp)
 - Viết một lời nhắn ngắn gọn (2-3 dòng) gửi tới khách hàng.
-- Xưng hô: "Dạ/Em" - "Anh/Chị".
+- Xưng hô: Dựa vào tên khách hàng "{user_name}" để xưng hô "Anh" hoặc "Chị" cho phù hợp. Nếu không rõ tên hoặc không xác định được giới tính, hãy dùng "Anh/Chị".
 - Thể hiện sự hào hứng, tận tâm.
-- Ví dụ: "Dạ, em nhận được thông tin rồi ạ! Dưới đây là bài viết em soạn riêng cho sản phẩm của mình..."
+- Ví dụ: "Dạ, em chào Anh [Tên]!...", "Dạ, em chào Chị [Tên]!..."
 
 Nhiệm vụ 2: Nội dung mô tả (Bán hàng chuyên nghiệp)
 - Viết nội dung mô tả sản phẩm: "{product_info}" theo phong cách {style}.
@@ -128,15 +144,15 @@ def _sanitize_output(text: str) -> str:
     return text.replace("*", "")
 
 
-def generate_from_image(api_key: str, image: Image.Image, style: str, product_info: Optional[str] = None) -> str:
+def generate_from_image(api_key: str, image: Image.Image, style: str, product_info: Optional[str] = None, user_name: Optional[str] = None) -> str:
     """Generate a product description from an image."""
     model = get_model(api_key)
-    response = model.generate_content([_image_prompt(style, product_info), image])
+    response = model.generate_content([_image_prompt(style, product_info, user_name), image])
     return _sanitize_output(response.text) if response and response.text else ""
 
 
-def generate_from_text(api_key: str, product_info: str, style: str) -> str:
+def generate_from_text(api_key: str, product_info: str, style: str, user_name: Optional[str] = None) -> str:
     """Generate a product description from product information text."""
     model = get_model(api_key)
-    response = model.generate_content(_text_prompt(product_info, style))
+    response = model.generate_content(_text_prompt(product_info, style, user_name))
     return _sanitize_output(response.text) if response and response.text else ""
