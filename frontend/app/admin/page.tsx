@@ -3,11 +3,12 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { User, ToastState, HistoryItem } from "../../types"; // Adjusted import path
 import { useRouter } from "next/navigation";
-import { Sparkles, Trash2, Users, FileText, BarChart3, LogOut, MessageSquare, Shield, ShieldAlert, Image as ImageIcon, Type, Sun, Moon } from "lucide-react";
+import { Sparkles, Trash2, Users, FileText, BarChart3, LogOut, MessageSquare, Shield, ShieldAlert, Image as ImageIcon, Type, Sun, Moon, Star, Eye, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import clsx from "clsx";
 import { TimeSeriesChart } from "../../components/TimeSeriesChart";
 import { getAvatarUrl } from "../../utils/url";
+import { ConfirmationModal } from "../../components/ConfirmationModal";
 
 interface Stats {
     total_users: number;
@@ -37,9 +38,16 @@ export default function AdminPage() {
         limit: 10
     });
 
+    // Filter State
+    const [filters, setFilters] = useState({
+        role: "all",
+        source: "all"
+    });
+
     // Data states
     const [users, setUsers] = useState<AdminUser[]>([]);
     const [descriptions, setDescriptions] = useState<HistoryItem[]>([]);
+    const [viewDescription, setViewDescription] = useState<HistoryItem | null>(null);
     const [stats, setStats] = useState<Stats | null>(null);
 
     const [loading, setLoading] = useState(true);
@@ -55,6 +63,56 @@ export default function AdminPage() {
     const showToast = (type: "success" | "error", message: string) => {
         setToast({ id: Date.now(), type, message });
         setTimeout(() => setToast(null), 3000);
+    };
+
+    // Modal State
+    const [confirmationModal, setConfirmationModal] = useState<{
+        isOpen: boolean;
+        type: 'user' | 'content' | null;
+        id: string | null;
+        title: string;
+        message: string;
+    }>({
+        isOpen: false,
+        type: null,
+        id: null,
+        title: "",
+        message: ""
+    });
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const closeConfirmationModal = () => {
+        setConfirmationModal(prev => ({ ...prev, isOpen: false }));
+        setTimeout(() => setConfirmationModal({ isOpen: false, type: null, id: null, title: "", message: "" }), 300);
+    };
+
+    const confirmDelete = async () => {
+        if (!confirmationModal.id || !confirmationModal.type) return;
+
+        setIsDeleting(true);
+        try {
+            if (confirmationModal.type === 'user') {
+                await axios.delete(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/users/${confirmationModal.id}`);
+                setUsers(prev => prev.filter(u => u.id !== confirmationModal.id));
+                showToast("success", "Đã xóa người dùng thành công");
+
+                // Update stats
+                setStats(prev => prev ? { ...prev, total_users: prev.total_users - 1 } : null);
+            } else if (confirmationModal.type === 'content') {
+                await axios.delete(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/descriptions/${confirmationModal.id}`);
+                setDescriptions(prev => prev.filter(d => d.id !== confirmationModal.id));
+                showToast("success", "Đã xóa nội dung thành công");
+
+                // Update stats
+                setStats(prev => prev ? { ...prev, total_descriptions: prev.total_descriptions - 1 } : null);
+            }
+            closeConfirmationModal();
+        } catch (err) {
+            console.error("Delete failed:", err);
+            showToast("error", "Xóa thất bại, vui lòng thử lại");
+        } finally {
+            setIsDeleting(false);
+        }
     };
 
     // Theme toggle
@@ -120,8 +178,19 @@ export default function AdminPage() {
             const params = {
                 search: queryParams.search,
                 skip,
-                limit: queryParams.limit
+                limit: queryParams.limit,
+                role: filters.role !== 'all' ? filters.role : undefined,
+                source: filters.source !== 'all' ? filters.source : undefined
             };
+
+            // Only fetch what's needed based on active tab to optimize? 
+            // Or just fetch both as before. Let's start with both for simplicity but with checks if we want.
+            // Actually, querying both tables with mixed filters might be weird if we want specific filters for specific tables.
+            // But the current implementation fetches both in parallel. 
+            // We'll pass both filter params, the backend ignores unknown params happily usually, 
+            // OR we fetch based on activeTab.
+            // Let's optimize to fetch based on active tab or just fetch both. 
+            // The original code fetched both. Let's stick to that but applying filters where relevant.
 
             const [usersRes, descRes] = await Promise.all([
                 axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/users`, { params }),
@@ -169,7 +238,7 @@ export default function AdminPage() {
             fetchTableData();
         }, 300);
         return () => clearTimeout(timeoutId);
-    }, [queryParams]);
+    }, [queryParams, filters]);
 
     useEffect(() => {
         // Refetch analytics when granularity changes
@@ -185,18 +254,14 @@ export default function AdminPage() {
         setQueryParams(prev => ({ ...prev, page: newPage }));
     };
 
-    const handleDeleteUser = async (userId: string) => {
-        if (!window.confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
-        try {
-            await axios.delete(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/users/${userId}`);
-            showToast("success", "User deleted successfully");
-            fetchTableData();
-            // Update stats
-            const statsRes = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/stats`);
-            setStats(statsRes.data);
-        } catch (err) {
-            showToast("error", "Failed to delete user");
-        }
+    const handleDeleteUser = (userId: string) => {
+        setConfirmationModal({
+            isOpen: true,
+            type: 'user',
+            id: userId,
+            title: "Xóa Người Dùng?",
+            message: "Hành động này sẽ xóa vĩnh viễn người dùng này khỏi hệ thống. Bạn có chắc chắn muốn tiếp tục không?"
+        });
     };
 
     const handleUpdateRole = async (userId: string, newRole: string) => {
@@ -219,16 +284,14 @@ export default function AdminPage() {
         }
     };
 
-    const handleDeleteDescription = async (id: string) => {
-        if (!window.confirm("Delete this content?")) return;
-        try {
-            await axios.delete(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/descriptions/${id}`);
-            showToast("success", "Content deleted successfully");
-            setDescriptions(prev => prev.filter(d => d.id !== id));
-            setStats(prev => prev ? { ...prev, total_descriptions: prev.total_descriptions - 1 } : null);
-        } catch (err) {
-            showToast("error", "Failed to delete content");
-        }
+    const handleDeleteDescription = (id: string) => {
+        setConfirmationModal({
+            isOpen: true,
+            type: 'content',
+            id: id,
+            title: "Xóa Nội Dung?",
+            message: "Nội dung này sẽ bị xóa vĩnh viễn và không thể khôi phục. Bạn có muốn xóa không?"
+        });
     };
 
     if (loading) return <div className="min-h-screen bg-black text-white flex items-center justify-center font-sans"><Sparkles className="animate-spin mr-2" /> Loading Admin Dashboard...</div>;
@@ -478,7 +541,23 @@ export default function AdminPage() {
                                         transition={{ duration: 0.2 }}
                                     >
                                         <div className="p-6 border-b border-panel-border flex justify-between items-center bg-panel">
-                                            <h2 className="text-lg font-bold flex items-center gap-2 text-app-text"><Users size={18} className="text-blue-400" /> Registered Users</h2>
+                                            <div className="flex items-center gap-4">
+                                                <h2 className="text-lg font-bold flex items-center gap-2 text-app-text"><Users size={18} className="text-blue-400" /> Registered Users</h2>
+                                                <select
+                                                    value={filters.role}
+                                                    onChange={(e) => setFilters(prev => ({ ...prev, role: e.target.value }))}
+                                                    className={clsx(
+                                                        "text-xs font-medium px-2 py-1 rounded border outline-none cursor-pointer transition-colors",
+                                                        isDarkMode ? "bg-white/5 border-white/10 text-gray-300 focus:border-blue-500" : "bg-white border-gray-200 text-gray-700 focus:border-blue-500"
+                                                    )}
+                                                >
+                                                    <option value="all">Tất cả vai trò</option>
+                                                    <option value="admin">Admin</option>
+                                                    <option value="user_pro">Pro User</option>
+                                                    <option value="user_free">Free User</option>
+                                                    <option value="user">User</option>
+                                                </select>
+                                            </div>
                                             <span className={clsx("text-xs uppercase tracking-wider font-bold", isDarkMode ? "text-gray-500" : "text-gray-600")}>{users.length} Records</span>
                                         </div>
                                         <div className="overflow-x-auto">
@@ -560,7 +639,21 @@ export default function AdminPage() {
                                         transition={{ duration: 0.2 }}
                                     >
                                         <div className="p-6 border-b border-panel-border flex justify-between items-center bg-panel">
-                                            <h2 className="text-lg font-bold flex items-center gap-2 text-app-text"><MessageSquare size={18} className="text-pink-400" /> Generated Descriptions</h2>
+                                            <div className="flex items-center gap-4">
+                                                <h2 className="text-lg font-bold flex items-center gap-2 text-app-text"><MessageSquare size={18} className="text-pink-400" /> Mô tả đã tạo</h2>
+                                                <select
+                                                    value={filters.source}
+                                                    onChange={(e) => setFilters(prev => ({ ...prev, source: e.target.value }))}
+                                                    className={clsx(
+                                                        "text-xs font-medium px-2 py-1 rounded border outline-none cursor-pointer transition-colors",
+                                                        isDarkMode ? "bg-white/5 border-white/10 text-gray-300 focus:border-pink-500" : "bg-white border-gray-200 text-gray-700 focus:border-pink-500"
+                                                    )}
+                                                >
+                                                    <option value="all">Tất cả loại</option>
+                                                    <option value="text">Văn bản</option>
+                                                    <option value="image">Hình ảnh</option>
+                                                </select>
+                                            </div>
                                             <span className={clsx("text-xs uppercase tracking-wider font-bold", isDarkMode ? "text-gray-500" : "text-gray-600")}>{descriptions.length} Items</span>
                                         </div>
                                         <div className="overflow-x-auto">
@@ -570,6 +663,8 @@ export default function AdminPage() {
                                                         <th className="p-4 pl-6">Type</th>
                                                         <th className="p-4">Summary</th>
                                                         <th className="p-4">Style</th>
+                                                        <th className="p-4">Rating</th>
+                                                        <th className="p-4">Người Tạo</th>
                                                         <th className="p-4">Date</th>
                                                         <th className="p-4 text-right pr-6">Action</th>
                                                     </tr>
@@ -599,8 +694,29 @@ export default function AdminPage() {
                                                                 </div>
                                                             </td>
                                                             <td className={clsx("p-4 text-xs italic", isDarkMode ? "text-gray-400" : "text-gray-600")}>{d.style}</td>
+                                                            <td className={clsx("p-4 text-xs font-mono", isDarkMode ? "text-gray-400" : "text-gray-600")}>
+                                                                {d.rating ? (
+                                                                    <span className="flex items-center text-yellow-500 gap-1 font-bold">
+                                                                        {d.rating} <Star size={12} fill="currentColor" />
+                                                                    </span>
+                                                                ) : <span className="opacity-30">-</span>}
+                                                            </td>
+                                                            <td className={clsx("p-4 text-xs font-mono", isDarkMode ? "text-gray-400" : "text-gray-600")}>
+                                                                <div>{d.user_full_name || "Unknown"}</div>
+                                                                <div className="text-[10px] opacity-70">{d.user_email}</div>
+                                                            </td>
                                                             <td className={clsx("p-4 text-xs font-mono", isDarkMode ? "text-gray-500" : "text-gray-600")}>{new Date(d.timestamp).toLocaleDateString()}</td>
                                                             <td className="p-4 text-right pr-6">
+                                                                <button
+                                                                    onClick={() => setViewDescription(d)}
+                                                                    className={clsx(
+                                                                        "p-2 rounded-lg transition-all opacity-0 group-hover:opacity-100 mr-2",
+                                                                        isDarkMode ? "hover:bg-blue-500/10 text-gray-600 hover:text-blue-400" : "hover:bg-blue-100 text-gray-400 hover:text-blue-500"
+                                                                    )}
+                                                                    title="View Details"
+                                                                >
+                                                                    <Eye size={16} />
+                                                                </button>
                                                                 <button
                                                                     onClick={() => handleDeleteDescription(d.id)}
                                                                     className={clsx(
@@ -660,6 +776,121 @@ export default function AdminPage() {
                     </div>
                 </div>
             </main>
+
+            <ConfirmationModal
+                isOpen={confirmationModal.isOpen}
+                onClose={closeConfirmationModal}
+                onConfirm={confirmDelete}
+                title={confirmationModal.title}
+                message={confirmationModal.message}
+                isLoading={isDeleting}
+                isDarkMode={isDarkMode}
+            />
+
+            {/* View Description Modal */}
+            <AnimatePresence>
+                {viewDescription && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setViewDescription(null)}
+                            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className={clsx(
+                                "relative w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-2xl border shadow-2xl flex flex-col",
+                                isDarkMode ? "bg-[#121212] border-white/10" : "bg-white border-gray-200"
+                            )}
+                        >
+                            {/* Modal Header */}
+                            <div className={clsx("p-6 border-b flex justify-between items-center shrink-0", isDarkMode ? "border-white/10 bg-[#151515]" : "border-gray-100 bg-gray-50")}>
+                                <h3 className={clsx("text-lg font-bold flex items-center gap-2", isDarkMode ? "text-white" : "text-gray-900")}>
+                                    <FileText size={20} className="text-blue-500" />
+                                    Content Details
+                                </h3>
+                                <button
+                                    onClick={() => setViewDescription(null)}
+                                    className={clsx("p-2 rounded-lg transition-colors", isDarkMode ? "hover:bg-white/10 text-gray-400 hover:text-white" : "hover:bg-gray-200 text-gray-500 hover:text-gray-900")}
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            {/* Modal Content */}
+                            <div className="p-6 overflow-y-auto custom-scrollbar">
+                                <div className="space-y-6">
+                                    {/* Image Section */}
+                                    {viewDescription.image_url && (
+                                        <div className="rounded-xl overflow-hidden border border-white/10 bg-black/50">
+                                            <img src={viewDescription.image_url} alt="Reference" className="w-full h-auto max-h-[400px] object-contain mx-auto" />
+                                        </div>
+                                    )}
+
+                                    {/* Meta Info Grid */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className={clsx("p-4 rounded-xl border", isDarkMode ? "bg-white/5 border-white/5" : "bg-gray-50 border-gray-100")}>
+                                            <div className={clsx("text-xs font-medium uppercase tracking-wider mb-1", isDarkMode ? "text-gray-500" : "text-gray-400")}>Created By</div>
+                                            <div className="font-medium flex items-center gap-2">
+                                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 text-[10px] flex items-center justify-center text-white">
+                                                    {viewDescription.user_full_name?.charAt(0) || "U"}
+                                                </div>
+                                                <span className={clsx(isDarkMode ? "text-gray-200" : "text-gray-900")}>{viewDescription.user_full_name || "Unknown"}</span>
+                                            </div>
+                                            <div className={clsx("text-xs mt-0.5 ml-8", isDarkMode ? "text-gray-500" : "text-gray-500")}>{viewDescription.user_email}</div>
+                                        </div>
+                                        <div className={clsx("p-4 rounded-xl border", isDarkMode ? "bg-white/5 border-white/5" : "bg-gray-50 border-gray-100")}>
+                                            <div className={clsx("text-xs font-medium uppercase tracking-wider mb-1", isDarkMode ? "text-gray-500" : "text-gray-400")}>Rating</div>
+                                            <div className="font-medium">
+                                                {viewDescription.rating ? (
+                                                    <div className="flex items-center gap-1 text-yellow-400">
+                                                        <span className="text-xl font-bold">{viewDescription.rating}</span>
+                                                        <div className="flex">
+                                                            {[1, 2, 3, 4, 5].map(star => (
+                                                                <Star
+                                                                    key={star}
+                                                                    size={14}
+                                                                    fill={viewDescription.rating! >= star ? "currentColor" : "none"}
+                                                                    className={viewDescription.rating! >= star ? "text-yellow-400" : "text-gray-600"}
+                                                                />
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                ) : <span className="opacity-50 italic">Not rated yet</span>}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Prompt Section */}
+                                    <div className={clsx("p-4 rounded-xl border", isDarkMode ? "bg-white/5 border-white/5" : "bg-gray-50 border-gray-100")}>
+                                        <div className={clsx("text-xs font-medium uppercase tracking-wider mb-2 flex justify-between", isDarkMode ? "text-gray-500" : "text-gray-400")}>
+                                            <span>Input Prompt</span>
+                                            <span className="px-2 py-0.5 rounded bg-white/10 text-white text-[10px]">{viewDescription.style}</span>
+                                        </div>
+                                        <p className={clsx("text-sm leading-relaxed", isDarkMode ? "text-gray-300" : "text-gray-700")}>{viewDescription.prompt || "No text prompt provided"}</p>
+                                    </div>
+
+                                    {/* Full Description Section */}
+                                    <div className={clsx("p-4 rounded-xl border", isDarkMode ? "bg-white/5 border-white/5" : "bg-gray-50 border-gray-100")}>
+                                        <div className={clsx("text-xs font-medium uppercase tracking-wider mb-2", isDarkMode ? "text-gray-500" : "text-gray-400")}>Generated Content</div>
+                                        <div className={clsx("text-sm leading-relaxed whitespace-pre-wrap font-sans", isDarkMode ? "text-gray-200" : "text-gray-800")}>
+                                            {viewDescription.full_description}
+                                        </div>
+                                    </div>
+
+                                    <div className={clsx("text-xs text-right", isDarkMode ? "text-gray-600" : "text-gray-400")}>
+                                        ID: {viewDescription.id} • Created: {new Date(viewDescription.timestamp).toLocaleString()}
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

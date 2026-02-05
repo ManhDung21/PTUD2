@@ -19,6 +19,7 @@ def get_admin_user(current_user: UserDocument = Depends(get_current_user)) -> Us
 @router.get("/users", response_model=List[UserOut])
 async def get_all_users(
     search: str = None,
+    role: str = None,
     skip: int = 0,
     limit: int = 50,
     db: Database = Depends(get_database),
@@ -26,13 +27,14 @@ async def get_all_users(
 ):
     query = {}
     if search:
-        query = {
-            "$or": [
-                {"email": {"$regex": search, "$options": "i"}},
-                {"full_name": {"$regex": search, "$options": "i"}},
-                {"phone_number": {"$regex": search, "$options": "i"}}
-            ]
-        }
+        query["$or"] = [
+            {"email": {"$regex": search, "$options": "i"}},
+            {"full_name": {"$regex": search, "$options": "i"}},
+            {"phone_number": {"$regex": search, "$options": "i"}}
+        ]
+    
+    if role and role != "all":
+        query["role"] = role
     
     users_cursor = db.users.find(query).sort("created_at", -1).skip(skip).limit(limit)
     users = []
@@ -90,6 +92,7 @@ from ..schemas import RoleUpdateRequest, HistoryItem
 @router.get("/descriptions", response_model=List[HistoryItem])
 async def get_all_descriptions(
     search: str = None,
+    source: str = None,
     skip: int = 0,
     limit: int = 50,
     db: Database = Depends(get_database),
@@ -97,18 +100,28 @@ async def get_all_descriptions(
 ):
     query = {}
     if search:
-        query = {
-            "$or": [
-                {"content": {"$regex": search, "$options": "i"}},
-                {"prompt": {"$regex": search, "$options": "i"}},
-                {"style": {"$regex": search, "$options": "i"}}
-            ]
-        }
+        query["$or"] = [
+            {"content": {"$regex": search, "$options": "i"}},
+            {"prompt": {"$regex": search, "$options": "i"}},
+            {"style": {"$regex": search, "$options": "i"}}
+        ]
+        
+    if source and source != "all":
+        query["source"] = source
         
     cursor = db.descriptions.find(query).sort("timestamp", -1).skip(skip).limit(limit)
-    results = []
+    descriptions_list = list(cursor)
     
-    for doc in cursor:
+    # Collect user IDs
+    user_ids = {doc.get("user_id") for doc in descriptions_list if doc.get("user_id")}
+    
+    # Fetch users
+    users_cursor = db.users.find({"_id": {"$in": list(user_ids)}}, {"email": 1, "full_name": 1})
+    users_map = {doc["_id"]: doc for doc in users_cursor}
+    
+    results = []
+    for doc in descriptions_list:
+        user_info = users_map.get(doc.get("user_id"))
         results.append(HistoryItem(
             id=str(doc["_id"]),
             timestamp=doc["timestamp"].isoformat(),
@@ -118,7 +131,10 @@ async def get_all_descriptions(
             full_description=doc.get("content", ""),
             image_url=doc.get("image_path"),
             prompt=doc.get("prompt"),
-            conversation_id=str(doc.get("conversation_id")) if doc.get("conversation_id") else None
+            conversation_id=str(doc.get("conversation_id")) if doc.get("conversation_id") else None,
+            user_email=user_info.get("email") if user_info else None,
+            user_full_name=user_info.get("full_name") if user_info else None,
+            rating=doc.get("rating")
         ))
     return results
 

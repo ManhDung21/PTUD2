@@ -11,6 +11,10 @@ class GenerateTextRequest(BaseModel):
     conversation_id: Optional[str] = None
 
 
+class RatingRequest(BaseModel):
+    rating: int = Field(..., ge=1, le=5)
+
+
 class DescriptionResponse(BaseModel):
     description: str
     history_id: str
@@ -18,9 +22,9 @@ class DescriptionResponse(BaseModel):
     style: str
     source: str
     image_url: Optional[str]
-    image_url: Optional[str]
     prompt: Optional[str] = None
     conversation_id: Optional[str] = None
+    rating: Optional[int] = None
 
 
 class HistoryItem(BaseModel):
@@ -31,9 +35,11 @@ class HistoryItem(BaseModel):
     summary: str
     full_description: str
     image_url: Optional[str]
-    image_url: Optional[str]
     prompt: Optional[str] = None
     conversation_id: Optional[str] = None
+    user_email: Optional[str] = None
+    user_full_name: Optional[str] = None
+    rating: Optional[int] = None
 
 
 class Conversation(BaseModel):
@@ -68,6 +74,7 @@ class UpdateProfileRequest(BaseModel):
     full_name: Optional[str] = Field(default=None, description="Họ tên")
     email: Optional[str] = Field(default=None, description="Email")
     phone_number: Optional[str] = Field(default=None, description="Số điện thoại")
+    plan_type: Optional[str] = Field(default=None, description="Loại gói cước (chỉ cho admin)")
 
 
 class TokenResponse(BaseModel):

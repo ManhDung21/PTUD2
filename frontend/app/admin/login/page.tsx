@@ -75,7 +75,7 @@ export default function AdminLoginPage() {
                                     value={identifier}
                                     onChange={(e) => setIdentifier(e.target.value)}
                                     className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-black placeholder-black/20 focus:outline-none focus:border-purple-500/50 focus:bg-white/10 transition-all shadow-inner"
-                                    placeholder="....."
+                                    placeholder="[EMAIL_ADDRESS]"
                                     required
                                 />
                             </div>

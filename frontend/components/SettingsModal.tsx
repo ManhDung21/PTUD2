@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { User } from "../types";
-import { X, LogOut, User as UserIcon, Mail, Phone, Shield, Monitor, Sun, Moon, Save, Lock, Crown, Sparkles } from "lucide-react";
+import { X, LogOut, User as UserIcon, Mail, Phone, Shield, Monitor, Sun, Moon, Save, Lock, Crown, Sparkles, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import clsx from "clsx";
 
@@ -225,23 +225,58 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                         </div>
                                     </div>
 
-                                    {/* Plan Info & Upgrade */}
                                     <div className="mb-6 p-4 rounded-2xl bg-panel border border-panel-border flex items-center justify-between transition-colors hover:border-app-muted/30">
                                         <div>
                                             <div className="text-xs font-bold text-app-muted uppercase tracking-wider mb-1">Gói hiện tại</div>
-                                            <div className="flex items-center gap-2">
-                                                <span className={clsx(
-                                                    "font-bold text-lg",
-                                                    user.plan_type === 'pro' ? "text-purple-500" :
-                                                        user.plan_type === 'plus' ? "text-blue-500" :
-                                                            "text-app-text"
-                                                )}>
-                                                    {(user.plan_type || 'Free').toUpperCase()}
-                                                </span>
-                                                {user.plan_type === 'pro' && <Crown size={16} className="text-purple-500" />}
+                                            <div className="flex items-center gap-2 relative">
+                                                {user.role === 'admin' ? (
+                                                    <div className="relative group/plan">
+                                                        <button className={clsx(
+                                                            "flex items-center gap-1 font-bold text-lg cursor-pointer hover:opacity-80 transition-opacity",
+                                                            (user.plan_type === 'pro' || !user.plan_type) ? "text-purple-600" :
+                                                                user.plan_type === 'plus' ? "text-blue-500" : "text-gray-500"
+                                                        )}>
+                                                            {user.plan_type ? user.plan_type.toUpperCase() : 'PRO'}
+                                                            <ChevronDown size={14} />
+                                                        </button>
+
+                                                        {/* Plan Dropdown */}
+                                                        <div className="absolute top-full left-0 mt-1 w-32 bg-panel border border-panel-border rounded-xl shadow-xl overflow-hidden hidden group-hover/plan:block z-50">
+                                                            {(['free', 'plus', 'pro'] as const).map((plan) => (
+                                                                <button
+                                                                    key={plan}
+                                                                    onClick={() => onUpdateProfile({ plan_type: plan } as any)}
+                                                                    className={clsx(
+                                                                        "w-full text-left px-4 py-2 text-sm font-bold hover:bg-glass-highlight transition-colors flex items-center justify-between",
+                                                                        plan === 'pro' ? "text-purple-500" :
+                                                                            plan === 'plus' ? "text-blue-500" : "text-gray-500",
+                                                                        user.plan_type === plan && "bg-white/5"
+                                                                    )}
+                                                                >
+                                                                    {plan.toUpperCase()}
+                                                                    {user.plan_type === plan && <div className="w-1.5 h-1.5 rounded-full bg-current" />}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <span className={clsx(
+                                                        "font-bold text-lg",
+                                                        (user.role === 'user_pro' || user.plan_type === 'pro') ? "text-yellow-500" :
+                                                            (user.role === 'user_plus' || user.plan_type === 'plus') ? "text-blue-500" :
+                                                                "text-gray-500"
+                                                    )}>
+                                                        {(user.role === 'user_pro' || user.plan_type === 'pro') ? 'PRO' :
+                                                            (user.role === 'user_plus' || user.plan_type === 'plus') ? 'PLUS' : 'FREE'}
+                                                    </span>
+                                                )}
+
+                                                {(user.role === 'admin' || user.role === 'user_pro' || user.plan_type === 'pro') && (
+                                                    <Crown size={16} className={user.role === 'admin' ? "text-purple-600" : "text-yellow-500"} />
+                                                )}
                                             </div>
                                         </div>
-                                        {user.plan_type !== 'pro' && (
+                                        {!(user.role === 'admin' || user.role === 'user_pro' || user.plan_type === 'pro') && (
                                             <button
                                                 onClick={() => {
                                                     onClose();

@@ -65,6 +65,7 @@ def history_item_from_doc(description: DescriptionDocument) -> Dict[str, str | N
         "full_description": content,
         "image_url": _image_url(description.get("image_path")),
         "prompt": description.get("prompt"),
+        "rating": description.get("rating"),
     }
 
 

@@ -7,6 +7,7 @@ export interface DescriptionResponse {
     image_url?: string | null;
     prompt?: string | null;
     conversation_id?: string | null;
+    rating?: number | null;
 }
 
 export interface HistoryItem {
@@ -19,6 +20,9 @@ export interface HistoryItem {
     image_url?: string | null;
     prompt?: string | null;
     conversation_id?: string | null;
+    user_email?: string | null;
+    user_full_name?: string | null;
+    rating?: number | null;
 }
 
 export interface Conversation {

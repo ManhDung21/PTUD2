@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Conversation, User } from "../types";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, MessageSquare, Trash2, Settings, User as UserIcon, LogOut, Info, Sparkles, Crown, LogIn } from "lucide-react";
+import { Plus, MessageSquare, Trash2, Settings, User as UserIcon, LogOut, Info, Sparkles, Crown, LogIn, Sun, Moon } from "lucide-react";
 import clsx from "clsx";
 import { useRef, useEffect } from 'react';
 
@@ -19,6 +19,8 @@ interface SidebarProps {
     onProfileClick: () => void;
     onOpenInfo: () => void;
     onOpenPricing: () => void;
+    isDarkMode: boolean;
+    onToggleTheme: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -32,7 +34,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     onDeleteConversation,
     onProfileClick,
     onOpenInfo,
-    onOpenPricing
+    onOpenPricing,
+    isDarkMode,
+    onToggleTheme
 }) => {
     const [deleteId, setDeleteId] = useState<string | null>(null);
 
@@ -133,8 +137,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         <span className="font-bold text-xl tracking-tight text-app-text">FruitText AI</span>
                     </div>
                     <div className="flex items-center gap-2">
+                        <button
+                            onClick={onToggleTheme}
+                            className="p-2 hover:bg-panel rounded-full transition-colors group"
+                            title={isDarkMode ? "Chuyển sang chế độ sáng" : "Chuyển sang chế độ tối"}
+                        >
+                            {isDarkMode ? (
+                                <Sun size={20} className="text-yellow-400 group-hover:rotate-90 transition-transform duration-500" />
+                            ) : (
+                                <Moon size={20} className="text-blue-500 group-hover:-rotate-12 transition-transform duration-500" />
+                            )}
+                        </button>
                         <button onClick={onClose} className="p-2 hover:bg-panel rounded-full transition-colors md:hidden">
-                            <Plus size={20} className="text-app-text" />
+                            <Plus size={20} className="text-app-text rotate-45" />
                         </button>
                     </div>
                 </div>
@@ -216,11 +231,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             <div className="flex items-center justify-between px-2">
                                 <span className={clsx(
                                     "text-[10px] font-bold px-2 py-0.5 rounded-full border",
-                                    (user.plan_type === 'pro') ? "bg-purple-500/10 text-purple-500 border-purple-500/20" :
-                                        (user.plan_type === 'plus') ? "bg-blue-500/10 text-blue-500 border-blue-500/20" :
-                                            "bg-gray-500/10 text-gray-500 border-gray-500/20"
+                                    (user.role === 'admin') ? "bg-purple-500/10 text-purple-500 border-purple-500/20" :
+                                        (user.role === 'user_pro' || user.plan_type === 'pro') ? "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" :
+                                            (user.role === 'user_plus' || user.plan_type === 'plus') ? "bg-blue-500/10 text-blue-500 border-blue-500/20" :
+                                                "bg-gray-500/10 text-gray-500 border-gray-500/20"
                                 )}>
-                                    {(user.plan_type || 'FREE').toUpperCase()}
+                                    {user.role === 'admin' ? 'ADMIN' :
+                                        (user.role === 'user_pro' || user.plan_type === 'pro') ? 'PRO' :
+                                            (user.role === 'user_plus' || user.plan_type === 'plus') ? 'PLUS' : 'FREE'}
                                 </span>
 
                                 {user.plan_type !== 'pro' && (

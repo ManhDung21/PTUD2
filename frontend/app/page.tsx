@@ -294,11 +294,11 @@ export default function HomePage() {
     try {
       if (!token) return;
 
-      const res = await axios.put<{ full_name: string; phone_number: string; email: string }>(`${API_BASE_URL}/auth/profile`, data, {
+      const res = await axios.put<{ full_name: string; phone_number: string; email: string; plan_type?: string }>(`${API_BASE_URL}/auth/profile`, data, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      setUser(prev => prev ? { ...prev, full_name: res.data.full_name, phone_number: res.data.phone_number } : null);
+      setUser(prev => prev ? { ...prev, ...res.data } : null);
       showToast("success", "Cập nhật thông tin thành công");
     } catch (err: any) {
       showToast("error", err.response?.data?.detail || "Không thể cập nhật thông tin");
@@ -367,7 +367,8 @@ export default function HomePage() {
         source: item.source,
         image_url: item.image_url,
         prompt: item.prompt,
-        conversation_id: conv.id
+        conversation_id: conv.id,
+        rating: item.rating
       }));
       setSession(messages);
     } catch (err) {
@@ -424,27 +425,46 @@ export default function HomePage() {
     }, "image/jpeg");
   };
 
+  // Audio Ref for robust playback management
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // ... (existing code)
+
   const handleRead = async (text: string) => {
+    // 1. Stop current audio if playing
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+
+    // 2. Toggle Off logic
     if (isReading) {
       setIsReading(false);
-      // Just flag, actual stop logic needs audio ref which we didn't fully implement in this simplified version
-      // Ideally we keep the audio ref in a useRef here or inside a hook
       return;
     }
+
+    // 3. Start new playback (Streaming)
     setIsReading(true);
     try {
-      const response = await axios.post(
-        `${API_BASE_URL}/api/tts`,
-        { product_info: text, style: "" },
-        { responseType: "blob" }
-      );
-      const audioUrl = URL.createObjectURL(response.data);
-      const audio = new Audio(audioUrl);
-      audio.onended = () => setIsReading(false);
-      audio.play();
+      // Create new Audio instance if needed
+      if (!audioRef.current) {
+        audioRef.current = new Audio();
+        audioRef.current.onended = () => setIsReading(false);
+        audioRef.current.onerror = () => {
+          setIsReading(false);
+          showToast("error", "Lỗi phát âm thanh");
+        };
+      }
+
+      // Use GET request for streaming (Browser handles buffering automatically)
+      const streamUrl = `${API_BASE_URL}/api/tts?text=${encodeURIComponent(text)}`;
+      audioRef.current.src = streamUrl;
+
+      await audioRef.current.play();
     } catch (e) {
+      console.error(e);
       setIsReading(false);
-      showToast("error", "Lỗi đọc văn bản");
+      showToast("error", "Không thể đọc nội dung này");
     }
   };
 
@@ -485,6 +505,12 @@ export default function HomePage() {
         window.open('https://www.tiktok.com', '_blank');
       }, 1000);
     }
+  };
+
+  const handleRate = (historyId: string, rating: number) => {
+    setSession(prev => prev.map(item =>
+      item.history_id === historyId ? { ...item, rating } : item
+    ));
   };
 
   return (
@@ -540,6 +566,8 @@ export default function HomePage() {
           onDeleteConversation={handleDeleteConversation}
           onOpenInfo={() => setSettingsVisible(true)}
           onOpenPricing={() => setPricingVisible(true)}
+          isDarkMode={isDarkMode}
+          onToggleTheme={toggleTheme}
         />
 
         <main className="flex-1 flex flex-col relative w-full h-full z-10 transition-all duration-300">
@@ -552,6 +580,7 @@ export default function HomePage() {
             onShareFacebook={() => showToast("success", "Tính năng chia sẻ đang được cập nhật")}
             onShareTikTok={() => showToast("success", "Tính năng chia sẻ đang được cập nhật")}
             inputContent={{ text: input, image: selectedImagePreview, style: selectedStyle }}
+            onRate={handleRate}
           />
 
         </main>
@@ -613,6 +642,7 @@ export default function HomePage() {
           onClose={() => setPricingVisible(false)}
           onUpgrade={handleUpgradeClick}
           currentPlan={user?.plan_type || 'free'}
+          role={user?.role}
         />
 
         <PaymentMethodModal

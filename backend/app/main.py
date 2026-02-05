@@ -33,6 +33,7 @@ from .schemas import (
     TokenResponse,
     UpdateProfileRequest,
     UserOut,
+    RatingRequest,
 )
 from .services import auth, content, email as email_service, history as history_service, tts, conversations as conversation_service
 from .services import cloudinary_service
@@ -115,6 +116,9 @@ def _user_out(user: UserDocument) -> UserOut:
         role=user.get("role", "user"),
         avatar_url=user.get("avatar_url"),
         created_at=created_at.isoformat(),
+        plan_type=user.get("plan_type", "free"),
+        subscription_status=user.get("subscription_status", "none"),
+        stripe_customer_id=user.get("stripe_customer_id"),
     )
 
 
@@ -151,6 +155,12 @@ async def _process_avatar_upload(
 def _append_user_info(description: str, user: Optional[UserDocument]) -> str:
     if not user:
         return description
+        
+    # Check if this is a structured content generation (contains |||)
+    # If it's just a conversational response, do not append contact info
+    if "|||" not in description:
+        return description
+
     parts: list[str] = []
     full_name = (user.get("full_name") or "").strip()
     email = (user.get("email") or "").strip()
@@ -525,6 +535,14 @@ def update_profile(
             raise HTTPException(status_code=400, detail="Số điện thoại đã tồn tại")
         updates["phone_number"] = phone
 
+    if payload.plan_type is not None:
+        # Only allow admin to change their own plan type via this endpoint for simulation
+        if current_user.get("role") == "admin":
+             if payload.plan_type in ["free", "plus", "pro"]:
+                 updates["plan_type"] = payload.plan_type
+             else:
+                 raise HTTPException(status_code=400, detail="Invalid plan type")
+
     if not updates:
         raise HTTPException(status_code=400, detail="Không có thông tin cập nhật")
 
@@ -772,28 +790,68 @@ def get_all_users(
     return [_user_out(user) for user in users]
 
 
+@app.get("/api/tts")
+async def text_to_speech_get(
+    text: str,
+    current_user: Optional[UserDocument] = Depends(get_current_user_optional),
+) -> StreamingResponse:
+    """Generate speech from text using Edge-TTS (Streaming) via GET."""
+    if not text:
+        raise HTTPException(status_code=400, detail="Vui lòng cung cấp văn bản")
+        
+    try:
+        # Use generator directly for streaming
+        return StreamingResponse(
+            tts.generate_speech(text),
+            media_type="audio/mpeg",
+            headers={"Content-Disposition": "inline; filename=speech.mp3"}
+        )
+    except Exception as e:
+        print(f"TTS Generation Error: {e}")
+        raise HTTPException(status_code=500, detail=f"Lỗi tạo giọng đọc: {str(e)}")
+
+
 @app.post("/api/tts")
-async def text_to_speech(
+async def text_to_speech_post(
     payload: GenerateTextRequest,
     current_user: Optional[UserDocument] = Depends(get_current_user_optional),
 ) -> StreamingResponse:
-    """Generate speech from text using Edge-TTS."""
-    # Use product_info as the text to speak
+    """Generate speech from text using Edge-TTS (Streaming) via POST."""
     text = payload.product_info
     if not text:
         raise HTTPException(status_code=400, detail="Vui lòng cung cấp văn bản")
         
     try:
-        audio_buffer = await tts.generate_speech(text)
+         return StreamingResponse(
+            tts.generate_speech(text),
+            media_type="audio/mpeg",
+            headers={"Content-Disposition": "inline; filename=speech.mp3"}
+        )
     except Exception as e:
         print(f"TTS Generation Error: {e}")
         raise HTTPException(status_code=500, detail=f"Lỗi tạo giọng đọc: {str(e)}")
-    
-    return StreamingResponse(
-        audio_buffer,
-        media_type="audio/mpeg",
-        headers={"Content-Disposition": "attachment; filename=speech.mp3"}
-    )
+
+
+@app.put("/api/history/{item_id}/rate")
+def update_rating(
+    item_id: str,
+    rating_request: RatingRequest,
+    current_user: UserDocument = Depends(get_current_user),
+    db: Database = Depends(get_database),
+) -> JSONResponse:
+    """Update rating for a specific history item."""
+    try:
+        item_id_obj = ObjectId(item_id)
+        result = _descriptions_collection(db).update_one(
+            {"_id": item_id_obj},
+            {"$set": {"rating": rating_request.rating}}
+        )
+        if result.matched_count == 0:
+             raise HTTPException(status_code=404, detail="Không tìm thấy mục lịch sử")
+        return JSONResponse({"status": "ok", "message": "Đã cập nhật đánh giá"})
+    except Exception as e:
+        print(f"Error updating rating: {e}")
+        raise HTTPException(status_code=500, detail="Lỗi khi cập nhật đánh giá")
 
 
 @app.delete("/api/history/{item_id}")

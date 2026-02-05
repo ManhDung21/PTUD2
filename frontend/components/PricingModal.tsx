@@ -8,9 +8,10 @@ interface PricingModalProps {
     onClose: () => void;
     onUpgrade: (plan: 'plus' | 'pro') => void;
     currentPlan: string;
+    role?: string;
 }
 
-export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onUpgrade, currentPlan }) => {
+export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onUpgrade, currentPlan, role }) => {
     if (!isOpen) return null;
 
     const plans = [
@@ -46,7 +47,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onU
             ],
             color: 'blue',
             buttonText: 'Nâng cấp Plus',
-            disabled: currentPlan === 'plus' || currentPlan === 'pro'
+            disabled: role === 'admin' || role === 'user_pro' || currentPlan === 'plus' || currentPlan === 'pro'
         },
         {
             id: 'pro',
@@ -64,7 +65,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onU
             color: 'purple',
             badge: 'Phổ biến nhất',
             buttonText: 'Nâng cấp Pro',
-            disabled: currentPlan === 'pro'
+            disabled: role === 'admin' || role === 'user_pro' || currentPlan === 'pro'
         }
     ];
 
@@ -150,7 +151,11 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onU
                                                 : "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/25 hover:scale-[1.02] active:scale-[0.98]"
                                     )}
                                 >
-                                    {plan.disabled && plan.id === currentPlan ? "Đang sử dụng" : plan.buttonText}
+                                    {plan.disabled && (
+                                        (plan.id === 'pro' && (role === 'admin' || role === 'user_pro' || currentPlan === 'pro')) ||
+                                        (plan.id === 'plus' && (role === 'user_plus' || currentPlan === 'plus')) ||
+                                        plan.id === 'free'
+                                    ) ? (role === 'admin' ? "Đang sử dụng (Admin)" : "Đang sử dụng") : plan.buttonText}
                                 </button>
                             </div>
                         ))}

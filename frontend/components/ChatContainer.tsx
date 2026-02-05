@@ -1,9 +1,10 @@
 "use client";
 
 import React from "react";
+import axios from "axios";
 import { DescriptionResponse, User } from "../types";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Share2, Volume2, VolumeX, Facebook, Music, Copy } from "lucide-react";
+import { Sparkles, Share2, Volume2, VolumeX, Facebook, Music, Copy, Star } from "lucide-react";
 import clsx from "clsx";
 
 interface ChatContainerProps {
@@ -15,6 +16,7 @@ interface ChatContainerProps {
     onShareFacebook: (content: string, url?: string | null) => void;
     onShareTikTok: (content: string, url?: string | null) => void;
     inputContent?: { text: string; image?: string | null; style?: string };
+    onRate?: (historyId: string, rating: number) => void;
 }
 
 export const ChatContainer: React.FC<ChatContainerProps> = ({
@@ -25,7 +27,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     isReading,
     onShareFacebook,
     onShareTikTok,
-    inputContent
+    inputContent,
+    onRate
 }) => {
 
     // Welcome Screen
@@ -66,12 +69,35 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
 
     const [viewImage, setViewImage] = React.useState<string | null>(null);
     const scrollRef = React.useRef<HTMLDivElement>(null);
+    const [ratingLoading, setRatingLoading] = React.useState<string | null>(null);
+    const [hoveredStar, setHoveredStar] = React.useState<{ id: string, star: number } | null>(null);
 
     React.useEffect(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
     }, [session, loading, inputContent]);
+
+    const handleRate = async (historyId: string, rating: number) => {
+        setRatingLoading(historyId);
+        try {
+            // Optimistic update (requires parent state update ideally, but local feedback is good)
+            const token = sessionStorage.getItem("token");
+            if (!token) return;
+
+            await axios.put(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/history/${historyId}/rate`, { rating }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            // Ideally call a prop to update parent state, but for now we can rely on local state if we had it, or just show success
+            // To properly update UI, we should call a function passed from parent to update the session item
+            if (onRate) onRate(historyId, rating);
+
+        } catch (error) {
+            console.error("Rating failed", error);
+        } finally {
+            setRatingLoading(null);
+        }
+    };
 
     return (
         <>
@@ -81,7 +107,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                     {/* Render History Messages */}
                     {session.map((item, index) => (
                         <div key={item.history_id || index} className="flex flex-col gap-6 md:gap-10">
-                            {/* User Message */}
+                            {/* User Message ... */}
+                            {/* ... (keep existing User Message code) ... */}
                             <motion.div
                                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -150,38 +177,116 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                                                         </div>
 
                                                         {/* Actions for Content Only */}
-                                                        <div className="flex flex-wrap gap-2 pt-4 border-t border-white/10 mt-4">
-                                                            <button onClick={() => {
-                                                                navigator.clipboard.writeText(content);
-                                                                // You might want to add a toast here
-                                                            }} className="glass-button px-3 py-1.5 md:px-4 md:py-2 rounded-full flex items-center gap-2 text-xs md:text-sm text-app-muted hover:text-green-400">
-                                                                <Copy size={14} className="md:w-4 md:h-4" />
-                                                                <span>Copy</span>
-                                                            </button>
-                                                            <button onClick={() => onRead(content)} className="glass-button px-3 py-1.5 md:px-4 md:py-2 rounded-full flex items-center gap-2 text-xs md:text-sm text-app-muted hover:text-app-text">
-                                                                {isReading ? <VolumeX size={14} className="md:w-4 md:h-4" /> : <Volume2 size={14} className="md:w-4 md:h-4" />}
-                                                                <span>Đọc</span>
-                                                            </button>
-                                                            <button onClick={() => onShareFacebook(content, item.image_url)} className="glass-button px-3 py-1.5 md:px-4 md:py-2 rounded-full flex items-center gap-2 text-xs md:text-sm text-app-muted hover:text-blue-400">
-                                                                <Facebook size={14} className="md:w-4 md:h-4" />
-                                                                <span>Face</span>
-                                                            </button>
-                                                            <button onClick={() => onShareTikTok(content, item.image_url)} className="glass-button px-3 py-1.5 md:px-4 md:py-2 rounded-full flex items-center gap-2 text-xs md:text-sm text-app-muted hover:text-pink-400">
-                                                                <Music size={14} className="md:w-4 md:h-4" />
-                                                                <span>TikTok</span>
-                                                            </button>
+                                                        <div className="flex flex-wrap gap-2 pt-4 border-t border-white/10 mt-4 items-center justify-between">
+                                                            <div className="flex gap-2">
+                                                                <button onClick={() => {
+                                                                    navigator.clipboard.writeText(content);
+                                                                }} className="glass-button px-3 py-1.5 md:px-4 md:py-2 rounded-full flex items-center gap-2 text-xs md:text-sm text-app-muted hover:text-green-400">
+                                                                    <Copy size={14} className="md:w-4 md:h-4" />
+                                                                    <span>Copy</span>
+                                                                </button>
+                                                                <button onClick={() => onRead(content)} className="glass-button px-3 py-1.5 md:px-4 md:py-2 rounded-full flex items-center gap-2 text-xs md:text-sm text-app-muted hover:text-app-text">
+                                                                    {isReading ? <VolumeX size={14} className="md:w-4 md:h-4" /> : <Volume2 size={14} className="md:w-4 md:h-4" />}
+                                                                    <span>Đọc</span>
+                                                                </button>
+                                                                <button onClick={() => onShareFacebook(content, item.image_url)} className="glass-button px-3 py-1.5 md:px-4 md:py-2 rounded-full flex items-center gap-2 text-xs md:text-sm text-app-muted hover:text-blue-400">
+                                                                    <Facebook size={14} className="md:w-4 md:h-4" />
+                                                                    <span>Face</span>
+                                                                </button>
+                                                                <button onClick={() => onShareTikTok(content, item.image_url)} className="glass-button px-3 py-1.5 md:px-4 md:py-2 rounded-full flex items-center gap-2 text-xs md:text-sm text-app-muted hover:text-pink-400">
+                                                                    <Music size={14} className="md:w-4 md:h-4" />
+                                                                    <span>TikTok</span>
+                                                                </button>
+                                                            </div>
+                                                            {/* Star Rating */}
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="flex gap-1" onMouseLeave={() => setHoveredStar(null)}>
+                                                                    {[1, 2, 3, 4, 5].map((star) => {
+                                                                        const currentRating = item.rating || 0;
+                                                                        const isHovered = hoveredStar?.id === item.history_id && hoveredStar.star >= star;
+                                                                        const isFilled = currentRating >= star;
+                                                                        const showFilled = hoveredStar?.id === item.history_id ? isHovered : isFilled;
+
+                                                                        return (
+                                                                            <button
+                                                                                key={star}
+                                                                                onClick={() => handleRate(item.history_id, star)}
+                                                                                onMouseEnter={() => setHoveredStar({ id: item.history_id, star })}
+                                                                                className={clsx(
+                                                                                    "p-1 transition-all hover:scale-110",
+                                                                                    showFilled ? "text-yellow-400 fill-yellow-400" : "text-gray-400 hover:text-yellow-200"
+                                                                                )}
+                                                                            >
+                                                                                <Star
+                                                                                    size={16}
+                                                                                    strokeWidth={2}
+                                                                                    fill={showFilled ? "#FACC15" : "none"}
+                                                                                    className={showFilled ? "text-yellow-400" : "text-gray-400"}
+                                                                                />
+                                                                            </button>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                                {ratingLoading === item.history_id && (
+                                                                    <span className="text-[10px] text-app-muted animate-pulse">Đang gửi...</span>
+                                                                )}
+                                                                {!ratingLoading && item.rating && (
+                                                                    <span className="text-xs text-green-500 font-bold ml-1 border border-green-500/30 bg-green-500/10 px-2 py-0.5 rounded-md">
+                                                                        Bạn đã đánh giá {item.rating} sao
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 )}
-
-                                                {/* Fallback actions if no separator found (old messages) */}
+                                                {/* Fallback actions ... */}
                                                 {!content && (
-                                                    <div className="flex flex-wrap gap-2 pt-1 md:pt-2">
-                                                        <button onClick={() => onRead(item.description || "")} className="glass-button px-3 py-1.5 md:px-4 md:py-2 rounded-full flex items-center gap-2 text-xs md:text-sm text-app-muted hover:text-app-text">
-                                                            {isReading ? <VolumeX size={14} className="md:w-4 md:h-4" /> : <Volume2 size={14} className="md:w-4 md:h-4" />}
-                                                            <span>Đọc</span>
-                                                        </button>
-                                                        {/* Other share buttons... */}
+                                                    <div className="flex flex-col gap-2 pt-1 md:pt-2">
+                                                        <div className="flex flex-wrap gap-2">
+                                                            <button onClick={() => onRead(item.description || "")} className="glass-button px-3 py-1.5 md:px-4 md:py-2 rounded-full flex items-center gap-2 text-xs md:text-sm text-app-muted hover:text-app-text">
+                                                                {isReading ? <VolumeX size={14} className="md:w-4 md:h-4" /> : <Volume2 size={14} className="md:w-4 md:h-4" />}
+                                                                <span>Đọc</span>
+                                                            </button>
+                                                        </div>
+
+                                                        {/* Star Rating for Simple Responses */}
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <div className="flex gap-1" onMouseLeave={() => setHoveredStar(null)}>
+                                                                {[1, 2, 3, 4, 5].map((star) => {
+                                                                    const currentRating = item.rating || 0;
+                                                                    const isHovered = hoveredStar?.id === item.history_id && hoveredStar.star >= star;
+                                                                    const isFilled = currentRating >= star;
+                                                                    const showFilled = hoveredStar?.id === item.history_id ? isHovered : isFilled;
+
+                                                                    return (
+                                                                        <button
+                                                                            key={star}
+                                                                            onClick={() => handleRate(item.history_id, star)}
+                                                                            onMouseEnter={() => setHoveredStar({ id: item.history_id, star })}
+                                                                            className={clsx(
+                                                                                "p-1 transition-all hover:scale-110",
+                                                                                showFilled ? "text-yellow-400 fill-yellow-400" : "text-gray-400 hover:text-yellow-200"
+                                                                            )}
+                                                                        >
+                                                                            <Star
+                                                                                size={16}
+                                                                                strokeWidth={2}
+                                                                                fill={showFilled ? "#FACC15" : "none"}
+                                                                                className={showFilled ? "text-yellow-400" : "text-gray-400"}
+                                                                            />
+                                                                        </button>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                            {ratingLoading === item.history_id && (
+                                                                <span className="text-[10px] text-app-muted animate-pulse">Đang gửi...</span>
+                                                            )}
+                                                            {!ratingLoading && item.rating && (
+                                                                <span className="text-xs text-green-500 font-bold ml-1 border border-green-500/30 bg-green-500/10 px-2 py-0.5 rounded-md">
+                                                                    Bạn đã đánh giá {item.rating} sao
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 )}
                                             </>
@@ -191,8 +296,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                             </motion.div>
                         </div>
                     ))}
-
-                    {/* Pending User Message (Loading state) */}
+                    {/* ... (Pending Message & Loading Indicator from original) ... */}
                     {(loading && (inputContent?.text || inputContent?.image)) && (
                         <motion.div
                             initial={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -221,7 +325,6 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                         </motion.div>
                     )}
 
-                    {/* AI Loading Indicator */}
                     {loading && (
                         <motion.div
                             initial={{ opacity: 0 }}
@@ -246,8 +349,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                             </div>
                         </motion.div>
                     )}
-                </div >
-            </div >
+                </div>
+            </div>
 
             {/* Lightbox / Image Modal */}
             <AnimatePresence>
