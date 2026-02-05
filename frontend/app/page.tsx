@@ -294,7 +294,7 @@ export default function HomePage() {
     try {
       if (!token) return;
 
-      const res = await axios.put<{ full_name: string; phone_number: string; email: string; plan_type?: string }>(`${API_BASE_URL}/auth/profile`, data, {
+      const res = await axios.put<{ full_name: string; phone_number: string; email: string; plan_type?: 'free' | 'plus' | 'pro' }>(`${API_BASE_URL}/auth/profile`, data, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
