@@ -30,6 +30,11 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     inputContent,
     onRate
 }) => {
+    // All hooks MUST be at the top, before any conditional returns
+    const [viewImage, setViewImage] = React.useState<string | null>(null);
+    const scrollRef = React.useRef<HTMLDivElement>(null);
+    const [ratingLoading, setRatingLoading] = React.useState<string | null>(null);
+    const [hoveredStar, setHoveredStar] = React.useState<{ id: string, star: number } | null>(null);
 
     // Welcome Screen
     // Only hide if we have history (session.length > 0) or if we are actively loading (sent a message)
@@ -66,11 +71,6 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
             </div>
         );
     }
-
-    const [viewImage, setViewImage] = React.useState<string | null>(null);
-    const scrollRef = React.useRef<HTMLDivElement>(null);
-    const [ratingLoading, setRatingLoading] = React.useState<string | null>(null);
-    const [hoveredStar, setHoveredStar] = React.useState<{ id: string, star: number } | null>(null);
 
     React.useEffect(() => {
         if (scrollRef.current) {

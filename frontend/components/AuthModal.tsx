@@ -100,6 +100,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                             <p className="text-gray-700 text-base font-semibold">
                                 {mode === "login" && "Nhập thông tin để truy cập lịch sử."}
                                 {mode === "register" && "Tham gia tương lai của trò chuyện AI."}
+                                {mode === "forgot" && "Nhập email để nhận mã xác thực."}
+                                {mode === "reset" && "Nhập mã xác thực và mật khẩu mới."}
                             </p>
                         </div>
 
@@ -175,6 +177,56 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                                 <input type="email" name="email" placeholder="Email đăng ký" value={formData.email} onChange={handleChange} className="ios-input w-full rounded-2xl px-5 py-4 placeholder:text-gray-400 text-app-text text-base font-medium" required />
                             )}
 
+                            {mode === "reset" && (
+                                <>
+                                    <input
+                                        type="text"
+                                        name="identifier"
+                                        placeholder="Email hoặc SĐT"
+                                        value={formData.identifier}
+                                        onChange={handleChange}
+                                        className="ios-input w-full rounded-2xl px-5 py-4 placeholder:text-gray-400 text-app-text text-base font-medium"
+                                        required
+                                    />
+                                    <input
+                                        type="text"
+                                        name="token"
+                                        placeholder="Mã xác thực (kiểm tra email)"
+                                        value={formData.token}
+                                        onChange={handleChange}
+                                        className="ios-input w-full rounded-2xl px-5 py-4 placeholder:text-gray-400 text-app-text text-base font-medium"
+                                        required
+                                    />
+                                    <div className="relative">
+                                        <input
+                                            type={showPassword ? "text" : "password"}
+                                            name="password"
+                                            placeholder="Mật khẩu mới"
+                                            value={formData.password}
+                                            onChange={handleChange}
+                                            className="ios-input w-full rounded-2xl px-5 py-4 placeholder:text-gray-400 pr-12 text-app-text text-base font-medium"
+                                            required
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-app-text transition-colors"
+                                        >
+                                            {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}
+                                        </button>
+                                    </div>
+                                    <input
+                                        type="password"
+                                        name="confirmPassword"
+                                        placeholder="Xác nhận mật khẩu mới"
+                                        value={formData.confirmPassword}
+                                        onChange={handleChange}
+                                        className="ios-input w-full rounded-2xl px-5 py-4 placeholder:text-gray-400 text-app-text text-base font-medium"
+                                        required
+                                    />
+                                </>
+                            )}
+
                             {/* Submit Button */}
                             <button
                                 type="submit"
@@ -182,7 +234,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                                 className="w-full bg-white text-black h-[56px] rounded-full font-bold text-lg hover:scale-[1.02] active:scale-[0.98] transition-all mt-2 flex items-center justify-center gap-2 shadow-xl shadow-black/20"
                             >
                                 {loading && <Loader2 size={22} className="animate-spin" />}
-                                {mode === "login" ? "Đăng nhập" : mode === "register" ? "Đăng ký" : "Gửi liên kết"}
+                                {mode === "login" ? "Đăng nhập" : mode === "register" ? "Đăng ký" : mode === "reset" ? "Đặt lại mật khẩu" : "Gửi liên kết"}
                                 {!loading && <ArrowRight size={22} />}
                             </button>
                         </form>
@@ -190,6 +242,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         <div className="mt-8 text-center text-base text-gray-300 relative z-10 font-medium">
                             {mode === "login" ? (
                                 <>Chưa có tài khoản? <button onClick={() => setMode("register")} className="text-app-text font-semibold hover:underline">Đăng ký</button></>
+                            ) : mode === "forgot" || mode === "reset" ? (
+                                <><button onClick={() => setMode("login")} className="text-app-text font-semibold hover:underline">Quay lại Đăng nhập</button></>
                             ) : (
                                 <><button onClick={() => setMode("login")} className="text-app-text font-semibold hover:underline">Quay lại Đăng nhập</button></>
                             )}

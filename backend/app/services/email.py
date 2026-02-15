@@ -102,15 +102,17 @@ def _send_with_smtp(recipient: str, subject: str, body: str) -> bool:
 def send_password_reset_code(recipient: str, code: str) -> bool:
     body = RESET_BODY_TEMPLATE.format(code=code)
 
-    if _send_with_resend(recipient, RESET_SUBJECT, body):
+    # Try SMTP first (more reliable with Gmail App Password)
+    if _send_with_smtp(recipient, RESET_SUBJECT, body):
         return True
 
-    sent_via_smtp = _send_with_smtp(recipient, RESET_SUBJECT, body)
-    if not sent_via_smtp:
+    # Fallback to Resend
+    sent_via_resend = _send_with_resend(recipient, RESET_SUBJECT, body)
+    if not sent_via_resend:
         settings = get_settings()
         if not settings.debug:
             raise RuntimeError("Không thể gửi email xác thực")
         _log_debug(f"Email không gửi được. Mã đặt lại cho {recipient}: {code}")
-    return sent_via_smtp
+    return sent_via_resend
 
 #hehehe

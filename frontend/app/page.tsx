@@ -280,6 +280,58 @@ export default function HomePage() {
     }
   };
 
+  const handleForgotPassword = async (email: string) => {
+    setAuthLoading(true);
+    try {
+      const response = await axios.post(`${API_BASE_URL}/auth/forgot-password`, {
+        identifier: email,
+      });
+      showToast("success", response.data.message || "Đã gửi mã xác thực tới email của bạn.");
+      // Switch to reset mode after successful request
+      setAuthMode("reset");
+    } catch (error: any) {
+      console.error(error);
+      if (axios.isAxiosError(error) && error.response) {
+        showToast("error", error.response.data.detail || "Không thể gửi mã xác thực");
+      } else {
+        showToast("error", "Có lỗi xảy ra khi gửi mã xác thực");
+      }
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (data: any) => {
+    setAuthLoading(true);
+    try {
+      // Validate password confirmation
+      if (data.password !== data.confirmPassword) {
+        showToast("error", "Mật khẩu xác nhận không khớp");
+        setAuthLoading(false);
+        return;
+      }
+
+      const response = await axios.post(`${API_BASE_URL}/auth/reset-password`, {
+        identifier: data.identifier,
+        token: data.token,
+        new_password: data.password,
+      });
+
+      showToast("success", response.data.message || "Mật khẩu đã được đặt lại thành công");
+      // Switch back to login mode after successful reset
+      setAuthMode("login");
+    } catch (error: any) {
+      console.error(error);
+      if (axios.isAxiosError(error) && error.response) {
+        showToast("error", error.response.data.detail || "Không thể đặt lại mật khẩu");
+      } else {
+        showToast("error", "Có lỗi xảy ra khi đặt lại mật khẩu");
+      }
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
   const handleLogout = () => {
     setToken(null);
     setUser(null);
@@ -613,8 +665,8 @@ export default function HomePage() {
           loading={authLoading}
           onLogin={handleLogin}
           onRegister={handleRegister}
-          onForgot={async () => { }}
-          onReset={async () => { }}
+          onForgot={handleForgotPassword}
+          onReset={handleResetPassword}
         />
 
         <ProfileModal
