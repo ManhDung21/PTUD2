@@ -79,8 +79,8 @@ app = FastAPI(title="AI Product Description Service")
 
 
 app.include_router(conversations.router, prefix="/api/conversations", tags=["Conversations"])
-app.include_router(admin.router)
-app.include_router(payments.router)
+app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
+app.include_router(payments.router, prefix="/api/payments", tags=["Payments"])
 def root() -> JSONResponse:
     return JSONResponse({"message": "AI Product Description Service đang chạy", "endpoints": ["/health", "/auth", "/api"]})
 

@@ -17,6 +17,7 @@ interface ChatContainerProps {
     onShareTikTok: (content: string, url?: string | null) => void;
     inputContent?: { text: string; image?: string | null; style?: string };
     onRate?: (historyId: string, rating: number) => void;
+    showToast?: (type: "success" | "error", message: string) => void;
 }
 
 export const ChatContainer: React.FC<ChatContainerProps> = ({
@@ -28,13 +29,20 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     onShareFacebook,
     onShareTikTok,
     inputContent,
-    onRate
+    onRate,
+    showToast
 }) => {
     // All hooks MUST be at the top, before any conditional returns
     const [viewImage, setViewImage] = React.useState<string | null>(null);
     const scrollRef = React.useRef<HTMLDivElement>(null);
     const [ratingLoading, setRatingLoading] = React.useState<string | null>(null);
     const [hoveredStar, setHoveredStar] = React.useState<{ id: string, star: number } | null>(null);
+
+    React.useEffect(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+    }, [session, loading, inputContent]);
 
     // Welcome Screen
     // Only hide if we have history (session.length > 0) or if we are actively loading (sent a message)
@@ -72,28 +80,36 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
         );
     }
 
-    React.useEffect(() => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-        }
-    }, [session, loading, inputContent]);
-
     const handleRate = async (historyId: string, rating: number) => {
         setRatingLoading(historyId);
         try {
-            // Optimistic update (requires parent state update ideally, but local feedback is good)
+            // Check if user is logged in
             const token = sessionStorage.getItem("token");
-            if (!token) return;
+            if (!token) {
+                if (showToast) {
+                    showToast("error", "Vui lòng đăng nhập để đánh giá");
+                }
+                setRatingLoading(null);
+                return;
+            }
 
             await axios.put(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/history/${historyId}/rate`, { rating }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            // Ideally call a prop to update parent state, but for now we can rely on local state if we had it, or just show success
-            // To properly update UI, we should call a function passed from parent to update the session item
+
+            // Update parent state
             if (onRate) onRate(historyId, rating);
+
+            // Show success toast notification
+            if (showToast) {
+                showToast("success", `Cảm ơn bạn đã đánh giá ${rating} sao! 🌟`);
+            }
 
         } catch (error) {
             console.error("Rating failed", error);
+            if (showToast) {
+                showToast("error", "Không thể gửi đánh giá. Vui lòng thử lại.");
+            }
         } finally {
             setRatingLoading(null);
         }

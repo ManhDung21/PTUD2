@@ -629,10 +629,11 @@ export default function HomePage() {
             user={user}
             onRead={handleRead}
             isReading={isReading}
-            onShareFacebook={() => showToast("success", "Tính năng chia sẻ đang được cập nhật")}
-            onShareTikTok={() => showToast("success", "Tính năng chia sẻ đang được cập nhật")}
+            onShareFacebook={(content, url) => handleShare('facebook', content, url)}
+            onShareTikTok={(content, url) => handleShare('tiktok', content, url)}
             inputContent={{ text: input, image: selectedImagePreview, style: selectedStyle }}
             onRate={handleRate}
+            showToast={showToast}
           />
 
         </main>
@@ -702,6 +703,15 @@ export default function HomePage() {
           onClose={() => setPaymentMethodVisible(false)}
           planType={selectedPlan}
           onConfirm={handlePaymentConfirm}
+        />
+
+        <PaymentQRModal
+          isOpen={qrModalVisible}
+          onClose={() => setQrModalVisible(false)}
+          type={qrType}
+          amount={selectedPlan === 'plus' ? '99.000đ' : '199.000đ'}
+          description={`Thanh toan goi ${selectedPlan === 'plus' ? 'Plus' : 'Pro'}`}
+          user={user}
         />
       </div>
     </div>

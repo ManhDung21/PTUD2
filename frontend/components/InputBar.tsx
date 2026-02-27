@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Image, Camera, Send, Mic, X, Sparkles } from "lucide-react";
 import clsx from "clsx";
@@ -44,8 +44,25 @@ export const InputBar: React.FC<InputBarProps> = ({
 }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const mobileCameraRef = useRef<HTMLInputElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
     const [isFocused, setIsFocused] = useState(false);
     const [showStyles, setShowStyles] = useState(false);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+                setIsFocused(false);
+                setShowStyles(false);
+            } else if (containerRef.current && containerRef.current.contains(event.target as Node)) {
+                setIsFocused(true);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
 
     const styles = ["Tiếp thị", "Sáng tạo", "Chuyên nghiệp", "Hài hước"];
 
@@ -135,6 +152,7 @@ export const InputBar: React.FC<InputBarProps> = ({
             </AnimatePresence>
 
             <motion.div
+                ref={containerRef}
                 layout
                 initial={false}
                 animate={{
@@ -279,7 +297,6 @@ export const InputBar: React.FC<InputBarProps> = ({
                             }
                         }}
                         onFocus={() => setIsFocused(true)}
-                        onBlur={() => setIsFocused(false)}
                         onPaste={handlePaste}
                         placeholder={loading ? "Đang gửi..." : `Hỏi (${selectedStyle})...`}
                         rows={1}
