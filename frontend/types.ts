@@ -43,6 +43,7 @@ export interface User {
     email: string | null;
     phone_number: string | null;
     full_name: string | null;
+    address?: string | null;
     avatar_url: string | null;
     created_at: string;
     role?: string;

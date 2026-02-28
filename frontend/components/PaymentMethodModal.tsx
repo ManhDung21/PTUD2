@@ -16,7 +16,7 @@ export const PaymentMethodModal: React.FC<PaymentMethodModalProps> = ({
     planType,
     onConfirm
 }) => {
-    const [selectedMethod, setSelectedMethod] = useState<'stripe' | 'bank' | 'momo'>('stripe');
+    const [selectedMethod, setSelectedMethod] = useState<'stripe' | 'bank' | 'momo'>('bank');
 
     if (!isOpen || !planType) return null;
 
@@ -74,30 +74,6 @@ export const PaymentMethodModal: React.FC<PaymentMethodModalProps> = ({
                     {/* Payment Methods */}
                     <div className="p-6 space-y-3">
                         <div
-                            onClick={() => setSelectedMethod('stripe')}
-                            className={clsx(
-                                "flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all",
-                                selectedMethod === 'stripe'
-                                    ? "border-blue-500 bg-blue-500/5 shadow-lg shadow-blue-500/10"
-                                    : "border-panel-border hover:border-app-muted/30 bg-panel"
-                            )}
-                        >
-                            <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center shrink-0 shadow-sm">
-                                <span className="font-bold text-indigo-600 text-lg italic pr-1">VISA</span>
-                            </div>
-                            <div className="flex-1">
-                                <div className="font-bold text-app-text">Thẻ Tín dụng / Ghi nợ</div>
-                                <div className="text-xs text-app-muted">Thanh toán an toàn qua Stripe</div>
-                            </div>
-                            <div className={clsx(
-                                "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors",
-                                selectedMethod === 'stripe' ? "border-blue-500 bg-blue-500" : "border-app-muted/30"
-                            )}>
-                                {selectedMethod === 'stripe' && <Check size={14} className="text-white" />}
-                            </div>
-                        </div>
-
-                        <div
                             onClick={() => setSelectedMethod('bank')}
                             className={clsx(
                                 "flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all",
@@ -111,7 +87,7 @@ export const PaymentMethodModal: React.FC<PaymentMethodModalProps> = ({
                             </div>
                             <div className="flex-1">
                                 <div className="font-bold text-app-text">Chuyển khoản Ngân hàng</div>
-                                <div className="text-xs text-app-muted">Quét mã VietQR (Xử lý thủ công)</div>
+                                <div className="text-xs text-app-muted">Quét mã VietQR tự động xác nhận đơn</div>
                             </div>
                             <div className={clsx(
                                 "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors",
@@ -135,7 +111,7 @@ export const PaymentMethodModal: React.FC<PaymentMethodModalProps> = ({
                             </div>
                             <div className="flex-1">
                                 <div className="font-bold text-app-text">Ví MoMo</div>
-                                <div className="text-xs text-app-muted">Quét mã QR (Xử lý thủ công)</div>
+                                <div className="text-xs text-app-muted">Thanh toán tự động qua cổng MoMo</div>
                             </div>
                             <div className={clsx(
                                 "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors",

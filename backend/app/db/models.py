@@ -11,6 +11,7 @@ class UserDocument(TypedDict, total=False):
     email: Optional[str]
     phone_number: Optional[str]
     full_name: Optional[str]
+    address: Optional[str]
     avatar_url: Optional[str]
     avatar_url: Optional[str]
     role: Optional[str]  # "free", "plus", "pro", "admin"
@@ -57,7 +58,9 @@ class PasswordResetTokenDocument(TypedDict, total=False):
 class PaymentDocument(TypedDict, total=False):
     _id: ObjectId
     user_id: ObjectId
-    stripe_session_id: str
+    stripe_session_id: Optional[str]
+    payos_order_code: Optional[int]
+    plan_type: str
     amount: int
     currency: str
     status: str

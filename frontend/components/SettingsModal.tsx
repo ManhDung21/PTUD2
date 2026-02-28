@@ -10,7 +10,7 @@ interface SettingsModalProps {
     isOpen: boolean;
     onClose: () => void;
     user: User | null;
-    onUpdateProfile: (data: { full_name?: string; phone_number?: string }) => Promise<void>;
+    onUpdateProfile: (data: { full_name?: string; phone_number?: string; address?: string; plan_type?: 'free' | 'plus' | 'pro' }) => Promise<void>;
     isDarkMode: boolean;
     onToggleTheme: () => void;
     onUpdateAvatar: (file: File) => Promise<void>;
@@ -34,6 +34,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     const [activeTab, setActiveTab] = useState<Tab>("profile");
     const [fullName, setFullName] = useState("");
     const [phoneNumber, setPhoneNumber] = useState("");
+    const [address, setAddress] = useState("");
     const [loading, setLoading] = useState(false);
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -59,13 +60,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         if (user) {
             setFullName(user.full_name || "");
             setPhoneNumber(user.phone_number || "");
+            setAddress(user.address || "");
         }
     }, [user, isOpen]);
 
     const handleSaveProfile = async () => {
         setLoading(true);
         try {
-            await onUpdateProfile({ full_name: fullName, phone_number: phoneNumber });
+            await onUpdateProfile({ full_name: fullName, phone_number: phoneNumber, address: address });
             onClose();
         } catch (error) {
             // Error handling is done in parent
@@ -333,6 +335,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                                 placeholder="Nhập số điện thoại"
                                             />
                                             <p className="text-xs text-app-muted/70 px-1">Số điện thoại sẽ được gắn watermark trên ảnh.</p>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold uppercase text-app-muted tracking-wider ml-1">Địa chỉ</label>
+                                            <input
+                                                type="text"
+                                                value={address}
+                                                onChange={(e) => setAddress(e.target.value)}
+                                                className="w-full glass-input px-4 py-3 rounded-xl text-app-text focus:ring-2 focus:ring-purple-500/50 outline-none transition-all"
+                                                placeholder="Nhập địa chỉ của bạn"
+                                            />
+                                            <p className="text-xs text-app-muted/70 px-1">Địa chỉ sẽ được gắn watermark trên ảnh và hiện ở phần đặt hàng.</p>
                                         </div>
                                     </div>
 

@@ -1,10 +1,14 @@
 """Content generation helpers leveraging Gemini."""
 
 from typing import Optional
-
+import io
+import base64
 from PIL import Image
+import anthropic
 
+from pymongo.database import Database
 from .gemini import get_model
+from .market import extract_product_info, get_market_average
 
 
 STYLE_PROMPTS = {
@@ -44,27 +48,30 @@ def get_style_prompt(style: str) -> str:
     return STYLE_PROMPTS.get(style, STYLE_PROMPTS["Tiếp thị"])
 
 
-def _image_prompt(style: str, product_info: Optional[str] = None, user_name: Optional[str] = None) -> str:
-    user_context = f'\nThông tin bổ sung từ người dùng: "{product_info}"' if product_info else ""
-    
-    greeting = "Anh/Chị"
-    if user_name:
-        # Simple heuristic for gender inference based on common Vietnamese names could go here, 
-        # or we just rely on the LLM to pick it up if we say "Greeting User: {user_name}"?
-        # Better approach: explicit instruction to the model.
-        pass
+def _image_prompt(style: str, product_info: Optional[str] = None, user_name: Optional[str] = None, user_tier: str = "free", market_avg: Optional[int] = None) -> str:
+    pro_instruction = ""
+    market_text = f"\n3. DỮ LIỆU THỊ TRƯỜNG NỘI BỘ: Hiện tại nhà nông trong hệ thống đang bán mặt hàng này dao động quanh mức trung bình {market_avg} VNĐ. Hãy dùng mức giá này rải vào phần Gợi ý." if market_avg else ""
+    if user_tier in ["plus", "pro"]:
+        pro_instruction = f"""
+ĐẶC QUYỀN PRO: 
+1. BẠN LÀ CHUYÊN GIA COPYWRITING VÀ KINH DOANH NÔNG SẢN HÀNG ĐẦU VIỆT NAM. Hãy dùng ngôn từ mộc mạc, chân thành đi thẳng vào lòng người mua, mang đậm chất chợ quê hoặc nhà vườn truyền thống Việt Nam. 
+2. PHÂN TÍCH THỊ TRƯỜNG VÀ GỢI Ý GIÁ BÁN: Hãy nhìn hình ảnh, tự động phân tích cung cầu, thị hiếu và đưa ra [Gợi ý định giá] hợp lý cho sản phẩm này dựa trên kinh nghiệm. Đặt vào phần 'Gợi ý Giá Bán & Chiến Lược'.{market_text}
+"""
 
     return f"""Bạn là FruitText AI - một trợ lý viết nội dung (content) trái cây tận tâm, tinh tế và thuần Việt.
 
 Thông tin khách hàng: {user_name if user_name else "Chưa rõ tên"}
 
 Nhiệm vụ: PHÂN TÍCH HÌNH ẢNH và YÊU CẦU:
+{pro_instruction}
 
 NGUYÊN TẮC CỐT LÕI (BẮT BUỘC):
-1. **TRANG TRỌNG TIẾNG VIỆT**: Hạn chế tối đa dùng tiếng Anh (VD: thay "Hello" bằng "Xin chào", "Content" bằng "Nội dung/Bài viết", "Free" bằng "Miễn phí"). Chỉ giữ lại từ chuyên ngành không thể thay thế (như SEO, Marketing).
-2. **ĐỌC VỊ KHÁCH HÀNG**: Quan sát cách khách hàng giao tiếp để điều chỉnh giọng điệu:
-   - Nếu họ nhắn ngắn, cộc lốc -> Trả lời ngắn gọn, điềm đạm, tập trung vào công việc.
-   - Nếu họ dùng nhiều icon, teen code -> Trả lời vui vẻ, năng lượng, dùng nhiều emoji.
+1. **TRANG TRỌNG TIẾNG VIỆT**: Hạn chế sử dụng tiếng Anh tốn diện tích, chỉ giữ lại các thuật ngữ quen thuộc.
+2. **NGẮN GỌN, SÚC TÍCH**: Hãy viết bài thật ngắn gọn, cô đọng (tổng độ dài tối đa chỉ bằng 2/3 so với bình thường). TRÁNH LẶP LẠI các cấu trúc câu cũ rích, lặp ý, hãy dùng ngôn từ thật phong phú, đa dạng.
+3. **ĐIỂM NHẤN THỊ GIÁC**: KHÔNG ĐƯỢC DÙNG DẤU SAO (*) để in đậm hay in nghiêng vì hệ thống không hỗ trợ Markdown. Thay vào đó, hãy **VIẾT HOA CÁC TỪ KHÓA QUAN TRỌNG** và sử dụng thật nhiều biểu tượng cảm xúc (EMOJI) 🌈🔥 để làm bài viết thật bắt mắt, sinh động.
+4. **ĐỌC VỊ KHÁCH HÀNG**: Quan sát cách khách hàng giao tiếp để điều chỉnh giọng điệu:
+   - Nếu họ nhắn ngắn, cộc lốc -> Trả lời điềm đạm, tập trung vào công việc.
+   - Nếu họ dùng nhiều icon, teen code -> Trả lời vui vẻ, năng lượng, cực nhiều emoji.
    - Nếu họ nhắn trang trọng, đầy đủ -> Trả lời lễ phép, kính cẩn (Dạ thưa...).
 
 TRƯỜNG HỢP 1: HÌNH ẢNH KHÔNG PHẢI LÀ TRÁI CÂY/MÓN ĂN TỪ TRÁI CÂY
@@ -98,6 +105,8 @@ Cam kết:
 [Cam kết chuẩn người Việt: Bao ăn, bao đổi trả, nguồn gốc rõ ràng, không hóa chất, an toàn cho trẻ nhỏ...]
 Gợi ý:
 [Gợi ý món ăn Việt: Làm sinh tố, nước ép, chè, gỏi, chưng yến, hoặc bày mâm ngũ quả...]
+Liên hệ & Đặt hàng:
+[HÃY CUNG CẤP Địa chỉ khu vườn/Mua hàng. Nếu khách CÓ cung cấp địa chỉ, số điện thoại hoặc tên vườn -> HÃY MANG XUỐNG ĐÂY. Nếu KHÔNG -> ĐỂ TRỐNG (đừng bịa ra địa chỉ) HOẶC ghi là "Hãy bình luận để nhận báo giá và địa chỉ mua hàng nhé!"].
 Từ khóa:
 [Thẻ tag tiếng Việt...]
 
@@ -108,19 +117,31 @@ Lưu ý:
 """
 
 
-def _text_prompt(product_info: str, style: str, user_name: Optional[str] = None) -> str:
+def _text_prompt(product_info: str, style: str, user_name: Optional[str] = None, user_tier: str = "free", market_avg: Optional[int] = None) -> str:
+    pro_instruction = ""
+    market_text = f"\n3. DỮ LIỆU THỊ TRƯỜNG NỘI BỘ: Hiện tại nhà nông trong hệ thống đang bán mặt hàng này dao động quanh mức trung bình {market_avg} VNĐ. Hãy dùng mức giá này tham chiếu vào phần Gợi ý." if market_avg else ""
+    if user_tier in ["plus", "pro"]:
+        pro_instruction = f"""
+ĐẶC QUYỀN PRO: 
+1. BẠN LÀ CHUYÊN GIA COPYWRITING VÀ KINH DOANH NÔNG SẢN HÀNG ĐẦU VIỆT NAM. Hãy dùng ngôn từ mộc mạc, chân thành đi vào lòng người mang đậm chất Việt Nam. 
+2. PHÂN TÍCH THỊ TRƯỜNG VÀ GỢI Ý GIÁ BÁN: Hãy tự động phân tích cung cầu, thị hiếu và đưa ra [Gợi ý định giá] hợp lý cho sản phẩm này dựa trên kinh nghiệm. Đặt vào phần 'Gợi ý Giá Bán & Chiến Lược'.{market_text}
+"""
+
     return f"""Bạn là FruitText AI - một trợ lý viết nội dung (content) trái cây tận tâm, tinh tế và thuần Việt.
 
 Thông tin khách hàng: {user_name if user_name else "Chưa rõ tên"}
 
 Nhiệm vụ: PHÂN TÍCH YÊU CẦU NGƯỜI DÙNG: "{product_info}" theo các nguyên tắc sau:
+{pro_instruction}
 
 NGUYÊN TẮC CỐT LÕI (BẮT BUỘC):
-1. **TRANG TRỌNG TIẾNG VIỆT**: Hạn chế tối đa dùng tiếng Anh (VD: dùng "Xin chào" thay "Hello", "Bài viết" thay "Content").
-2. **ĐỌC VỊ KHÁCH HÀNG**: QUAN TRỌNG
-   - Input cộc lốc (VD: "cam", "táo", "viết đi") -> Output: Điềm đạm, chuyên nghiệp, ngắn gọn. (VD: "Dạ, em gửi Anh/Chị nội dung về cam ạ.")
-   - Input thân thiện (VD: "chào em", "giúp chị với nha") -> Output: Nhẹ nhàng, tình cảm, dùng từ ngữ mềm mại.
-   - Input vui vẻ/teencode (VD: "hihi", "kaka", icon) -> Output: Hào hứng, năng lượng, dùng nhiều emoji 😄🍎.
+1. **TRANG TRỌNG TIẾNG VIỆT**: Hạn chế sử dụng tiếng Anh tốn diện tích, chỉ giữ lại các thuật ngữ quen thuộc.
+2. **NGẮN GỌN, SÚC TÍCH**: Hãy viết bài thật ngắn gọn, cô đọng (tổng độ dài tối đa chỉ bằng 2/3 so với bình thường). TRÁNH LẶP LẠI các cấu trúc câu cũ rích, lặp ý, hãy dùng từ rực rỡ, mới mẻ.
+3. **ĐIỂM NHẤN THỊ GIÁC**: KHÔNG ĐƯỢC DÙNG DẤU SAO (*) để in đậm hay in nghiêng. Thay vào đó, hãy **VIẾT HOA CÁC TỪ KHÓA QUAN TRỌNG** và sử dụng biểu tượng cảm xúc (EMOJI) 🌈🔥 để giúp bài viết thật bắt mắt, sống động.
+4. **ĐỌC VỊ KHÁCH HÀNG**: QUAN TRỌNG
+   - Input cộc lốc -> Output: Điềm đạm, chuyên nghiệp, ngắn gọn. 
+   - Input thân thiện -> Output: Nhẹ nhàng, tình cảm.
+   - Input vui vẻ -> Output: Hào hứng, năng lượng, siêu nhiều emoji 😄🍎.
 
 TRƯỜNG HỢP 1: GIAO TIẾP XÃ GIAO / CHÀO HỎI
 -> Trả lời tự nhiên theo đúng tông giọng đã phân tích ở trên.
@@ -145,6 +166,8 @@ Cam kết:
 [Cam kết chuẩn người Việt: Bao ăn, bao bù, nguồn gốc vườn nhà, không chất bảo quản...]
 Gợi ý:
 [Gợi ý món ăn Việt: Làm sinh tố, nước ép, chè, gỏi, bày mâm lễ...]
+Liên hệ & Đặt hàng:
+[HÃY CUNG CẤP Địa chỉ khu vườn/Mua hàng. Nếu khách CÓ cung cấp địa chỉ, số điện thoại hoặc tên vườn -> HÃY MANG XUỐNG ĐÂY. Nếu KHÔNG -> ĐỂ TRỐNG (đừng bịa ra địa chỉ) HOẶC ghi là "Hãy bình luận để nhận báo giá và địa chỉ mua hàng nhé!"].
 Từ khóa:
 [Thẻ tag tiếng Việt...]
 
@@ -155,19 +178,108 @@ Lưu ý:
 
 
 
-def _sanitize_output(text: str) -> str:
-    return text.replace("*", "")
+def _pil_to_base64(image: Image.Image) -> str:
+    buffered = io.BytesIO()
+    if image.format == "PNG" or image.mode == "RGBA":
+        image = image.convert("RGB")
+    image.save(buffered, format="JPEG")
+    return base64.b64encode(buffered.getvalue()).decode('utf-8')
 
-
-def generate_from_image(api_key: str, image: Image.Image, style: str, product_info: Optional[str] = None, user_name: Optional[str] = None) -> str:
+def generate_from_image(api_key: str, image: Image.Image, style: str, product_info: Optional[str] = None, user_name: Optional[str] = None, user_tier: str = "free", anthropic_api_key: Optional[str] = None, db: Optional[Database] = None) -> str:
     """Generate a product description from an image."""
-    model = get_model(api_key)
-    response = model.generate_content([_image_prompt(style, product_info, user_name), image])
+    
+    market_avg = None
+    if user_tier in ["plus", "pro"] and db and product_info:
+        # Ngầm lấy giá thị trường
+        extracted = extract_product_info(api_key, product_info)
+        if extracted:
+            market_avg = get_market_average(db, extracted["product_name"])
+
+    prompt = _image_prompt(style, product_info, user_name, user_tier, market_avg)
+    
+    # Đối với Plus/Pro, dùng Claude nếu có API Key
+    if user_tier in ["plus", "pro"] and anthropic_api_key:
+        try:
+            client = anthropic.Anthropic(api_key=anthropic_api_key)
+            response = client.messages.create(
+                model="claude-3-5-sonnet-20241022",
+                max_tokens=1000,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {
+                                "type": "image",
+                                "source": {
+                                    "type": "base64",
+                                    "media_type": "image/jpeg",
+                                    "data": _pil_to_base64(image)
+                                }
+                            }
+                        ]
+                    }
+                ]
+            )
+            return _sanitize_output(response.content[0].text)
+        except Exception as e:
+            print(f"Anthropic Image Error: {e}, falling back to Gemini")
+
+    # Bản Free hoặc Fallback -> dùng Gemini (Bật Search tool nếu là Pro Fallback)
+    import google.generativeai as genai
+    tools = [genai.protos.Tool(google_search_retrieval=genai.protos.GoogleSearchRetrieval())] if user_tier in ["plus", "pro"] else None
+    model_name = "gemini-1.5-pro" if user_tier in ["plus", "pro"] else "gemini-1.5-flash"
+    
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel(model_name, tools=tools)
+    response = model.generate_content([prompt, image])
     return _sanitize_output(response.text) if response and response.text else ""
 
 
-def generate_from_text(api_key: str, product_info: str, style: str, user_name: Optional[str] = None) -> str:
+def generate_from_text(api_key: str, product_info: str, style: str, user_name: Optional[str] = None, user_tier: str = "free", anthropic_api_key: Optional[str] = None, db: Optional[Database] = None) -> str:
     """Generate a product description from product information text."""
-    model = get_model(api_key)
-    response = model.generate_content(_text_prompt(product_info, style, user_name))
+    
+    market_avg = None
+    if user_tier in ["plus", "pro"] and db and product_info:
+        extracted = extract_product_info(api_key, product_info)
+        if extracted:
+            market_avg = get_market_average(db, extracted["product_name"])
+
+    prompt = _text_prompt(product_info, style, user_name, user_tier, market_avg)
+
+    # Đối với Plus/Pro, dùng Claude nếu có API Key
+    if user_tier in ["plus", "pro"] and anthropic_api_key:
+        try:
+            client = anthropic.Anthropic(api_key=anthropic_api_key)
+            response = client.messages.create(
+                model="claude-3-5-sonnet-20241022",
+                max_tokens=1000,
+                messages=[
+                    {"role": "user", "content": prompt}
+                ]
+            )
+            return _sanitize_output(response.content[0].text)
+        except Exception as e:
+            print(f"Anthropic Text Error: {e}, falling back to Gemini")
+
+    import google.generativeai as genai
+    tools = [genai.protos.Tool(google_search_retrieval=genai.protos.GoogleSearchRetrieval())] if user_tier in ["plus", "pro"] else None
+    model_name = "gemini-1.5-pro" if user_tier in ["plus", "pro"] else "gemini-1.5-flash"
+    
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel(model_name, tools=tools)
+    response = model.generate_content(prompt)
     return _sanitize_output(response.text) if response and response.text else ""
+
+def generate_chat_title(api_key: str, prompt: str, generated_text: str) -> str:
+    """Generate a short chat title based on the user prompt and AI response."""
+    model = get_model(api_key)
+    instruction = f"Tạo một tiêu đề rất ngắn (2-4 từ) tóm tắt đoạn chat sau. Chỉ trả về tiêu đề, KHÔNG GIẢI THÍCH.\n\nUser: {prompt}\nAI: {generated_text}"
+    try:
+        response = model.generate_content(instruction)
+        if response and response.text:
+            title = response.text.replace('"', '').replace('\n', '').strip()
+            return title[:50]
+    except Exception as e:
+        print(f"Error generating chat title: {e}")
+    return "Đoạn chat mới"

@@ -98,8 +98,8 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onU
                         <p className="text-app-muted">Mở khóa toàn bộ tiềm năng sáng tạo với các gói nâng cấp</p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {plans.map((plan) => (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+                        {plans.filter(plan => plan.id !== 'plus').map((plan) => (
                             <div
                                 key={plan.id}
                                 className={clsx(

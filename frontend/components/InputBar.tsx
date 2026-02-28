@@ -209,14 +209,14 @@ export const InputBar: React.FC<InputBarProps> = ({
                                 {!loading && (
                                     <button
                                         onClick={onClearImage}
-                                        className="absolute -top-2 -right-2 bg-panel text-app-text rounded-full p-1 backdrop-blur-md hover:bg-glass-highlight transition-colors"
+                                        className="absolute top-1 right-1 bg-black/60 text-white shadow-sm rounded-full p-1 backdrop-blur-md hover:bg-black/80 transition-colors z-10"
                                     >
-                                        <X size={12} />
+                                        <X size={14} />
                                     </button>
                                 )}
                                 {loading && (
-                                    <div className="absolute -top-2 -right-2 bg-panel/50 text-app-muted rounded-full p-1 backdrop-blur-md cursor-not-allowed">
-                                        <X size={12} />
+                                    <div className="absolute top-1 right-1 bg-black/40 text-white/50 rounded-full p-1 backdrop-blur-md cursor-not-allowed z-10">
+                                        <X size={24} />
                                     </div>
                                 )}
                             </div>

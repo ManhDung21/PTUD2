@@ -61,6 +61,7 @@ class RegisterRequest(BaseModel):
     email: str = Field(..., description="Địa chỉ email")
     phone_number: str = Field(..., min_length=10, max_length=11, description="Số điện thoại")
     full_name: str = Field(..., min_length=2, description="Họ tên")
+    address: Optional[str] = Field(default=None, description="Địa chỉ (tùy chọn)")
     password: str = Field(min_length=6)
     avatar_url: Optional[str] = Field(default=None, description="Ảnh đại diện (tùy chọn)")
 
@@ -74,6 +75,7 @@ class UpdateProfileRequest(BaseModel):
     full_name: Optional[str] = Field(default=None, description="Họ tên")
     email: Optional[str] = Field(default=None, description="Email")
     phone_number: Optional[str] = Field(default=None, description="Số điện thoại")
+    address: Optional[str] = Field(default=None, description="Địa chỉ")
     plan_type: Optional[str] = Field(default=None, description="Loại gói cước (chỉ cho admin)")
 
 
@@ -87,7 +89,7 @@ class UserOut(BaseModel):
     email: Optional[str] = None
     phone_number: Optional[str] = None
     full_name: Optional[str] = None
-    full_name: Optional[str] = None
+    address: Optional[str] = None
     role: str = "free"
     subscription_status: Optional[str] = "none"
     plan_type: Optional[str] = "free"

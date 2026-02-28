@@ -21,19 +21,19 @@ export const PaymentQRModal: React.FC<PaymentQRModalProps> = ({
     description,
     user
 }) => {
-    const [copied, setCopied] = useState(false);
+    const [copied, setCopied] = useState<string | null>(null);
 
     if (!isOpen) return null;
 
     // Fake account info for demo
     const accountInfo = type === 'bank' ? {
-        name: "NGUYEN VAN A",
-        number: "1903678912345",
-        bank: "Techcombank",
+        name: "PHUNG MANH DUNG",
+        number: "088888211104",
+        bank: "MB Bank",
         branch: "Hanoi"
     } : {
-        name: "NGUYEN VAN A",
-        number: "0987654321",
+        name: "PHUNG MANH DUNG",
+        number: "088888211104",
         bank: "Ví MoMo",
         branch: ""
     };
@@ -42,9 +42,13 @@ export const PaymentQRModal: React.FC<PaymentQRModalProps> = ({
 
     const handleCopy = (text: string) => {
         navigator.clipboard.writeText(text);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        setCopied(text);
+        setTimeout(() => setCopied(null), 2000);
     };
+
+    // Chuỗi dữ liệu QR cơ bản theo định dạng Momo Cá Nhân (hoặc chuyển khoản text)
+    // Nếu bạn có ảnh QR MoMo thật tải về từ app, bạn có thể lưu nó vào thư mục public/ và thay bằng "/momo-qr.png"
+    const momoQRData = `2|99|${accountInfo.number}|${accountInfo.name}|${user?.email?.split('@')[0]}|0|0|${amount.replace(/\D/g, '')}`;
 
     // QR Code Placeholder URL (Using a generic QR generator API for demo)
     // In production, this would be a real VietQR or Momo QR
@@ -76,14 +80,26 @@ export const PaymentQRModal: React.FC<PaymentQRModalProps> = ({
                         "p-8 flex flex-col items-center justify-center text-white min-w-[250px]",
                         type === 'bank' ? "bg-blue-600" : "bg-pink-600"
                     )}>
-                        <h3 className="font-bold text-lg mb-4">Quét mã để thanh toán</h3>
+                        <h3 className="font-bold text-lg mb-4 text-center">
+                            {type === 'bank' ? 'Quét mã VietQR' : 'Quét mã MoMo'}
+                        </h3>
                         <div className="bg-white p-4 rounded-2xl shadow-lg">
-                            {/* Placeholder QR - In a real app use a QR library or image */}
-                            <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(transferContent)}`} alt="QR Code" className="w-40 h-40 mix-blend-multiply" />
+                            {type === 'bank' ? (
+                                <img src="/Qrthanhtoan.png" alt="QR Code Ngân Hàng" className="w-40 h-40 object-contain" />
+                            ) : (
+                                // MoMo thường dùng mã QR cá nhân phát sinh từ app, 
+                                // Hệ thống sẽ tạm thời tạo 1 QR chứa form chuyển tiền tự động của MoMo
+                                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(momoQRData)}`} alt="MoMo QR Code" className="w-40 h-40" />
+                            )}
                         </div>
                         <div className="mt-4 text-center">
                             <div className="text-sm opacity-80">Số tiền</div>
                             <div className="text-2xl font-bold">{amount}</div>
+                            {type === 'momo' && (
+                                <div className="text-xs opacity-75 mt-2 max-w-[200px] text-center">
+                                    Mở app MoMo, chọn "Quét mã" để thanh toán
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -119,26 +135,39 @@ export const PaymentQRModal: React.FC<PaymentQRModalProps> = ({
                                         onClick={() => handleCopy(accountInfo.number)}
                                         className="p-1.5 hover:bg-glass-highlight rounded-lg transition-colors text-blue-500"
                                     >
-                                        {copied ? <Check size={16} /> : <Copy size={16} />}
+                                        {copied === accountInfo.number ? <Check size={16} /> : <Copy size={16} />}
                                     </button>
                                 </div>
                             </div>
                             <div className="space-y-1 p-3 bg-glass-highlight rounded-xl border border-panel-border">
                                 <div className="text-xs font-bold text-app-muted uppercase">Nội dung chuyển khoản</div>
-                                <div className="flex items-center gap-2">
-                                    <div className="text-app-text font-medium font-mono text-sm break-all">{transferContent}</div>
-                                    <button
-                                        onClick={() => handleCopy(transferContent)}
-                                        className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-blue-500 shrink-0"
-                                    >
-                                        {copied ? <Check size={16} /> : <Copy size={16} />}
-                                    </button>
+                                <div className="flex flex-col gap-2 w-full mt-2">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <div className="text-app-text font-medium font-mono text-sm break-all truncate">{user?.email || 'N/A'}</div>
+                                        <button
+                                            onClick={() => handleCopy(user?.email || '')}
+                                            className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-blue-500 shrink-0"
+                                        >
+                                            {copied === user?.email ? <Check size={16} /> : <Copy size={16} />}
+                                        </button>
+                                    </div>
+                                    <div className="h-px bg-panel-border" />
+                                    <div className="flex items-center justify-between gap-2">
+                                        <div className="text-app-text font-medium font-mono text-sm break-all truncate">{description}</div>
+                                        <button
+                                            onClick={() => handleCopy(description)}
+                                            className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-blue-500 shrink-0"
+                                        >
+                                            {copied === description ? <Check size={16} /> : <Copy size={16} />}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <div className="mt-6 text-center text-xs text-app-muted">
-                            Sau khi chuyển khoản, vui lòng chờ 5-10 phút để hệ thống xử lý hoặc liên hệ Admin.
+                            Sau khi chuyển khoản, vui lòng chờ 5-10 phút để hệ thống xử lý hoặc liên hệ Admin
+                            mdung07102004@gmail.com.
                         </div>
                     </div>
                 </motion.div>

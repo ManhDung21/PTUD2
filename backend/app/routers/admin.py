@@ -178,6 +178,34 @@ async def update_user_role(
     return {"message": "Role updated successfully"}
 
 
+from pydantic import BaseModel
+class PlanUpdateRequest(BaseModel):
+    plan_type: str
+
+@router.put("/users/{user_id}/plan")
+async def update_user_plan(
+    user_id: str,
+    plan_update: PlanUpdateRequest,
+    db: Database = Depends(get_database),
+    admin: UserDocument = Depends(get_admin_user)
+):
+    if not ObjectId.is_valid(user_id):
+        raise HTTPException(status_code=400, detail="Invalid ID")
+    
+    if plan_update.plan_type not in ["free", "plus", "pro"]:
+        raise HTTPException(status_code=400, detail="Invalid plan type")
+
+    result = db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": {"plan_type": plan_update.plan_type}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    return {"message": "Plan updated successfully"}
+
+
 
 from datetime import datetime, timedelta
 from ..schemas import TimeSeriesResponse, TimeSeriesDataPoint

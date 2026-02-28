@@ -71,17 +71,23 @@ export default function HomePage() {
   const handlePaymentConfirm = async (method: 'stripe' | 'bank' | 'momo') => {
     if (!selectedPlan || !user) return;
 
-    if (method === 'bank' || method === 'momo') {
+    if (method === 'momo') {
       setPaymentMethodVisible(false);
       setQrType(method);
       setQrModalVisible(true);
       return;
     }
 
-    // Stripe Flow
+    // Stripe & PayOS Flow (Automatic)
     try {
       setLoading(true); // Show loading indicator
-      const res = await axios.post(`${API_BASE_URL}/api/payments/create-checkout-session`, {}, {
+
+      let endpoint = '';
+      if (method === 'stripe') endpoint = `${API_BASE_URL}/api/payments/create-checkout-session`;
+      else if (method === 'bank') endpoint = `${API_BASE_URL}/api/payments/create-payos-payment`;
+      else endpoint = `${API_BASE_URL}/api/payments/create-momo-payment`;
+
+      const res = await axios.post(endpoint, {}, {
         params: { plan_type: selectedPlan },
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -137,6 +143,24 @@ export default function HomePage() {
     setToast({ id: Date.now(), type, message });
     setTimeout(() => setToast(null), 4000);
   }, []);
+
+  // Check URL attributes for payment success or cancellation
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const success = urlParams.get('success');
+      const canceled = urlParams.get('canceled');
+
+      if (success === 'true') {
+        showToast("success", "Thanh toán giao dịch thành công! Tài khoản của bạn đang được nâng cấp.");
+        // Gỡ query parameter ra khỏi url để không bị hiển thị lại
+        window.history.replaceState({}, '', window.location.pathname);
+      } else if (canceled === 'true') {
+        showToast("error", "Giao dịch thanh toán đã bị hủy bỏ.");
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }
+  }, [showToast]);
 
   // --- Initial Data Loading ---
   useEffect(() => {
@@ -342,11 +366,11 @@ export default function HomePage() {
     showToast("success", "Đã đăng xuất");
   };
 
-  const handleUpdateProfile = async (data: { full_name?: string; phone_number?: string }) => {
+  const handleUpdateProfile = async (data: { full_name?: string; phone_number?: string; address?: string; plan_type?: 'free' | 'plus' | 'pro' }) => {
     try {
       if (!token) return;
 
-      const res = await axios.put<{ full_name: string; phone_number: string; email: string; plan_type?: 'free' | 'plus' | 'pro' }>(`${API_BASE_URL}/auth/profile`, data, {
+      const res = await axios.put<{ full_name: string; phone_number: string; email: string; address?: string; plan_type?: 'free' | 'plus' | 'pro' }>(`${API_BASE_URL}/auth/profile`, data, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -396,6 +420,19 @@ export default function HomePage() {
       showToast("success", "Đã xoá cuộc trò chuyện.");
     } catch (err) {
       showToast("error", "Không thể xoá mục này.");
+    }
+  };
+
+  const handleEditConversationTitle = async (id: string, newTitle: string) => {
+    if (!token) return;
+    try {
+      const res = await axios.patch<Conversation>(`${API_BASE_URL}/api/conversations/${id}`, { title: newTitle }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setConversations(prev => prev.map(item => item.id === id ? { ...item, title: res.data.title } : item));
+      showToast("success", "Đã đổi tên đoạn chat.");
+    } catch (err) {
+      showToast("error", "Không thể đổi tên đoạn chat.");
     }
   };
 
@@ -537,24 +574,24 @@ export default function HomePage() {
 
     // 2. Desktop / Fallback Logic
     if (platform === 'facebook') {
-      if (url) {
-        // Share URL (Image)
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank', 'width=600,height=400');
-      } else {
-        // Share Text -> Copy to clipboard & open FB
-        await navigator.clipboard.writeText(content);
-        showToast("success", "Đã copy nội dung! Hãy dán vào bài viết Facebook.");
-        setTimeout(() => {
+      await navigator.clipboard.writeText(content);
+      showToast("success", "Đã copy mô tả! Hãy dán vào bài viết Facebook của bạn.");
+      setTimeout(() => {
+        if (url) {
+          // Share URL (Image)
+          window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank', 'width=600,height=400');
+        } else {
+          // Share Text
           window.open('https://www.facebook.com', '_blank');
-        }, 1000);
-      }
+        }
+      }, 1000);
     } else if (platform === 'tiktok') {
       // TikTok doesn't have a simple web share URL for text/images easily
       // Best approach is typically copy to clipboard
       await navigator.clipboard.writeText(content);
-      showToast("success", "Đã copy nội dung! Hãy dán vào TikTok.");
+      showToast("success", "Đã copy mô tả! Đang mở trang tải lên TikTok...");
       setTimeout(() => {
-        window.open('https://www.tiktok.com', '_blank');
+        window.open('https://www.tiktok.com/creator-center/upload?from=upload', '_blank');
       }, 1000);
     }
   };
@@ -616,6 +653,7 @@ export default function HomePage() {
           onAuthClick={() => setAuthVisible(true)}
           onProfileClick={() => setProfileVisible(true)}
           onDeleteConversation={handleDeleteConversation}
+          onEditConversationTitle={handleEditConversationTitle}
           onOpenInfo={() => setSettingsVisible(true)}
           onOpenPricing={() => setPricingVisible(true)}
           isDarkMode={isDarkMode}

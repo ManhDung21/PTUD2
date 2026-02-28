@@ -36,6 +36,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         email: "",
         full_name: "",
         phone_number: "",
+        address: "",
         confirmPassword: "",
         token: ""
     });
@@ -49,7 +50,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         if (mode === "login") {
             onLogin({ identifier: formData.identifier, password: formData.password });
         } else if (mode === "register") {
-            onRegister({ email: formData.email, password: formData.password, full_name: formData.full_name, phone_number: formData.phone_number });
+            onRegister({ email: formData.email, password: formData.password, full_name: formData.full_name, phone_number: formData.phone_number, address: formData.address });
         } else if (mode === "forgot") {
             onForgot(formData.email);
         } else if (mode === "reset") {
@@ -152,6 +153,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                                     <input type="text" name="full_name" placeholder="Họ và tên" value={formData.full_name} onChange={handleChange} className="ios-input w-full rounded-2xl px-5 py-4 placeholder:text-gray-400 text-app-text text-base font-medium" />
                                     <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} className="ios-input w-full rounded-2xl px-5 py-4 placeholder:text-gray-400 text-app-text text-base font-medium" required />
                                     <input type="text" name="phone_number" placeholder="Số điện thoại" value={formData.phone_number} onChange={handleChange} className="ios-input w-full rounded-2xl px-5 py-4 placeholder:text-gray-400 text-app-text text-base font-medium" />
+                                    <input type="text" name="address" placeholder="Địa chỉ (tùy chọn)" value={formData.address} onChange={handleChange} className="ios-input w-full rounded-2xl px-5 py-4 placeholder:text-gray-400 text-app-text text-base font-medium" />
                                     <div className="relative">
                                         <input
                                             type={showPassword ? "text" : "password"}

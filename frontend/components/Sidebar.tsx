@@ -21,6 +21,7 @@ interface SidebarProps {
     onOpenPricing: () => void;
     isDarkMode: boolean;
     onToggleTheme: () => void;
+    onEditConversationTitle?: (id: string, newTitle: string) => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -36,9 +37,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
     onOpenInfo,
     onOpenPricing,
     isDarkMode,
-    onToggleTheme
+    onToggleTheme,
+    onEditConversationTitle
 }) => {
     const [deleteId, setDeleteId] = useState<string | null>(null);
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editValue, setEditValue] = useState("");
+
+    const startEditing = (e: React.MouseEvent, item: Conversation) => {
+        e.stopPropagation();
+        setEditingId(item.id);
+        setEditValue(item.title);
+    };
+
+    const submitEdit = (id: string) => {
+        if (onEditConversationTitle && editValue.trim() !== "") {
+            onEditConversationTitle(id, editValue.trim());
+        }
+        setEditingId(null);
+    };
+
+    const handleEditKeyDown = (e: React.KeyboardEvent, id: string) => {
+        if (e.key === "Enter") {
+            submitEdit(id);
+        } else if (e.key === "Escape") {
+            setEditingId(null);
+        }
+    };
 
     const confirmDelete = (e: React.MouseEvent) => {
         if (deleteId) {
@@ -51,6 +76,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as Element;
+
+            // Ignore clicks if they fall on modals
+            if (
+                target.closest('.z-\\[1000\\]') ||
+                target.closest('.z-\\[2000\\]') ||
+                target.closest('.z-\\[2100\\]') ||
+                target.closest('.z-\\[2200\\]') ||
+                target.closest('.z-\\[9999\\]') ||
+                target.closest('.z-\\[2000\\]')
+            ) {
+                return;
+            }
+
             if (isOpen && sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
                 onClose();
             }
@@ -180,19 +219,42 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             >
                                 <div className="flex items-center gap-3 overflow-hidden">
                                     <MessageSquare size={16} className="text-app-muted min-w-[16px]" />
-                                    <span className="truncate text-sm text-app-text group-hover:text-primary-gradient-start transition-colors">
-                                        {item.title}
-                                    </span>
+                                    {editingId === item.id ? (
+                                        <input
+                                            autoFocus
+                                            value={editValue}
+                                            onChange={e => setEditValue(e.target.value)}
+                                            onKeyDown={e => handleEditKeyDown(e, item.id)}
+                                            onBlur={() => submitEdit(item.id)}
+                                            className="bg-panel border border-panel-border text-sm text-app-text px-2 py-1 rounded outline-none w-full"
+                                            onClick={e => e.stopPropagation()}
+                                        />
+                                    ) : (
+                                        <span className="truncate text-sm text-app-text group-hover:text-primary-gradient-start transition-colors">
+                                            {item.title}
+                                        </span>
+                                    )}
                                 </div>
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setDeleteId(item.id);
-                                    }}
-                                    className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-500/20 hover:text-red-400 rounded-full transition-all"
-                                >
-                                    <Trash2 size={14} />
-                                </button>
+                                <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button
+                                        onClick={(e) => startEditing(e, item)}
+                                        className="p-1.5 hover:bg-glass-highlight hover:text-blue-400 rounded-full transition-all text-app-muted"
+                                        title="Đổi tên"
+                                    >
+                                        <Plus size={14} className="rotate-45" style={{ display: 'none' }} />
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setDeleteId(item.id);
+                                        }}
+                                        className="p-1.5 hover:bg-red-500/20 hover:text-red-400 rounded-full transition-all text-app-muted"
+                                        title="Xóa"
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
                             </motion.div>
                         ))
                     )}

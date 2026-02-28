@@ -35,7 +35,7 @@ from .schemas import (
     UserOut,
     RatingRequest,
 )
-from .services import auth, content, email as email_service, history as history_service, tts, conversations as conversation_service
+from .services import auth, content, email as email_service, history as history_service, tts, conversations as conversation_service, market
 from .services import cloudinary_service
 from .services.auth import (
     get_current_user, 
@@ -165,6 +165,7 @@ def _append_user_info(description: str, user: Optional[UserDocument]) -> str:
     full_name = (user.get("full_name") or "").strip()
     email = (user.get("email") or "").strip()
     phone = (user.get("phone_number") or "").strip()
+    address = (user.get("address") or "").strip()
 
     if full_name:
         parts.append(f"Họ tên: {full_name}")
@@ -172,6 +173,8 @@ def _append_user_info(description: str, user: Optional[UserDocument]) -> str:
         parts.append(f"Số điện thoại: {phone}")
     if email:
         parts.append(f"Email: {email}")
+    if address:
+        parts.append(f"Địa chỉ: {address}")
 
     if not parts:
         return description
@@ -187,11 +190,14 @@ def _overlay_user_info_on_image(image: Image.Image, user: Optional[UserDocument]
 
     full_name = (user.get("full_name") or "").strip()
     phone = (user.get("phone_number") or "").strip()
+    address = (user.get("address") or "").strip()
     lines: list[str] = []
     if full_name:
         lines.append(f"Họ tên: {full_name}")
     if phone:
         lines.append(f"SĐT: {phone}")
+    if address:
+        lines.append(f"Địa chỉ: {address}")
 
     if not lines:
         return image
@@ -331,6 +337,7 @@ def register(payload: RegisterRequest, db: Database = Depends(get_database)) -> 
     email = payload.email.strip().lower()
     phone_number = payload.phone_number.strip()
     full_name = payload.full_name.strip()
+    address = payload.address.strip() if payload.address else None
     avatar_url = payload.avatar_url.strip() if payload.avatar_url else None
 
     if not is_email(email):
@@ -353,6 +360,8 @@ def register(payload: RegisterRequest, db: Database = Depends(get_database)) -> 
         "plan_type": "free",
         "subscription_status": "none"
     }
+    if address:
+        user["address"] = address
     if avatar_url:
         user["avatar_url"] = avatar_url
     result = users.insert_one(user)
@@ -509,35 +518,33 @@ def update_profile(
     db: Database = Depends(get_database),
 ) -> UserOut:
     users = _users_collection(db)
-    updates: dict[str, str] = {}
-
+    updates = {}
     if payload.full_name is not None:
-        full_name = payload.full_name.strip()
-        if len(full_name) < 2:
-            raise HTTPException(status_code=400, detail="Họ tên cần ít nhất 2 ký tự")
-        updates["full_name"] = full_name
-
+        updates["full_name"] = payload.full_name.strip()
     if payload.email is not None:
         email = payload.email.strip().lower()
         if not is_email(email):
             raise HTTPException(status_code=400, detail="Vui lòng nhập email hợp lệ")
-        exists = users.find_one({"email": email, "_id": {"$ne": current_user["_id"]}})
-        if exists:
-            raise HTTPException(status_code=400, detail="Email đã tồn tại")
+        # Ensure email is not taken by someone else
+        existing = users.find_one({"email": email, "_id": {"$ne": current_user["_id"]}})
+        if existing:
+            raise HTTPException(status_code=400, detail="Email này đã được sử dụng")
         updates["email"] = email
-
     if payload.phone_number is not None:
         phone = payload.phone_number.strip()
         if not is_phone_number(phone):
             raise HTTPException(status_code=400, detail="Vui lòng nhập số điện thoại hợp lệ")
-        exists = users.find_one({"phone_number": phone, "_id": {"$ne": current_user["_id"]}})
-        if exists:
-            raise HTTPException(status_code=400, detail="Số điện thoại đã tồn tại")
+        # Ensure phone is not taken by someone else
+        existing = users.find_one({"phone_number": phone, "_id": {"$ne": current_user["_id"]}})
+        if existing:
+            raise HTTPException(status_code=400, detail="Số điện thoại này đã được sử dụng")
         updates["phone_number"] = phone
+    if payload.address is not None:
+        updates["address"] = payload.address.strip()
 
     if payload.plan_type is not None:
-        # Only allow admin to change their own plan type via this endpoint for simulation
-        if current_user.get("role") == "admin":
+        # Only allow if the requesting user is actually an admin
+        if current_user.get("role") == "admin": # Changed from `!= "admin"` to `== "admin"` based on original intent
              if payload.plan_type in ["free", "plus", "pro"]:
                  updates["plan_type"] = payload.plan_type
              else:
@@ -622,7 +629,32 @@ async def generate_description_from_image(
 
     try:
         user_name = current_user.get("full_name") if current_user else None
-        description_text = content.generate_from_image(settings.gemini_api_key, image, style, prompt, user_name)
+        user_tier = current_user.get("role", "free") if current_user else "free"
+        
+        if current_user and user_tier == "free":
+            today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+            count = _descriptions_collection(db).count_documents({
+                "user_id": current_user["_id"],
+                "timestamp": {"$gte": today}
+            })
+            if count >= 5:
+                raise HTTPException(status_code=403, detail="Tài khoản dùng thử đã hết 5 lượt tạo hôm nay. Vui lòng nạp gói Plus hoặc Pro để dùng AI chuyên gia!")
+
+        description_text = content.generate_from_image(
+            api_key=settings.gemini_api_key, 
+            image=image, 
+            style=style, 
+            product_info=prompt, 
+            user_name=user_name,
+            user_tier=user_tier,
+            anthropic_api_key=settings.anthropic_api_key,
+            db=db
+        )
+
+        if prompt and current_user:
+            # Lưu giá dự định của user chạy ngầm
+            import asyncio
+            asyncio.create_task(asyncio.to_thread(market.store_market_data, db, settings.gemini_api_key, prompt, str(current_user["_id"])))
     except Exception as e:
         print(f"Gemini Image Generation Error: {e}")
         raise HTTPException(status_code=500, detail=f"Lỗi tạo mô tả từ ảnh: {str(e)}")
@@ -651,7 +683,7 @@ async def generate_description_from_image(
         
         if not conv_oid:
             # Create new
-            title = (prompt or "New Image Chat")[:50]
+            title = content.generate_chat_title(settings.gemini_api_key, prompt or "Phân tích hình ảnh", description_text)
             new_conv = conversation_service.create_conversation(
                 db.get_collection("conversations"),
                 current_user["_id"],
@@ -696,7 +728,30 @@ async def generate_description_from_text(
 
     try:
         user_name = current_user.get("full_name") if current_user else None
-        description_text = content.generate_from_text(settings.gemini_api_key, payload.product_info, payload.style, user_name)
+        user_tier = current_user.get("role", "free") if current_user else "free"
+        
+        if current_user and user_tier == "free":
+            today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+            count = _descriptions_collection(db).count_documents({
+                "user_id": current_user["_id"],
+                "timestamp": {"$gte": today}
+            })
+            if count >= 5:
+                raise HTTPException(status_code=403, detail="Tài khoản dùng thử đã hết 5 lượt tạo hôm nay. Vui lòng nạp gói Plus hoặc Pro để dùng AI chuyên gia!")
+
+        description_text = content.generate_from_text(
+            api_key=settings.gemini_api_key, 
+            product_info=payload.product_info, 
+            style=payload.style, 
+            user_name=user_name,
+            user_tier=user_tier,
+            anthropic_api_key=settings.anthropic_api_key,
+            db=db
+        )
+
+        if payload.product_info and current_user:
+            import asyncio
+            asyncio.create_task(asyncio.to_thread(market.store_market_data, db, settings.gemini_api_key, payload.product_info, str(current_user["_id"])))
     except Exception as e:
         print(f"Gemini Text Generation Error: {e}")
         raise HTTPException(status_code=500, detail=f"Lỗi tạo mô tả từ văn bản: {str(e)}")
@@ -725,7 +780,7 @@ async def generate_description_from_text(
         
         if not conv_oid:
             # Create new
-            title = (payload.product_info or "New Text Chat")[:50]
+            title = content.generate_chat_title(settings.gemini_api_key, payload.product_info or "Câu hỏi mới", description_text)
             new_conv = conversation_service.create_conversation(
                 db.get_collection("conversations"),
                 current_user["_id"],

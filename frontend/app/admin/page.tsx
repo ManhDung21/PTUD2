@@ -192,9 +192,15 @@ export default function AdminPage() {
             // Let's optimize to fetch based on active tab or just fetch both. 
             // The original code fetched both. Let's stick to that but applying filters where relevant.
 
+            const token = sessionStorage.getItem("token");
+            if (!token) {
+                setTableLoading(false);
+                return;
+            }
+
             const [usersRes, descRes] = await Promise.all([
-                axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/users`, { params }),
-                axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/descriptions`, { params })
+                axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/users`, { params, headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/descriptions`, { params, headers: { Authorization: `Bearer ${token}` } })
             ]);
 
             setUsers(usersRes.data);
@@ -210,9 +216,15 @@ export default function AdminPage() {
     const fetchAnalytics = async () => {
         try {
             setAnalyticsLoading(true);
+            const token = sessionStorage.getItem("token");
+            if (!token) {
+                setAnalyticsLoading(false);
+                return;
+            }
+
             const response = await axios.get(
                 `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/analytics/timeseries`,
-                { params: { granularity } }
+                { params: { granularity }, headers: { Authorization: `Bearer ${token}` } }
             );
             setAnalyticsData(response.data.data);
         } catch (err) {
@@ -280,6 +292,24 @@ export default function AdminPage() {
         } catch (err: any) {
             showToast("error", err.response?.data?.detail || "Failed to update role");
             // Revert the change by refetching
+            fetchTableData();
+        }
+    };
+
+    const handleUpdatePlan = async (userId: string, newPlan: 'free' | 'plus' | 'pro') => {
+        try {
+            const token = sessionStorage.getItem("token");
+            await axios.put(
+                `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/users/${userId}/plan`,
+                { plan_type: newPlan },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            showToast("success", `Plan updated to ${newPlan.toUpperCase()} successfully`);
+            setUsers(prevUsers =>
+                prevUsers.map(u => u.id === userId ? { ...u, plan_type: newPlan } : u)
+            );
+        } catch (err: any) {
+            showToast("error", err.response?.data?.detail || "Failed to update plan");
             fetchTableData();
         }
     };
@@ -567,6 +597,7 @@ export default function AdminPage() {
                                                         <th className="p-4 pl-6">User</th>
                                                         <th className="p-4">Contact</th>
                                                         <th className="p-4">Role</th>
+                                                        <th className="p-4">Plan</th>
                                                         <th className="p-4">Joined</th>
                                                         <th className="p-4 text-right pr-6">Controls</th>
                                                     </tr>
@@ -601,6 +632,22 @@ export default function AdminPage() {
                                                                     <option value="user_free">FREE</option>
                                                                     <option value="user_pro">PRO</option>
                                                                     <option value="admin">ADMIN</option>
+                                                                </select>
+                                                            </td>
+                                                            <td className="p-4">
+                                                                <select
+                                                                    value={u.plan_type || 'free'}
+                                                                    onChange={(e) => handleUpdatePlan(u.id, e.target.value as 'free' | 'plus' | 'pro')}
+                                                                    className={clsx(
+                                                                        "bg-transparent border border-white/10 rounded px-2 py-1 text-[11px] font-bold uppercase cursor-pointer outline-none focus:border-blue-500 transition-colors bg-[#0a0a0a]",
+                                                                        u.plan_type === 'pro' ? "text-purple-400 border-purple-500/30" :
+                                                                            u.plan_type === 'plus' ? "text-blue-400 border-blue-500/30" :
+                                                                                "text-gray-400"
+                                                                    )}
+                                                                >
+                                                                    <option value="free">FREE</option>
+                                                                    <option value="plus">PLUS</option>
+                                                                    <option value="pro">PRO</option>
                                                                 </select>
                                                             </td>
                                                             <td className={clsx("p-4 text-xs font-mono", isDarkMode ? "text-gray-500" : "text-gray-600")}>{new Date(u.created_at).toLocaleDateString()}</td>

@@ -5,7 +5,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    gemini_api_key: str = Field(..., validation_alias=AliasChoices("GEMINI_API_KEY", "GOOGLE_API_KEY"))
+    gemini_api_key: str = Field(..., validation_alias="GEMINI_API_KEY")
+    anthropic_api_key: str | None = Field(default=None, validation_alias="ANTHROPIC_API_KEY")
     jwt_secret: str = Field(..., validation_alias="JWT_SECRET")
     mongodb_uri: str = Field(default="mongodb://localhost:27017", validation_alias="MONGODB_URI")
     mongodb_db: str = Field(default="ptud2", validation_alias="MONGODB_DB")
@@ -24,11 +25,21 @@ class Settings(BaseSettings):
     stripe_secret_key: str | None = Field(default=None, validation_alias="STRIPE_SECRET_KEY")
     stripe_publishable_key: str | None = Field(default=None, validation_alias="STRIPE_PUBLISHABLE_KEY")
     stripe_webhook_secret: str | None = Field(default=None, validation_alias="STRIPE_WEBHOOK_SECRET")
-    frontend_url: str = Field(default="http://localhost:3000", validation_alias="FRONTEND_URL")
+    frontend_url: str = Field(default="http://localhost:3000", validation_alias="NEXT_PUBLIC_FRONTEND_URL")
     
     # Pricing IDs
     stripe_price_plus_id: str | None = Field(default=None, validation_alias="STRIPE_PRICE_PLUS_ID")
     stripe_price_pro_id: str | None = Field(default=None, validation_alias="STRIPE_PRICE_PRO_ID")
+
+    # PayOS
+    payos_client_id: str | None = Field(default=None, validation_alias="PAYOS_CLIENT_ID")
+    payos_api_key: str | None = Field(default=None, validation_alias="PAYOS_API_KEY")
+    payos_checksum_key: str | None = Field(default=None, validation_alias="PAYOS_CHECKSUM_KEY")
+
+    # MoMo
+    momo_partner_code: str | None = Field(default=None, validation_alias="MOMO_PARTNER_CODE")
+    momo_access_key: str | None = Field(default=None, validation_alias="MOMO_ACCESS_KEY")
+    momo_secret_key: str | None = Field(default=None, validation_alias="MOMO_SECRET_KEY")
 
     # Cấu hình đọc file .env
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
