@@ -25,6 +25,7 @@ class DescriptionResponse(BaseModel):
     prompt: Optional[str] = None
     conversation_id: Optional[str] = None
     rating: Optional[int] = None
+    remaining_free_generations: Optional[int] = None
 
 
 class HistoryItem(BaseModel):

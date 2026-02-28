@@ -575,6 +575,59 @@ def _store_description(
     return description
 
 
+def check_and_update_free_limit(db: Database, current_user: Optional[dict], conversation_id: Optional[str]) -> Optional[int]:
+    """Returns remaining generations for free user, or None if not applicable."""
+    if not current_user:
+        return None
+    
+    plan_type = current_user.get("plan_type", "free")
+    if plan_type != "free":
+        return None
+        
+    if conversation_id:
+        # Nếu có conversation_id tức là chat tiếp chứ không phải tạo mới mô tả
+        return None
+
+    user_doc = db.get_collection("users").find_one({"_id": current_user["_id"]})
+    if not user_doc:
+        return None
+
+    vietnam_tz = timezone(timedelta(hours=7))
+    now = datetime.now(vietnam_tz)
+    today_str = now.strftime("%Y-%m-%d")
+
+    free_usage_date = user_doc.get("free_usage_date")
+    free_usage_count = user_doc.get("free_usage_count", 0)
+
+    # Nếu bắt đầu sang ngày mới, đếm lại từ đầu
+    if free_usage_date != today_str:
+        free_usage_count = 0
+
+    if free_usage_count >= 10:
+        # Tính thời gian còn lại đến 24h00 (0h00 ngày hôm sau)
+        tomorrow = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        time_until_midnight = tomorrow - now
+        hours, remainder = divmod(int(time_until_midnight.total_seconds()), 3600)
+        minutes, _ = divmod(remainder, 60)
+        raise HTTPException(
+            status_code=403, 
+            detail=f"Bạn đã dùng hết 10 lượt tạo hôm nay. Vui lòng quay lại sau {hours} giờ {minutes} phút, hoặc nâng cấp lên gói Plus/Pro!"
+        )
+
+    new_count = free_usage_count + 1
+    remaining = 10 - new_count
+    
+    db.get_collection("users").update_one(
+        {"_id": current_user["_id"]},
+        {"$set": {
+            "free_usage_count": new_count,
+            "free_usage_date": today_str
+        }}
+    )
+    
+    return remaining
+
+
 @app.post("/api/descriptions/image", response_model=DescriptionResponse)
 async def generate_description_from_image(
     file: UploadFile = File(...),
@@ -630,16 +683,9 @@ async def generate_description_from_image(
 
     try:
         user_name = current_user.get("full_name") if current_user else None
-        user_tier = current_user.get("role", "free") if current_user else "free"
+        user_tier = current_user.get("plan_type", "free") if current_user else "free"
         
-        if current_user and user_tier == "free":
-            today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-            count = _descriptions_collection(db).count_documents({
-                "user_id": current_user["_id"],
-                "timestamp": {"$gte": today}
-            })
-            if count >= 5:
-                raise HTTPException(status_code=403, detail="Tài khoản dùng thử đã hết 5 lượt tạo hôm nay. Vui lòng nạp gói Plus hoặc Pro để dùng AI chuyên gia!")
+        remaining_free = check_and_update_free_limit(db, current_user, conversation_id)
 
         description_text = content.generate_from_image(
             api_key=settings.gemini_api_key, 
@@ -715,7 +761,8 @@ async def generate_description_from_image(
         source="image",
         image_url=history_payload.get("image_url") if history_payload else image_url,
         prompt=history_payload.get("prompt") if history_payload else None,
-        conversation_id=final_conversation_id
+        conversation_id=final_conversation_id,
+        remaining_free_generations=remaining_free
     )
 
 
@@ -729,16 +776,9 @@ async def generate_description_from_text(
 
     try:
         user_name = current_user.get("full_name") if current_user else None
-        user_tier = current_user.get("role", "free") if current_user else "free"
+        user_tier = current_user.get("plan_type", "free") if current_user else "free"
         
-        if current_user and user_tier == "free":
-            today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-            count = _descriptions_collection(db).count_documents({
-                "user_id": current_user["_id"],
-                "timestamp": {"$gte": today}
-            })
-            if count >= 5:
-                raise HTTPException(status_code=403, detail="Tài khoản dùng thử đã hết 5 lượt tạo hôm nay. Vui lòng nạp gói Plus hoặc Pro để dùng AI chuyên gia!")
+        remaining_free = check_and_update_free_limit(db, current_user, payload.conversation_id)
 
         description_text = content.generate_from_text(
             api_key=settings.gemini_api_key, 
@@ -812,7 +852,8 @@ async def generate_description_from_text(
         source="text",
         image_url=history_payload.get("image_url") if history_payload else None,
         prompt=payload.product_info,
-        conversation_id=final_conversation_id
+        conversation_id=final_conversation_id,
+        remaining_free_generations=remaining_free
     )
 
 

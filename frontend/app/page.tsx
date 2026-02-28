@@ -227,6 +227,10 @@ export default function HomePage() {
       const responseData = response.data;
       setSession(prev => [...prev, responseData]);
 
+      if (responseData.remaining_free_generations !== undefined && responseData.remaining_free_generations !== null) {
+        showToast("success", `Bạn còn ${responseData.remaining_free_generations} lượt tạo gốc hôm nay!`);
+      }
+
       if (responseData.conversation_id && responseData.conversation_id !== activeConversationId) {
         setActiveConversationId(responseData.conversation_id);
         const convRes = await axios.get(`${API_BASE_URL}/api/conversations`);
