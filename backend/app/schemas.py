@@ -84,15 +84,18 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 
 
+from datetime import datetime
+
 class UserOut(BaseModel):
     id: str
     email: Optional[str] = None
     phone_number: Optional[str] = None
     full_name: Optional[str] = None
     address: Optional[str] = None
-    role: str = "free"
+    role: str = "user"
     subscription_status: Optional[str] = "none"
     plan_type: Optional[str] = "free"
+    subscription_end_date: Optional[datetime] = None
     stripe_customer_id: Optional[str] = None
     avatar_url: Optional[str] = None
     created_at: str
@@ -130,6 +133,7 @@ class TimeSeriesDataPoint(BaseModel):
     active_users: int = 0
     descriptions_created: int = 0
     new_registrations: int = 0
+    new_pro_purchases: int = 0
 
 
 class TimeSeriesResponse(BaseModel):

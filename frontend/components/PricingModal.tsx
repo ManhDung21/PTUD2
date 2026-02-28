@@ -6,7 +6,7 @@ import clsx from 'clsx';
 interface PricingModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onUpgrade: (plan: 'plus' | 'pro') => void;
+    onUpgrade: (plan: 'plus' | 'pro' | 'pro_3m' | 'pro_6m') => void;
     currentPlan: string;
     role?: string;
 }
@@ -47,7 +47,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onU
             ],
             color: 'blue',
             buttonText: 'Nâng cấp Plus',
-            disabled: role === 'admin' || role === 'user_pro' || currentPlan === 'plus' || currentPlan === 'pro'
+            disabled: role === 'admin' || currentPlan === 'plus' || currentPlan.startsWith('pro')
         },
         {
             id: 'pro',
@@ -65,7 +65,43 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onU
             color: 'purple',
             badge: 'Phổ biến nhất',
             buttonText: 'Nâng cấp Pro',
-            disabled: role === 'admin' || role === 'user_pro' || currentPlan === 'pro'
+            disabled: role === 'admin' || currentPlan === 'pro'
+        },
+        {
+            id: 'pro_3m',
+            name: 'Pro (3 Tháng)',
+            icon: <Crown className="text-purple-500" size={24} />,
+            price: '6.000đ',
+            period: '/3 tháng',
+            description: 'Tiết kiệm 15%',
+            features: [
+                'Tất cả tính năng Pro',
+                'Không giới hạn lượt tạo',
+                'Tạo ảnh chất lượng cao 4K',
+                'Hỗ trợ ưu tiên 24/7'
+            ],
+            color: 'pink',
+            badge: 'Tiết kiệm',
+            buttonText: 'Mua 3 tháng',
+            disabled: role === 'admin' || currentPlan === 'pro_3m'
+        },
+        {
+            id: 'pro_6m',
+            name: 'Pro (6 Tháng)',
+            icon: <Crown className="text-red-500" size={24} />,
+            price: '8.000đ',
+            period: '/6 tháng',
+            description: 'Tiết kiệm 25%',
+            features: [
+                'Tất cả tính năng Pro',
+                'Không giới hạn lượt tạo',
+                'Tạo ảnh chất lượng cao 4K',
+                'Hỗ trợ ưu tiên 24/7'
+            ],
+            color: 'rose',
+            badge: 'Giá tốt nhất',
+            buttonText: 'Mua 6 tháng',
+            disabled: role === 'admin' || currentPlan === 'pro_6m'
         }
     ];
 
@@ -84,7 +120,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onU
                     initial={{ opacity: 0, scale: 0.9, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                    className="relative z-10 w-full max-w-5xl bg-panel border border-panel-border rounded-[32px] p-6 request-pricing-modal overflow-hidden max-h-[90vh] overflow-y-auto custom-scrollbar"
+                    className="relative z-10 w-full max-w-6xl bg-panel border border-panel-border rounded-[32px] p-6 request-pricing-modal overflow-hidden max-h-[90vh] overflow-y-auto custom-scrollbar"
                 >
                     <button
                         onClick={onClose}
@@ -98,19 +134,19 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onU
                         <p className="text-app-muted">Mở khóa toàn bộ tiềm năng sáng tạo với các gói nâng cấp</p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full mx-auto">
                         {plans.filter(plan => plan.id !== 'plus').map((plan) => (
                             <div
                                 key={plan.id}
                                 className={clsx(
                                     "relative p-6 rounded-3xl border transition-all duration-300 flex flex-col",
-                                    plan.id === 'pro'
-                                        ? "bg-gradient-to-b from-purple-500/10 to-transparent border-purple-500/50 shadow-xl shadow-purple-500/10 scale-105 border-2"
+                                    plan.id.startsWith('pro')
+                                        ? "bg-gradient-to-b from-purple-500/10 to-transparent border-purple-500/50 shadow-xl shadow-purple-500/10 scale-100 hover:scale-[1.02] border-2"
                                         : "bg-panel border-panel-border hover:border-app-muted/30"
                                 )}
                             >
                                 {plan.badge && (
-                                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold rounded-full shadow-lg">
+                                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold rounded-full shadow-lg whitespace-nowrap">
                                         {plan.badge}
                                     </div>
                                 )}
@@ -140,22 +176,20 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onU
                                 </div>
 
                                 <button
-                                    onClick={() => !plan.disabled && onUpgrade(plan.id as 'plus' | 'pro')}
+                                    onClick={() => !plan.disabled && onUpgrade(plan.id as any)}
                                     disabled={plan.disabled}
                                     className={clsx(
                                         "w-full py-3 rounded-xl font-bold text-sm transition-all",
                                         plan.disabled
                                             ? "bg-gray-100 dark:bg-white/5 text-gray-400 cursor-not-allowed"
-                                            : plan.id === 'pro'
+                                            : plan.id.startsWith('pro')
                                                 ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-lg hover:shadow-purple-500/25 hover:scale-[1.02] active:scale-[0.98]"
                                                 : "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/25 hover:scale-[1.02] active:scale-[0.98]"
                                     )}
                                 >
                                     {plan.disabled && (
-                                        (plan.id === 'pro' && (role === 'admin' || role === 'user_pro' || currentPlan === 'pro')) ||
-                                        (plan.id === 'plus' && (role === 'user_plus' || currentPlan === 'plus')) ||
-                                        plan.id === 'free'
-                                    ) ? (role === 'admin' ? "Đang sử dụng (Admin)" : "Đang sử dụng") : plan.buttonText}
+                                        (plan.id === 'free')
+                                    ) ? (role === 'admin' ? "Đang sử dụng (Admin)" : "Đang sử dụng") : plan.disabled ? "Đang sử dụng" : plan.buttonText}
                                 </button>
                             </div>
                         ))}

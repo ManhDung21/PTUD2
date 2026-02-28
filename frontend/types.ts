@@ -49,6 +49,7 @@ export interface User {
     role?: string;
     plan_type?: 'free' | 'plus' | 'pro';
     subscription_status?: string;
+    subscription_end_date?: string | null;
     stripe_customer_id?: string | null;
 }
 

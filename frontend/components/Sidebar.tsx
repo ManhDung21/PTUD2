@@ -294,13 +294,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                 <span className={clsx(
                                     "text-[10px] font-bold px-2 py-0.5 rounded-full border",
                                     (user.role === 'admin') ? "bg-purple-500/10 text-purple-500 border-purple-500/20" :
-                                        (user.role === 'user_pro' || user.plan_type === 'pro') ? "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" :
-                                            (user.role === 'user_plus' || user.plan_type === 'plus') ? "bg-blue-500/10 text-blue-500 border-blue-500/20" :
+                                        (user.plan_type === 'pro') ? "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" :
+                                            (user.plan_type === 'plus') ? "bg-blue-500/10 text-blue-500 border-blue-500/20" :
                                                 "bg-gray-500/10 text-gray-500 border-gray-500/20"
                                 )}>
                                     {user.role === 'admin' ? 'ADMIN' :
-                                        (user.role === 'user_pro' || user.plan_type === 'pro') ? 'PRO' :
-                                            (user.role === 'user_plus' || user.plan_type === 'plus') ? 'PLUS' : 'FREE'}
+                                        (user.plan_type === 'pro') ? 'PRO' :
+                                            (user.plan_type === 'plus') ? 'PLUS' : 'FREE'}
                                 </span>
 
                                 {user.plan_type !== 'pro' && (

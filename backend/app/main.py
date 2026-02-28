@@ -118,6 +118,7 @@ def _user_out(user: UserDocument) -> UserOut:
         created_at=created_at.isoformat(),
         plan_type=user.get("plan_type", "free"),
         subscription_status=user.get("subscription_status", "none"),
+        subscription_end_date=user.get("subscription_end_date"),
         stripe_customer_id=user.get("stripe_customer_id"),
     )
 
@@ -356,7 +357,7 @@ def register(payload: RegisterRequest, db: Database = Depends(get_database)) -> 
         "email": email,
         "phone_number": phone_number,
         "full_name": full_name,
-        "role": "free",
+        "role": "user",
         "plan_type": "free",
         "subscription_status": "none"
     }

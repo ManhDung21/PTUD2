@@ -46,6 +46,9 @@ async def get_all_users(
             full_name=doc.get("full_name"),
             role=doc.get("role", "user"),
             avatar_url=doc.get("avatar_url"),
+            plan_type=doc.get("plan_type", "free"),
+            subscription_status=doc.get("subscription_status", "none"),
+            subscription_end_date=doc.get("subscription_end_date"),
             created_at=doc.get("created_at").isoformat() if doc.get("created_at") else ""
         ))
     return users
@@ -164,7 +167,7 @@ async def update_user_role(
     if not ObjectId.is_valid(user_id):
         raise HTTPException(status_code=400, detail="Invalid ID")
     
-    if role_update.role not in ["user", "user_free", "user_pro", "admin"]:
+    if role_update.role not in ["user", "admin"]:
         raise HTTPException(status_code=400, detail="Invalid role")
 
     result = db.users.update_one(
@@ -195,9 +198,19 @@ async def update_user_plan(
     if plan_update.plan_type not in ["free", "plus", "pro"]:
         raise HTTPException(status_code=400, detail="Invalid plan type")
 
+    update_data = {"plan_type": plan_update.plan_type}
+    from datetime import datetime, timedelta
+    
+    if plan_update.plan_type != "free":
+        update_data["subscription_status"] = "active"
+        update_data["subscription_end_date"] = datetime.utcnow() + timedelta(days=30)
+    else:
+        update_data["subscription_status"] = "none"
+        update_data["subscription_end_date"] = None
+
     result = db.users.update_one(
         {"_id": ObjectId(user_id)},
-        {"$set": {"plan_type": plan_update.plan_type}}
+        {"$set": update_data}
     )
     
     if result.matched_count == 0:
@@ -332,19 +345,44 @@ async def get_timeseries_analytics(
         },
         {"$sort": {"_id": 1}}
     ]
+
+    # Aggregation for new pro purchases
+    pro_purchases_pipeline = [
+        {
+            "$match": {
+                "status": "completed",
+                "plan_type": {"$in": ["pro", "pro_3m", "pro_6m"]},
+                "created_at": {"$gte": start_dt.timestamp(), "$lte": end_dt.timestamp()}
+            }
+        },
+        {
+            "$group": {
+                "_id": {
+                    "$dateToString": {
+                        "format": date_format,
+                        "date": {"$toDate": {"$multiply": ["$created_at", 1000]}}
+                    }
+                },
+                "count": {"$sum": 1}
+            }
+        },
+        {"$sort": {"_id": 1}}
+    ]
     
     # Execute aggregations
     registrations_data = list(db.users.aggregate(registrations_pipeline))
     descriptions_data = list(db.descriptions.aggregate(descriptions_pipeline))
     active_users_data = list(db.descriptions.aggregate(active_users_pipeline))
+    pro_purchases_data = list(db.payments.aggregate(pro_purchases_pipeline))
     
     # Convert to dictionaries for easy lookup
     registrations_dict = {item["_id"]: item["count"] for item in registrations_data}
     descriptions_dict = {item["_id"]: item["count"] for item in descriptions_data}
     active_users_dict = {item["_id"]: item["count"] for item in active_users_data}
+    pro_purchases_dict = {item["_id"]: item["count"] for item in pro_purchases_data}
     
     # Get all unique timestamps
-    all_timestamps = set(registrations_dict.keys()) | set(descriptions_dict.keys()) | set(active_users_dict.keys())
+    all_timestamps = set(registrations_dict.keys()) | set(descriptions_dict.keys()) | set(active_users_dict.keys()) | set(pro_purchases_dict.keys())
     
     # Build response data
     result_data = []
@@ -353,7 +391,8 @@ async def get_timeseries_analytics(
             timestamp=timestamp,
             new_registrations=registrations_dict.get(timestamp, 0),
             descriptions_created=descriptions_dict.get(timestamp, 0),
-            active_users=active_users_dict.get(timestamp, 0)
+            active_users=active_users_dict.get(timestamp, 0),
+            new_pro_purchases=pro_purchases_dict.get(timestamp, 0)
         ))
     
     return TimeSeriesResponse(

@@ -52,12 +52,12 @@ export default function HomePage() {
   // ... existing code ...
 
   const [paymentMethodVisible, setPaymentMethodVisible] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<'plus' | 'pro' | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<'plus' | 'pro' | 'pro_3m' | 'pro_6m' | null>(null);
   const [qrModalVisible, setQrModalVisible] = useState(false);
   const [qrType, setQrType] = useState<'bank' | 'momo'>('bank');
 
   // Upgrade Handler (Step 1: Open Payment Method Select)
-  const handleUpgradeClick = (plan: 'plus' | 'pro') => {
+  const handleUpgradeClick = (plan: 'plus' | 'pro' | 'pro_3m' | 'pro_6m') => {
     if (!user) {
       setAuthVisible(true);
       return;
@@ -747,8 +747,15 @@ export default function HomePage() {
           isOpen={qrModalVisible}
           onClose={() => setQrModalVisible(false)}
           type={qrType}
-          amount={selectedPlan === 'plus' ? '99.000đ' : '199.000đ'}
-          description={`Thanh toan goi ${selectedPlan === 'plus' ? 'Plus' : 'Pro'}`}
+          amount={
+            selectedPlan === 'plus' ? '199.000đ' :
+              selectedPlan === 'pro_3m' ? '499.000đ' :
+                selectedPlan === 'pro_6m' ? '899.000đ' : '199.000đ'
+          }
+          description={`Thanh toan goi ${selectedPlan === 'plus' ? 'Plus' :
+            selectedPlan === 'pro_3m' ? 'Pro 3 Thang' :
+              selectedPlan === 'pro_6m' ? 'Pro 6 Thang' : 'Pro'
+            }`}
           user={user}
         />
       </div>

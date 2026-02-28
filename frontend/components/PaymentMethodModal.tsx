@@ -6,7 +6,7 @@ import clsx from 'clsx';
 interface PaymentMethodModalProps {
     isOpen: boolean;
     onClose: () => void;
-    planType: 'plus' | 'pro' | null;
+    planType: 'plus' | 'pro' | 'pro_3m' | 'pro_6m' | null;
     onConfirm: (method: 'stripe' | 'bank' | 'momo') => void;
 }
 
@@ -20,8 +20,13 @@ export const PaymentMethodModal: React.FC<PaymentMethodModalProps> = ({
 
     if (!isOpen || !planType) return null;
 
-    const planName = planType === 'plus' ? 'Plus' : 'Pro';
-    const planPrice = planType === 'plus' ? '99.000đ' : '199.000đ';
+    const planName = planType === 'plus' ? 'Plus' :
+        planType === 'pro_3m' ? 'Pro 3 Tháng' :
+            planType === 'pro_6m' ? 'Pro 6 Tháng' : 'Pro';
+
+    const planPrice = planType === 'plus' ? '199.000đ' :
+        planType === 'pro_3m' ? '499.000đ' :
+            planType === 'pro_6m' ? '899.000đ' : '199.000đ';
 
     return (
         <AnimatePresence>
@@ -59,9 +64,9 @@ export const PaymentMethodModal: React.FC<PaymentMethodModalProps> = ({
                         <div className="flex items-center gap-3">
                             <div className={clsx(
                                 "w-10 h-10 rounded-xl flex items-center justify-center",
-                                planType === 'pro' ? "bg-purple-500/20 text-purple-500" : "bg-blue-500/20 text-blue-500"
+                                planType?.startsWith('pro') ? "bg-purple-500/20 text-purple-500" : "bg-blue-500/20 text-blue-500"
                             )}>
-                                {planType === 'pro' ? <Crown size={20} /> : <Zap size={20} />}
+                                {planType?.startsWith('pro') ? <Crown size={20} /> : <Zap size={20} />}
                             </div>
                             <div>
                                 <div className="font-bold text-app-text">Gói {planName}</div>

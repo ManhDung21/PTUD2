@@ -19,6 +19,7 @@ interface TimeSeriesDataPoint {
     active_users: number;
     descriptions_created: number;
     new_registrations: number;
+    new_pro_purchases: number;
 }
 
 interface TimeSeriesChartProps {
@@ -119,6 +120,17 @@ export const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({ data, isDarkMo
                     dot={{ fill: '#22c55e', r: 3 }}
                     activeDot={{ r: 5 }}
                     name="Đăng ký mới"
+                />
+
+                {/* New Pro Purchases Line */}
+                <Line
+                    type="monotone"
+                    dataKey="new_pro_purchases"
+                    stroke="#f59e0b"
+                    strokeWidth={2}
+                    dot={{ fill: '#f59e0b', r: 3 }}
+                    activeDot={{ r: 5 }}
+                    name="Mua gói Pro"
                 />
             </LineChart>
         </ResponsiveContainer>

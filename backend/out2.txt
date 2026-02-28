@@ -1,0 +1,39 @@
+@dataclass
+class WebhookData:
+    orderCode: int
+    amount: int
+    description: str
+    accountNumber: str
+    reference: str
+    transactionDateTime: str
+    paymentLinkId: str
+    code: str
+    desc: str
+    counterAccountBankId: Optional[str]
+    counterAccountBankName: Optional[str]
+    counterAccountName: Optional[str]
+    counterAccountNumber: Optional[str]
+    virtualAccountName: Optional[str]
+    virtualAccountNumber: Optional[str]
+    currency: str
+
+    def to_json(self) -> dict[str, Any]:
+        return {
+            "orderCode": self.orderCode,
+            "amount": self.amount,
+            "description": self.description,
+            "accountNumber": self.accountNumber,
+            "reference": self.reference,
+            "transactionDateTime": self.transactionDateTime,
+            "paymentLinkId": self.paymentLinkId,
+            "currency": self.currency,
+            "code": self.code,
+            "desc": self.desc,
+            "counterAccountBankId": self.counterAccountBankId,
+            "counterAccountBankName": self.counterAccountBankName,
+            "counterAccountName": self.counterAccountName,
+            "counterAccountNumber": self.counterAccountNumber,
+            "virtualAccountName": self.virtualAccountName,
+            "virtualAccountNumber": self.virtualAccountNumber,
+        }
+

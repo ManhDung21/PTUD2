@@ -583,8 +583,6 @@ export default function AdminPage() {
                                                 >
                                                     <option value="all">Tất cả vai trò</option>
                                                     <option value="admin">Admin</option>
-                                                    <option value="user_pro">Pro User</option>
-                                                    <option value="user_free">Free User</option>
                                                     <option value="user">User</option>
                                                 </select>
                                             </div>
@@ -623,14 +621,10 @@ export default function AdminPage() {
                                                                     onChange={(e) => handleUpdateRole(u.id, e.target.value)}
                                                                     className={clsx(
                                                                         "bg-transparent border border-white/10 rounded px-2 py-1 text-[11px] font-bold uppercase cursor-pointer outline-none focus:border-purple-500 transition-colors bg-[#0a0a0a]",
-                                                                        u.role === 'admin' ? "text-purple-300 border-purple-500/30" :
-                                                                            u.role === 'user_pro' ? "text-yellow-300 border-yellow-500/30" :
-                                                                                "text-gray-400"
+                                                                        u.role === 'admin' ? "text-purple-300 border-purple-500/30" : "text-gray-400"
                                                                     )}
                                                                 >
                                                                     <option value="user">USER</option>
-                                                                    <option value="user_free">FREE</option>
-                                                                    <option value="user_pro">PRO</option>
                                                                     <option value="admin">ADMIN</option>
                                                                 </select>
                                                             </td>
@@ -649,6 +643,12 @@ export default function AdminPage() {
                                                                     <option value="plus">PLUS</option>
                                                                     <option value="pro">PRO</option>
                                                                 </select>
+                                                                {u.subscription_end_date && u.plan_type !== 'free' && (
+                                                                    <div className={clsx("text-[10px] mt-1.5 font-medium flex items-center gap-1", isDarkMode ? "text-gray-500" : "text-gray-500")}>
+                                                                        <span>⏱️</span>
+                                                                        {new Date(u.subscription_end_date).toLocaleDateString('vi-VN')}
+                                                                    </div>
+                                                                )}
                                                             </td>
                                                             <td className={clsx("p-4 text-xs font-mono", isDarkMode ? "text-gray-500" : "text-gray-600")}>{new Date(u.created_at).toLocaleDateString()}</td>
                                                             <td className="p-4 text-right pr-6">

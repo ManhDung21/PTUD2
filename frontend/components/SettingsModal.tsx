@@ -264,21 +264,27 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                                 ) : (
                                                     <span className={clsx(
                                                         "font-bold text-lg",
-                                                        (user.role === 'user_pro' || user.plan_type === 'pro') ? "text-yellow-500" :
-                                                            (user.role === 'user_plus' || user.plan_type === 'plus') ? "text-blue-500" :
+                                                        (user.plan_type === 'pro') ? "text-yellow-500" :
+                                                            (user.plan_type === 'plus') ? "text-blue-500" :
                                                                 "text-gray-500"
                                                     )}>
-                                                        {(user.role === 'user_pro' || user.plan_type === 'pro') ? 'PRO' :
-                                                            (user.role === 'user_plus' || user.plan_type === 'plus') ? 'PLUS' : 'FREE'}
+                                                        {(user.plan_type === 'pro') ? 'PRO' :
+                                                            (user.plan_type === 'plus') ? 'PLUS' : 'FREE'}
                                                     </span>
                                                 )}
 
-                                                {(user.role === 'admin' || user.role === 'user_pro' || user.plan_type === 'pro') && (
+                                                {(user.role === 'admin' || user.plan_type === 'pro') && (
                                                     <Crown size={16} className={user.role === 'admin' ? "text-purple-600" : "text-yellow-500"} />
                                                 )}
                                             </div>
+                                            {(user.role !== 'admin') && user.subscription_end_date && user.plan_type !== 'free' && (
+                                                <div className="mt-1 flex items-center gap-1.5 text-xs font-medium text-app-muted">
+                                                    <span>•</span>
+                                                    Hết hạn: <span className="text-app-text font-bold">{new Date(user.subscription_end_date).toLocaleDateString('vi-VN')}</span>
+                                                </div>
+                                            )}
                                         </div>
-                                        {!(user.role === 'admin' || user.role === 'user_pro' || user.plan_type === 'pro') && (
+                                        {!(user.role === 'admin' || user.plan_type === 'pro') && (
                                             <button
                                                 onClick={() => {
                                                     onClose();

@@ -35,6 +35,10 @@ async def create_checkout_session(
         price_id = settings.stripe_price_plus_id
     elif plan_type == "pro":
         price_id = settings.stripe_price_pro_id
+    elif plan_type == "pro_3m":
+        price_id = getattr(settings, 'stripe_price_pro_3m_id', settings.stripe_price_pro_id)
+    elif plan_type == "pro_6m":
+        price_id = getattr(settings, 'stripe_price_pro_6m_id', settings.stripe_price_pro_id)
     else:
         raise HTTPException(status_code=400, detail="Invalid plan type")
 
@@ -95,9 +99,9 @@ async def create_momo_payment(
     backend_url = os.environ.get("NEXT_PUBLIC_API_BASE_URL", "http://localhost:8000")
     ipnUrl = f"{backend_url.rstrip('/')}/api/payments/momo-webhook" 
 
-    orderInfo = "Mua Gói Plus" if plan_type == "plus" else "Mua Gói Pro"
+    orderInfo = "Mua Gói Plus" if plan_type == "plus" else "Mua Gói Pro 3 Tháng" if plan_type == "pro_3m" else "Mua Gói Pro 6 Tháng" if plan_type == "pro_6m" else "Mua Gói Pro"
     redirectUrl = settings.frontend_url + '/settings?success=true'
-    amount = "99000" if plan_type == "plus" else "199000"
+    amount = "2000" if plan_type == "plus" else "6000" if plan_type == "pro_3m" else "8000" if plan_type == "pro_6m" else "4000"
     orderId = str(uuid.uuid4())
     requestId = str(uuid.uuid4())
     requestType = "captureWallet"
@@ -162,9 +166,15 @@ async def create_payos_payment(
         checksum_key=settings.payos_checksum_key
     )
 
-    # TEST MODE: Hạ mức tiền xuống 2.000đ để test (PayOS yêu cầu tối thiểu là 2.000đ)
-    amount = 2000 # 99000 if plan_type == "plus" else 199000
-    plan_name = "Gói Plus" if plan_type == "plus" else "Gói Pro"
+    # TEST MODE: Hao mức tiền xuống 2.000đ để test (PayOS yêu cầu tối thiểu là 2.000đ)
+    amount_mapping = {
+        "plus": 2000,
+        "pro": 4000,
+        "pro_3m": 6000,
+        "pro_6m": 8000
+    }
+    amount = amount_mapping.get(plan_type, 2000)
+    plan_name = "Gói Plus" if plan_type == "plus" else "Gói Pro 3 Tháng" if plan_type == "pro_3m" else "Gói Pro 6 Tháng" if plan_type == "pro_6m" else "Gói Pro"
     order_code = int(time.time() * 1000) % 9007199254740991
 
     item = ItemData(name=plan_name, quantity=1, price=amount)
@@ -232,7 +242,7 @@ async def payos_webhook_received(request: Request, db: Database = Depends(get_da
         # In production, verify the webhook signature here.
         webhook_data = payos.verifyPaymentWebhookData(data)
         
-        if webhook_data.success and webhook_data.code == "00":
+        if webhook_data.code == "00" or data.get("code") == "00":
             order_code = webhook_data.orderCode
         
             # Find the pending payment
@@ -312,14 +322,21 @@ async def handle_successful_payment(user_id, plan_type: str, db: Database, payme
     
     # 2. Update User Plan
     now = datetime.utcnow()
-    # Thêm 30 ngày (chu kỳ)
-    end_date = now + timedelta(days=30)
+    # Determine adding days by plan
+    days = 30
+    if plan_type == "pro_3m":
+        days = 90
+    elif plan_type == "pro_6m":
+        days = 180
+    end_date = now + timedelta(days=days)
+    
+    display_plan = "pro" if plan_type in ["pro_3m", "pro_6m"] else plan_type
     
     db["users"].update_one(
         {"_id": user_id},
         {"$set": {
-            "role": plan_type,           # Cập nhật quyền sang "pro" hoặc "plus"
-            "plan_type": plan_type,      # Gói hiển thị
+            "role": "user",
+            "plan_type": display_plan,      # Gói hiển thị
             "subscription_status": "active",
             "subscription_end_date": end_date
         }}
