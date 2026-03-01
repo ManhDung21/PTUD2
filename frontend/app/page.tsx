@@ -10,7 +10,7 @@ import { ProfileModal } from "../components/ProfileModal";
 import { SettingsModal } from "../components/SettingsModal";
 import { PricingModal } from "../components/PricingModal";
 import { AuthMode, DescriptionResponse, HistoryItem, User, ToastState, Conversation } from "../types";
-import { Sparkles } from "lucide-react";
+import { Camera, RefreshCw, Send, Settings, Moon, Sun, Monitor, Zap, ExternalLink, LogOut, ChevronLeft, ArrowRight, Download, Eye, Link, Mic, Crown } from "lucide-react";
 import { PaymentMethodModal } from "../components/PaymentMethodModal";
 import { PaymentQRModal } from "../components/PaymentQRModal";
 
@@ -698,6 +698,8 @@ export default function HomePage() {
           selectedStyle={selectedStyle}
           onStyleChange={(s) => setSelectedStyle(s)}
           cameraStream={streamRef.current}
+          userPlan={user?.plan_type || 'free'}
+          onRequireUpgrade={() => showToast('error', 'Tính năng này chỉ dành cho tài khoản có phí. Vui lòng nâng cấp!')}
         />
 
         <AuthModal

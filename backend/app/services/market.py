@@ -12,7 +12,7 @@ def extract_product_info(api_key: str, user_prompt: str) -> Optional[Dict[str, A
     """
     try:
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        model = genai.GenerativeModel("gemini-2.5-flash")
         instruction = f"""
 Trích xuất tên nông sản và mức giá được nhắc đến trong đoạn text sau. 
 Nếu có giá, hãy chuyển nó về dạng số nguyên (VD: 65k -> 65000).

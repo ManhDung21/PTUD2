@@ -228,7 +228,7 @@ def generate_from_image(api_key: str, image: Image.Image, style: str, product_in
     # Bản Free hoặc Fallback -> dùng Gemini (Bật Search tool nếu là Pro Fallback)
     import google.generativeai as genai
     tools = [genai.protos.Tool(google_search_retrieval=genai.protos.GoogleSearchRetrieval())] if user_tier in ["plus", "pro"] else None
-    model_name = "gemini-1.5-pro" if user_tier in ["plus", "pro"] else "gemini-1.5-flash"
+    model_name = "gemini-2.5-pro" if user_tier in ["plus", "pro"] else "gemini-2.5-flash"
     
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel(model_name, tools=tools)
@@ -264,7 +264,7 @@ def generate_from_text(api_key: str, product_info: str, style: str, user_name: O
 
     import google.generativeai as genai
     tools = [genai.protos.Tool(google_search_retrieval=genai.protos.GoogleSearchRetrieval())] if user_tier in ["plus", "pro"] else None
-    model_name = "gemini-1.5-pro" if user_tier in ["plus", "pro"] else "gemini-1.5-flash"
+    model_name = "gemini-2.5-pro" if user_tier in ["plus", "pro"] else "gemini-2.5-flash"
     
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel(model_name, tools=tools)

@@ -2,7 +2,7 @@
 
 import React, { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Image, Camera, Send, Mic, X, Sparkles } from "lucide-react";
+import { Image, Camera, Send, Mic, X, Sparkles, Lock, Crown } from "lucide-react";
 import clsx from "clsx";
 
 interface InputBarProps {
@@ -23,6 +23,8 @@ interface InputBarProps {
     selectedStyle: string;
     onStyleChange: (style: string) => void;
     cameraStream: MediaStream | null;
+    userPlan?: string;
+    onRequireUpgrade?: () => void;
 }
 
 export const InputBar: React.FC<InputBarProps> = ({
@@ -40,7 +42,9 @@ export const InputBar: React.FC<InputBarProps> = ({
     isSidebarOpen,
     selectedStyle,
     onStyleChange,
-    cameraStream
+    cameraStream,
+    userPlan = "free",
+    onRequireUpgrade
 }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const mobileCameraRef = useRef<HTMLInputElement>(null);
@@ -174,23 +178,35 @@ export const InputBar: React.FC<InputBarProps> = ({
                             exit={{ opacity: 0, y: 10 }}
                             className="absolute bottom-full left-4 mb-2 p-2 rounded-[20px] bg-panel shadow-2xl border border-panel-border flex flex-col gap-1 min-w-[140px] z-[110]"
                         >
-                            {styles.map((s) => (
-                                <button
-                                    key={s}
-                                    onClick={() => {
-                                        onStyleChange(s);
-                                        setShowStyles(false);
-                                    }}
-                                    className={clsx(
-                                        "px-4 py-2 rounded-[12px] text-sm text-left transition-colors",
-                                        selectedStyle === s
-                                            ? "bg-glass-highlight text-app-text font-medium"
-                                            : "text-app-muted hover:bg-glass-highlight hover:text-app-text"
-                                    )}
-                                >
-                                    {s}
-                                </button>
-                            ))}
+                            {styles.map((s) => {
+                                const isPremium = s !== "Tiếp thị";
+                                const isLocked = isPremium && userPlan === "free";
+                                return (
+                                    <button
+                                        key={s}
+                                        onClick={() => {
+                                            if (isLocked) {
+                                                if (onRequireUpgrade) onRequireUpgrade();
+                                                setShowStyles(false);
+                                                return;
+                                            }
+                                            onStyleChange(s);
+                                            setShowStyles(false);
+                                        }}
+                                        className={clsx(
+                                            "px-4 py-2 flex items-center justify-between rounded-[12px] text-sm text-left transition-colors",
+                                            selectedStyle === s
+                                                ? "bg-glass-highlight text-app-text font-medium"
+                                                : "text-app-muted hover:bg-glass-highlight hover:text-app-text",
+                                            isLocked && "opacity-70"
+                                        )}
+                                    >
+                                        <span>{s}</span>
+                                        {isLocked && <Lock size={12} className="text-yellow-500" />}
+                                        {!isLocked && isPremium && <Crown size={12} className="text-yellow-500" />}
+                                    </button>
+                                );
+                            })}
                         </motion.div>
                     )}
                 </AnimatePresence>

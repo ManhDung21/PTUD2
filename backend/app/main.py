@@ -685,6 +685,9 @@ async def generate_description_from_image(
         user_name = current_user.get("full_name") if current_user else None
         user_tier = current_user.get("plan_type", "free") if current_user else "free"
         
+        if user_tier == "free" and style != "Tiếp thị":
+            style = "Tiếp thị"
+        
         remaining_free = check_and_update_free_limit(db, current_user, conversation_id)
 
         description_text = content.generate_from_image(
@@ -778,12 +781,15 @@ async def generate_description_from_text(
         user_name = current_user.get("full_name") if current_user else None
         user_tier = current_user.get("plan_type", "free") if current_user else "free"
         
+        if user_tier == "free" and payload.style != "Tiếp thị":
+            payload.style = "Tiếp thị"
+            
         remaining_free = check_and_update_free_limit(db, current_user, payload.conversation_id)
 
         description_text = content.generate_from_text(
             api_key=settings.gemini_api_key, 
             product_info=payload.product_info, 
-            style=payload.style, 
+            style=payload.style,
             user_name=user_name,
             user_tier=user_tier,
             anthropic_api_key=settings.anthropic_api_key,
