@@ -113,7 +113,7 @@ Từ khóa:
 Lưu ý: 
 1. Dấu phân cách ||| là BẮT BUỘC.
 2. Nội dung phải THUẦN VIỆT, gần gũi với đời sống người Việt Nam.
-3. Nội dung bổ sung: {user_context}
+3. Nội dung bổ sung: {product_info or "Không có"}
 """
 
 

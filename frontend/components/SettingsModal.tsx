@@ -38,6 +38,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     const [loading, setLoading] = useState(false);
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+    const [isPlanDropdownOpen, setIsPlanDropdownOpen] = useState(false);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     const handleAvatarClick = () => {
@@ -233,33 +234,43 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                             <div className="flex items-center gap-2 relative">
                                                 {user.role === 'admin' ? (
                                                     <div className="relative group/plan">
-                                                        <button className={clsx(
-                                                            "flex items-center gap-1 font-bold text-lg cursor-pointer hover:opacity-80 transition-opacity",
-                                                            (user.plan_type === 'pro' || !user.plan_type) ? "text-purple-600" :
-                                                                user.plan_type === 'plus' ? "text-blue-500" : "text-gray-500"
-                                                        )}>
+                                                        <button
+                                                            onClick={() => setIsPlanDropdownOpen(!isPlanDropdownOpen)}
+                                                            className={clsx(
+                                                                "flex items-center gap-1 font-bold text-lg cursor-pointer hover:opacity-80 transition-opacity",
+                                                                (user.plan_type === 'pro' || !user.plan_type) ? "text-purple-600" :
+                                                                    user.plan_type === 'plus' ? "text-blue-500" : "text-gray-500"
+                                                            )}>
                                                             {user.plan_type ? user.plan_type.toUpperCase() : 'PRO'}
                                                             <ChevronDown size={14} />
                                                         </button>
 
                                                         {/* Plan Dropdown */}
-                                                        <div className="absolute top-full left-0 mt-1 w-32 bg-panel border border-panel-border rounded-xl shadow-xl overflow-hidden hidden group-hover/plan:block z-50">
-                                                            {(['free', 'plus', 'pro'] as const).map((plan) => (
-                                                                <button
-                                                                    key={plan}
-                                                                    onClick={() => onUpdateProfile({ plan_type: plan } as any)}
-                                                                    className={clsx(
-                                                                        "w-full text-left px-4 py-2 text-sm font-bold hover:bg-glass-highlight transition-colors flex items-center justify-between",
-                                                                        plan === 'pro' ? "text-purple-500" :
-                                                                            plan === 'plus' ? "text-blue-500" : "text-gray-500",
-                                                                        user.plan_type === plan && "bg-white/5"
-                                                                    )}
-                                                                >
-                                                                    {plan.toUpperCase()}
-                                                                    {user.plan_type === plan && <div className="w-1.5 h-1.5 rounded-full bg-current" />}
-                                                                </button>
-                                                            ))}
-                                                        </div>
+                                                        {isPlanDropdownOpen && (
+                                                            <>
+                                                                <div className="fixed inset-0 z-40" onClick={() => setIsPlanDropdownOpen(false)} />
+                                                                <div className="absolute top-full left-0 mt-2 w-32 bg-white dark:bg-gray-800 border border-black/10 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
+                                                                    {(['free', 'plus', 'pro'] as const).map((plan) => (
+                                                                        <button
+                                                                            key={plan}
+                                                                            onClick={() => {
+                                                                                onUpdateProfile({ plan_type: plan } as any);
+                                                                                setIsPlanDropdownOpen(false);
+                                                                            }}
+                                                                            className={clsx(
+                                                                                "w-full text-left px-4 py-2.5 text-sm font-bold hover:bg-black/5 dark:hover:bg-white/5 transition-colors flex items-center justify-between",
+                                                                                plan === 'pro' ? "text-purple-500 dark:text-purple-400" :
+                                                                                    plan === 'plus' ? "text-blue-500 dark:text-blue-400" : "text-gray-600 dark:text-gray-300",
+                                                                                user.plan_type === plan && "bg-black/5 dark:bg-white/10"
+                                                                            )}
+                                                                        >
+                                                                            {plan.toUpperCase()}
+                                                                            {user.plan_type === plan && <div className="w-1.5 h-1.5 rounded-full bg-current" />}
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+                                                            </>
+                                                        )}
                                                     </div>
                                                 ) : (
                                                     <span className={clsx(
