@@ -59,12 +59,16 @@ export default function HomePage() {
 
   // Upgrade Handler (Step 1: Open Payment Method Select)
   const handleUpgradeClick = (plan: 'plus' | 'pro' | 'pro_3m' | 'pro_6m') => {
-    if (!user) {
+    setPricingVisible(false);
+
+    if (!user || !token) {
+      showToast("error", "Vui lòng tạo một tài khoản để mua gói cước!");
+      setAuthMode("register");
       setAuthVisible(true);
       return;
     }
+
     setSelectedPlan(plan);
-    setPricingVisible(false); // Close pricing, open payment method
     setPaymentMethodVisible(true);
   };
 
@@ -624,7 +628,7 @@ export default function HomePage() {
         </div>
 
         {toast && (
-          <div className={`fixed top-4 right-4 z-[2000] px-4 py-2 rounded-lg text-white font-medium shadow-lg backdrop-blur-md ${toast.type === 'success' ? 'bg-green-500/50' : 'bg-red-500/50'}`}>
+          <div className={`fixed top-20 md:top-4 right-4 max-w-[calc(100vw-32px)] md:max-w-md z-[2000] px-4 py-3 rounded-xl text-white font-medium shadow-xl backdrop-blur-md break-words border ${toast.type === 'success' ? 'bg-green-600/80 border-green-500/30' : 'bg-red-600/80 border-red-500/30'}`}>
             {toast.message}
           </div>
         )}

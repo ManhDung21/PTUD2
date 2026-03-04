@@ -625,9 +625,11 @@ def _store_description(
 
 def check_and_update_free_limit(request: Request, db: Database, current_user: Optional[dict], conversation_id: Optional[str]) -> Optional[int]:
     """Returns remaining generations for free user or guest, or None if not applicable."""
-    # Base check for conversation continuation
-    if conversation_id:
-        return None
+    
+    # Removed the bypass logic (`if conversation_id: return None`) 
+    # to ensure all generations, including follow-up chats, count towards the daily limit.
+    
+    # Also we let Admin accounts test the Free limit natively if their plan_type is 'free'.
 
     vietnam_tz = timezone(timedelta(hours=7))
     now = datetime.now(vietnam_tz)
@@ -652,7 +654,7 @@ def check_and_update_free_limit(request: Request, db: Database, current_user: Op
         if guest_usage_count >= 3:
             raise HTTPException(
                 status_code=403, 
-                detail=f"Khách vãng lai chỉ được thử 3 lần/ngày. Vui lòng đăng nhập hoặc chờ {hours} giờ {minutes} phút để tiếp tục!"
+                detail=f"Đã đạt giới hạn 3 lần/ngày dành cho khách. Vui lòng đăng nhập để tiếp tục!"
             )
             
         new_guest_count = guest_usage_count + 1
@@ -689,7 +691,7 @@ def check_and_update_free_limit(request: Request, db: Database, current_user: Op
     if free_usage_count >= 10:
         raise HTTPException(
             status_code=403, 
-            detail=f"Bạn đã dùng hết 10 lượt tạo hôm nay. Vui lòng quay lại sau {hours} giờ {minutes} phút, hoặc nâng cấp lên gói Plus/Pro!"
+            detail=f"Bạn đã dùng hết 10 lượt tạo hôm nay. Vui lòng nâng cấp gói cước để tiếp tục!"
         )
 
     new_count = free_usage_count + 1
