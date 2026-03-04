@@ -25,6 +25,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState<boolean>(false);
   const [input, setInput] = useState("");
   const [selectedStyle, setSelectedStyle] = useState("Tiếp thị");
+  const [remainingFree, setRemainingFree] = useState<number | null>(null);
 
   // Auth State
   const [user, setUser] = useState<User | null>(null);
@@ -228,7 +229,7 @@ export default function HomePage() {
       setSession(prev => [...prev, responseData]);
 
       if (responseData.remaining_free_generations !== undefined && responseData.remaining_free_generations !== null) {
-        showToast("success", `Bạn còn ${responseData.remaining_free_generations} lượt tạo gốc hôm nay!`);
+        setRemainingFree(responseData.remaining_free_generations);
       }
 
       if (responseData.conversation_id && responseData.conversation_id !== activeConversationId) {
@@ -700,6 +701,8 @@ export default function HomePage() {
           cameraStream={streamRef.current}
           userPlan={user?.plan_type || 'free'}
           onRequireUpgrade={() => showToast('error', 'Tính năng này chỉ dành cho tài khoản có phí. Vui lòng nâng cấp!')}
+          remainingFree={remainingFree}
+          onOpenPricing={() => setPricingVisible(true)}
         />
 
         <AuthModal

@@ -25,6 +25,8 @@ interface InputBarProps {
     cameraStream: MediaStream | null;
     userPlan?: string;
     onRequireUpgrade?: () => void;
+    remainingFree?: number | null;
+    onOpenPricing?: () => void;
 }
 
 export const InputBar: React.FC<InputBarProps> = ({
@@ -44,7 +46,9 @@ export const InputBar: React.FC<InputBarProps> = ({
     onStyleChange,
     cameraStream,
     userPlan = "free",
-    onRequireUpgrade
+    onRequireUpgrade,
+    remainingFree = null,
+    onOpenPricing
 }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const mobileCameraRef = useRef<HTMLInputElement>(null);
@@ -169,6 +173,28 @@ export const InputBar: React.FC<InputBarProps> = ({
                     "ios-input"
                 )}
             >
+                {/* Free Quota Warning */}
+                <AnimatePresence>
+                    {userPlan === 'free' && remainingFree !== null && remainingFree <= 2 && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                            animate={{ opacity: 1, height: "auto", marginBottom: 8 }}
+                            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                            className="bg-yellow-500/10 border border-yellow-500/20 text-yellow-500/90 text-xs md:text-sm px-3 py-2 rounded-xl flex items-center justify-between mx-1 mt-1"
+                        >
+                            <span>⚠️ Bạn chỉ còn <b>{remainingFree}</b> lượt tạo miễn phí hôm nay.</span>
+                            {onOpenPricing && (
+                                <button
+                                    onClick={onOpenPricing}
+                                    className="text-yellow-400 font-semibold hover:text-yellow-300 underline underline-offset-2 ml-2 whitespace-nowrap"
+                                >
+                                    Nâng cấp ngay
+                                </button>
+                            )}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
                 {/* Style Selector Popover */}
                 <AnimatePresence>
                     {showStyles && (

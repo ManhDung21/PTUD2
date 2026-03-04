@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Optional
 from uuid import uuid4
 
-from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -623,17 +623,52 @@ def _store_description(
     return description
 
 
-def check_and_update_free_limit(db: Database, current_user: Optional[dict], conversation_id: Optional[str]) -> Optional[int]:
-    """Returns remaining generations for free user, or None if not applicable."""
-    if not current_user:
+def check_and_update_free_limit(request: Request, db: Database, current_user: Optional[dict], conversation_id: Optional[str]) -> Optional[int]:
+    """Returns remaining generations for free user or guest, or None if not applicable."""
+    # Base check for conversation continuation
+    if conversation_id:
         return None
-    
+
+    vietnam_tz = timezone(timedelta(hours=7))
+    now = datetime.now(vietnam_tz)
+    today_str = now.strftime("%Y-%m-%d")
+    tomorrow = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+    time_until_midnight = tomorrow - now
+    hours, remainder = divmod(int(time_until_midnight.total_seconds()), 3600)
+    minutes, _ = divmod(remainder, 60)
+
+    if not current_user:
+        # GUEST USER RATE LIMITING (IP-based)
+        client_ip = request.client.host if request.client else "unknown"
+        guests_col = db.get_collection("guest_limits")
+        
+        guest_doc = guests_col.find_one({"ip": client_ip})
+        
+        if not guest_doc or guest_doc.get("usage_date") != today_str:
+            guest_usage_count = 0
+        else:
+            guest_usage_count = guest_doc.get("usage_count", 0)
+            
+        if guest_usage_count >= 3:
+            raise HTTPException(
+                status_code=403, 
+                detail=f"Khách vãng lai chỉ được thử 3 lần/ngày. Vui lòng đăng nhập hoặc chờ {hours} giờ {minutes} phút để tiếp tục!"
+            )
+            
+        new_guest_count = guest_usage_count + 1
+        guests_col.update_one(
+            {"ip": client_ip},
+            {"$set": {
+                "usage_count": new_guest_count,
+                "usage_date": today_str,
+                "updated_at": utc_now()
+            }},
+            upsert=True
+        )
+        return 3 - new_guest_count
+
     plan_type = current_user.get("plan_type", "free")
     if plan_type != "free":
-        return None
-        
-    if conversation_id:
-        # Nếu có conversation_id tức là chat tiếp chứ không phải tạo mới mô tả
         return None
 
     user_doc = db.get_collection("users").find_one({"_id": current_user["_id"]})
@@ -652,11 +687,6 @@ def check_and_update_free_limit(db: Database, current_user: Optional[dict], conv
         free_usage_count = 0
 
     if free_usage_count >= 10:
-        # Tính thời gian còn lại đến 24h00 (0h00 ngày hôm sau)
-        tomorrow = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
-        time_until_midnight = tomorrow - now
-        hours, remainder = divmod(int(time_until_midnight.total_seconds()), 3600)
-        minutes, _ = divmod(remainder, 60)
         raise HTTPException(
             status_code=403, 
             detail=f"Bạn đã dùng hết 10 lượt tạo hôm nay. Vui lòng quay lại sau {hours} giờ {minutes} phút, hoặc nâng cấp lên gói Plus/Pro!"
@@ -678,6 +708,7 @@ def check_and_update_free_limit(db: Database, current_user: Optional[dict], conv
 
 @app.post("/api/descriptions/image", response_model=DescriptionResponse)
 async def generate_description_from_image(
+    request: Request,
     file: UploadFile = File(...),
     style: str = Form("Tiếp thị"),
     prompt: Optional[str] = Form(None),
@@ -736,7 +767,7 @@ async def generate_description_from_image(
         if user_tier == "free" and style != "Tiếp thị":
             style = "Tiếp thị"
         
-        remaining_free = check_and_update_free_limit(db, current_user, conversation_id)
+        remaining_free = check_and_update_free_limit(request, db, current_user, conversation_id)
 
         description_text = content.generate_from_image(
             api_key=settings.gemini_api_key, 
@@ -819,6 +850,7 @@ async def generate_description_from_image(
 
 @app.post("/api/descriptions/text", response_model=DescriptionResponse)
 async def generate_description_from_text(
+    request: Request,
     payload: GenerateTextRequest,
     current_user: Optional[UserDocument] = Depends(get_current_user_optional),
     db: Database = Depends(get_database),
@@ -832,7 +864,7 @@ async def generate_description_from_text(
         if user_tier == "free" and payload.style != "Tiếp thị":
             payload.style = "Tiếp thị"
             
-        remaining_free = check_and_update_free_limit(db, current_user, payload.conversation_id)
+        remaining_free = check_and_update_free_limit(request, db, current_user, payload.conversation_id)
 
         description_text = content.generate_from_text(
             api_key=settings.gemini_api_key, 
