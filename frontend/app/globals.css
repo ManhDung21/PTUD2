@@ -38,12 +38,12 @@
   --text-muted: rgba(255, 255, 255, 0.5);
   --text-light: #FFFFFF;
 
-  --panel-bg: rgba(255, 255, 255, 0.05);
-  --panel-border: rgba(255, 255, 255, 0.1);
-  --glass-highlight: rgba(255, 255, 255, 0.1);
+  --panel-bg: rgba(255, 255, 255, 0.08); /* Tăng từ 0.05 lên 0.08 */
+  --panel-border: rgba(255, 255, 255, 0.15); /* Tăng từ 0.1 lên 0.15 */
+  --glass-highlight: rgba(255, 255, 255, 0.15); /* Tăng từ 0.1 lên 0.15 */
 
-  --input-bg: rgba(30, 30, 30, 0.6);
-  --input-border: rgba(255, 255, 255, 0.2);
+  --input-bg: rgba(30, 30, 30, 0.85); /* Tăng từ 0.6 lên 0.85 */
+  --input-border: rgba(255, 255, 255, 0.25); /* Tăng từ 0.2 lên 0.25 */
 
   --primary-gradient-start: #3B82F6;
   --primary-gradient-end: #8B5CF6;
