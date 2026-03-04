@@ -131,7 +131,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                                 className="flex justify-end"
                             >
                                 <div className="glass-panel px-4 py-3 md:px-6 md:py-4 rounded-[20px] md:rounded-[26px] rounded-tr-md max-w-[90%] md:max-w-[85%]">
-                                    {(item.image_url) && (
+                                    {(item.image_url && item.image_url.trim() !== '') && (
                                         <div
                                             className="cursor-zoom-in relative group"
                                             onClick={() => setViewImage(item.image_url || null)}
@@ -320,7 +320,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                             className="flex justify-end"
                         >
                             <div className="glass-panel px-6 py-4 rounded-[26px] rounded-tr-md max-w-[85%]">
-                                {(inputContent?.image) && (
+                                {(inputContent?.image && inputContent.image.trim() !== '') && (
                                     <img
                                         src={inputContent.image}
                                         alt="Upload"

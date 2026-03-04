@@ -226,6 +226,12 @@ export default function HomePage() {
 
       const response = await axios.post(url, payload, { headers });
       const responseData = response.data;
+
+      // Fix image URL mapping for static files
+      if (responseData.image_url && responseData.image_url.startsWith('/static')) {
+        responseData.image_url = `${API_BASE_URL}${responseData.image_url}`;
+      }
+
       setSession(prev => [...prev, responseData]);
 
       if (responseData.remaining_free_generations !== undefined && responseData.remaining_free_generations !== null) {

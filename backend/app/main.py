@@ -842,7 +842,7 @@ async def generate_description_from_image(
         style=style,
         source="image",
         image_url=history_payload.get("image_url") if history_payload else image_url,
-        prompt=history_payload.get("prompt") if history_payload else None,
+        prompt=history_payload.get("prompt") if history_payload else prompt,
         conversation_id=final_conversation_id,
         remaining_free_generations=remaining_free
     )
