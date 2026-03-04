@@ -578,12 +578,12 @@ export default function AdminPage() {
                                                     onChange={(e) => setFilters(prev => ({ ...prev, role: e.target.value }))}
                                                     className={clsx(
                                                         "text-xs font-medium px-2 py-1 rounded border outline-none cursor-pointer transition-colors",
-                                                        isDarkMode ? "bg-white/5 border-white/10 text-gray-300 focus:border-blue-500" : "bg-white border-gray-200 text-gray-700 focus:border-blue-500"
+                                                        isDarkMode ? "bg-[#1a1a1a] border-white/10 text-gray-300 focus:border-blue-500" : "bg-white border-gray-200 text-gray-700 focus:border-blue-500"
                                                     )}
                                                 >
-                                                    <option value="all">Tất cả vai trò</option>
-                                                    <option value="admin">Admin</option>
-                                                    <option value="user">User</option>
+                                                    <option value="all" className={isDarkMode ? "bg-[#1a1a1a]" : "bg-white"}>Tất cả vai trò</option>
+                                                    <option value="admin" className={isDarkMode ? "bg-[#1a1a1a]" : "bg-white"}>Admin</option>
+                                                    <option value="user" className={isDarkMode ? "bg-[#1a1a1a]" : "bg-white"}>User</option>
                                                 </select>
                                             </div>
                                             <span className={clsx("text-xs uppercase tracking-wider font-bold", isDarkMode ? "text-gray-500" : "text-gray-600")}>{users.length} Records</span>
@@ -620,12 +620,13 @@ export default function AdminPage() {
                                                                     value={u.role}
                                                                     onChange={(e) => handleUpdateRole(u.id, e.target.value)}
                                                                     className={clsx(
-                                                                        "bg-transparent border border-white/10 rounded px-2 py-1 text-[11px] font-bold uppercase cursor-pointer outline-none focus:border-purple-500 transition-colors bg-[#0a0a0a]",
-                                                                        u.role === 'admin' ? "text-purple-300 border-purple-500/30" : "text-gray-400"
+                                                                        "border rounded px-2 py-1 text-[11px] font-bold uppercase cursor-pointer outline-none focus:border-purple-500 transition-colors",
+                                                                        isDarkMode ? "bg-[#1a1a1a] border-white/10" : "bg-white border-gray-200",
+                                                                        u.role === 'admin' ? "text-purple-400 border-purple-500/30" : (isDarkMode ? "text-gray-400" : "text-gray-600")
                                                                     )}
                                                                 >
-                                                                    <option value="user">USER</option>
-                                                                    <option value="admin">ADMIN</option>
+                                                                    <option value="user" className={isDarkMode ? "bg-[#1a1a1a]" : "bg-white"}>USER</option>
+                                                                    <option value="admin" className={isDarkMode ? "bg-[#1a1a1a]" : "bg-white"}>ADMIN</option>
                                                                 </select>
                                                             </td>
                                                             <td className="p-4">
@@ -633,15 +634,16 @@ export default function AdminPage() {
                                                                     value={u.plan_type || 'free'}
                                                                     onChange={(e) => handleUpdatePlan(u.id, e.target.value as 'free' | 'plus' | 'pro')}
                                                                     className={clsx(
-                                                                        "bg-transparent border border-white/10 rounded px-2 py-1 text-[11px] font-bold uppercase cursor-pointer outline-none focus:border-blue-500 transition-colors bg-[#0a0a0a]",
-                                                                        u.plan_type === 'pro' ? "text-purple-400 border-purple-500/30" :
-                                                                            u.plan_type === 'plus' ? "text-blue-400 border-blue-500/30" :
-                                                                                "text-gray-400"
+                                                                        "border rounded px-2 py-1 text-[11px] font-bold uppercase cursor-pointer outline-none focus:border-blue-500 transition-colors",
+                                                                        isDarkMode ? "bg-[#1a1a1a] border-white/10" : "bg-white border-gray-200",
+                                                                        u.plan_type === 'pro' ? "text-purple-500 border-purple-500/30" :
+                                                                            u.plan_type === 'plus' ? "text-blue-500 border-blue-500/30" :
+                                                                                (isDarkMode ? "text-gray-400" : "text-gray-600")
                                                                     )}
                                                                 >
-                                                                    <option value="free">FREE</option>
-                                                                    <option value="plus">PLUS</option>
-                                                                    <option value="pro">PRO</option>
+                                                                    <option value="free" className={isDarkMode ? "bg-[#1a1a1a]" : "bg-white"}>FREE</option>
+                                                                    <option value="plus" className={isDarkMode ? "bg-[#1a1a1a]" : "bg-white"}>PLUS</option>
+                                                                    <option value="pro" className={isDarkMode ? "bg-[#1a1a1a]" : "bg-white"}>PRO</option>
                                                                 </select>
                                                                 {u.subscription_end_date && u.plan_type !== 'free' && (
                                                                     <div className={clsx("text-[10px] mt-1.5 font-medium flex items-center gap-1", isDarkMode ? "text-gray-500" : "text-gray-500")}>
@@ -693,12 +695,12 @@ export default function AdminPage() {
                                                     onChange={(e) => setFilters(prev => ({ ...prev, source: e.target.value }))}
                                                     className={clsx(
                                                         "text-xs font-medium px-2 py-1 rounded border outline-none cursor-pointer transition-colors",
-                                                        isDarkMode ? "bg-white/5 border-white/10 text-gray-300 focus:border-pink-500" : "bg-white border-gray-200 text-gray-700 focus:border-pink-500"
+                                                        isDarkMode ? "bg-[#1a1a1a] border-white/10 text-gray-300 focus:border-pink-500" : "bg-white border-gray-200 text-gray-700 focus:border-pink-500"
                                                     )}
                                                 >
-                                                    <option value="all">Tất cả loại</option>
-                                                    <option value="text">Văn bản</option>
-                                                    <option value="image">Hình ảnh</option>
+                                                    <option value="all" className={isDarkMode ? "bg-[#1a1a1a]" : "bg-white"}>Tất cả loại</option>
+                                                    <option value="text" className={isDarkMode ? "bg-[#1a1a1a]" : "bg-white"}>Văn bản</option>
+                                                    <option value="image" className={isDarkMode ? "bg-[#1a1a1a]" : "bg-white"}>Hình ảnh</option>
                                                 </select>
                                             </div>
                                             <span className={clsx("text-xs uppercase tracking-wider font-bold", isDarkMode ? "text-gray-500" : "text-gray-600")}>{descriptions.length} Items</span>

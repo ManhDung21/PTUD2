@@ -178,6 +178,13 @@ Lưu ý:
 
 
 
+def _sanitize_output(text: str) -> str:
+    """Loại bỏ các ký tự Markdown không được hỗ trợ (như dấu *)."""
+    if not text:
+        return ""
+    return text.replace("**", "").replace("*", "")
+
+
 def _pil_to_base64(image: Image.Image) -> str:
     buffered = io.BytesIO()
     if image.format == "PNG" or image.mode == "RGBA":
@@ -189,7 +196,7 @@ def generate_from_image(api_key: str, image: Image.Image, style: str, product_in
     """Generate a product description from an image."""
     
     market_avg = None
-    if user_tier in ["plus", "pro"] and db and product_info:
+    if user_tier in ["plus", "pro"] and db is not None and product_info:
         # Ngầm lấy giá thị trường
         extracted = extract_product_info(api_key, product_info)
         if extracted:
@@ -240,7 +247,7 @@ def generate_from_text(api_key: str, product_info: str, style: str, user_name: O
     """Generate a product description from product information text."""
     
     market_avg = None
-    if user_tier in ["plus", "pro"] and db and product_info:
+    if user_tier in ["plus", "pro"] and db is not None and product_info:
         extracted = extract_product_info(api_key, product_info)
         if extracted:
             market_avg = get_market_average(db, extracted["product_name"])

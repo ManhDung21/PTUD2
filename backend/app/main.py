@@ -206,35 +206,83 @@ def _overlay_user_info_on_image(image: Image.Image, user: Optional[UserDocument]
     base_image = image.convert("RGBA")
     draw = ImageDraw.Draw(base_image)
 
-    # Dynamic font sizing with safe fallback
+    # Dynamic font sizing with safe fallback (Multi-OS support)
     min_dim = min(base_image.size)
-    target_size = max(14, int(min_dim * 0.035))
-    try:
-        font = ImageFont.truetype("arial.ttf", target_size)
-    except Exception:
+    target_size = max(16, int(min_dim * 0.035))
+    
+    font = None
+    title_font = None
+    for font_name, bold_name in [("arial.ttf", "arialbd.ttf"), ("DejaVuSans.ttf", "DejaVuSans-Bold.ttf"), ("Helvetica.ttc", "Helvetica.ttc")]:
+        try:
+            font = ImageFont.truetype(font_name, target_size)
+            title_font = ImageFont.truetype(bold_name, int(target_size * 1.1))
+            break
+        except Exception:
+            continue
+            
+    if not font or not title_font:
         font = ImageFont.load_default()
+        title_font = font
 
-    text_padding = 10
-    line_spacing = 4
+    text_padding = 16
+    line_spacing = 8
+
+    title_text = "THÔNG TIN LIÊN HỆ"
+    # Dùng textbbox tương thích Pillow mới thay thế getsize cũ 
+    title_bbox = draw.textbbox((0, 0), title_text, font=title_font)
+    title_width = title_bbox[2] - title_bbox[0]
+    title_height = title_bbox[3] - title_bbox[1]
 
     bboxes = [draw.textbbox((0, 0), line, font=font) for line in lines]
-    text_width = max((bbox[2] - bbox[0]) for bbox in bboxes)
-    text_height = sum((bbox[3] - bbox[1]) for bbox in bboxes) + line_spacing * (len(lines) - 1)
+    max_line_width = max((bbox[2] - bbox[0]) for bbox in bboxes) if bboxes else 0
 
-    box_x = 8
-    box_y = 8
+    text_width = max(title_width, max_line_width)
+    # Tính tổng chiều cao
+    text_height = title_height + line_spacing + sum((bbox[3] - bbox[1]) for bbox in bboxes) + line_spacing * (len(lines) - 1)
+
+    box_x = 16
+    box_y = 16
     box_width = text_width + text_padding * 2
     box_height = text_height + text_padding * 2
 
-    draw.rectangle(
+    # Draw Shadow
+    shadow_offset = 6
+    draw.rounded_rectangle(
+        [(box_x + shadow_offset, box_y + shadow_offset), (box_x + shadow_offset + box_width, box_y + shadow_offset + box_height)],
+        radius=16,
+        fill=(0, 0, 0, 80),
+    )
+
+    # Draw Main Panel
+    draw.rounded_rectangle(
         [(box_x, box_y), (box_x + box_width, box_y + box_height)],
-        fill=(0, 0, 0, 160),
+        radius=16,
+        fill=(24, 24, 27, 210),   # Nền tối xịn
+        outline=(255, 255, 255, 50), # Viền sáng mỏng
+        width=1
     )
 
     text_x = box_x + text_padding
     text_y = box_y + text_padding
+    
+    # Vẽ Title
+    draw.text((text_x, text_y), title_text, font=title_font, fill=(167, 139, 250, 255)) # Tím nhạt
+    text_y += title_height + line_spacing + 6
+
+    # Vẽ Từng dòng
     for idx, line in enumerate(lines):
-        draw.text((text_x, text_y), line, font=font, fill=(255, 255, 255, 230))
+        if ": " in line:
+            label, value = line.split(": ", 1)
+            # Label
+            draw.text((text_x, text_y), label + ":", font=font, fill=(161, 161, 170, 255)) # Xám
+            
+            # Value
+            label_bbox = draw.textbbox((0, 0), label + ": ", font=font)
+            label_width = label_bbox[2] - label_bbox[0]
+            draw.text((text_x + label_width, text_y), value, font=font, fill=(255, 255, 255, 255)) # Trắng
+        else:
+            draw.text((text_x, text_y), line, font=font, fill=(255, 255, 255, 255))
+            
         line_height = bboxes[idx][3] - bboxes[idx][1]
         text_y += line_height + line_spacing
 
