@@ -11,6 +11,7 @@ import { SettingsModal } from "../components/SettingsModal";
 import { PricingModal } from "../components/PricingModal";
 import { AuthMode, DescriptionResponse, HistoryItem, User, ToastState, Conversation } from "../types";
 import { Camera, RefreshCw, Send, Settings, Moon, Sun, Monitor, Zap, ExternalLink, LogOut, ChevronLeft, ArrowRight, Download, Eye, Link, Mic, Crown } from "lucide-react";
+import { UserGuideModal } from "../components/UserGuideModal";
 import { PaymentMethodModal } from "../components/PaymentMethodModal";
 import { PaymentQRModal } from "../components/PaymentQRModal";
 
@@ -36,6 +37,7 @@ export default function HomePage() {
   const [profileVisible, setProfileVisible] = useState(false);
   const [settingsVisible, setSettingsVisible] = useState(false); // Controls Settings Modal
   const [pricingVisible, setPricingVisible] = useState(false);
+  const [guideVisible, setGuideVisible] = useState(false);
 
   // Camera & Image State
   const [cameraActive, setCameraActive] = useState(false);
@@ -633,24 +635,7 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Header: Menu Button & Brand (Visible when sidebar is closed) */}
-        {!sidebarOpen && (
-          <div className="fixed top-4 left-4 z-50 flex items-center gap-4">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="p-2 glass-button rounded-full hover:bg-panel transition-colors"
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-app-text"><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
-            </button>
 
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 flex items-center justify-center">
-                <img src="/fruittext_logo.svg" alt="Logo" className="w-full h-full object-contain drop-shadow-md hover:scale-110 transition-transform" />
-              </div>
-              <span className="font-bold text-xl text-app-text tracking-tight drop-shadow-md">FruitText AI</span>
-            </div>
-          </div>
-        )}
 
         <Sidebar
           isOpen={sidebarOpen}
@@ -671,11 +656,32 @@ export default function HomePage() {
           onEditConversationTitle={handleEditConversationTitle}
           onOpenInfo={() => setSettingsVisible(true)}
           onOpenPricing={() => setPricingVisible(true)}
+          onOpenGuide={() => setGuideVisible(true)}
           isDarkMode={isDarkMode}
           onToggleTheme={toggleTheme}
         />
 
         <main className="flex-1 flex flex-col relative w-full h-full z-10 transition-all duration-300">
+          {/* Header: Menu Button & Brand (Solid sticky on Mobile, Floating on PC) */}
+          {!sidebarOpen && (
+            <div className="shrink-0 flex items-center gap-3 p-3 bg-panel border-b border-panel-border z-50 w-full sticky top-0 md:fixed md:top-4 md:left-4 md:bg-transparent md:border-none md:p-0 md:w-auto">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="p-2 glass-button rounded-full hover:bg-panel transition-colors"
+                title="Mở menu"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-app-text"><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
+              </button>
+
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 flex items-center justify-center">
+                  <img src="/fruittext_logo.svg" alt="Logo" className="w-full h-full object-contain drop-shadow-md" />
+                </div>
+                <span className="font-bold text-lg text-app-text tracking-tight drop-shadow-md">FruitText AI</span>
+              </div>
+            </div>
+          )}
+
           <ChatContainer
             session={session}
             loading={loading}
@@ -763,6 +769,7 @@ export default function HomePage() {
         />
 
         <PaymentQRModal
+          // ... (existing code was correctly maintained due to StartLine/EndLine logic below)
           isOpen={qrModalVisible}
           onClose={() => setQrModalVisible(false)}
           type={qrType}
@@ -776,6 +783,11 @@ export default function HomePage() {
               selectedPlan === 'pro_6m' ? 'Pro 6 Thang' : 'Pro'
             }`}
           user={user}
+        />
+
+        <UserGuideModal
+          isOpen={guideVisible}
+          onClose={() => setGuideVisible(false)}
         />
       </div>
     </div>

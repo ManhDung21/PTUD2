@@ -19,6 +19,7 @@ interface SidebarProps {
     onProfileClick: () => void;
     onOpenInfo: () => void;
     onOpenPricing: () => void;
+    onOpenGuide: () => void;
     isDarkMode: boolean;
     onToggleTheme: () => void;
     onEditConversationTitle?: (id: string, newTitle: string) => void;
@@ -36,6 +37,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     onProfileClick,
     onOpenInfo,
     onOpenPricing,
+    onOpenGuide,
     isDarkMode,
     onToggleTheme,
     onEditConversationTitle
@@ -201,6 +203,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     >
                         <Plus size={20} className="text-app-text group-hover:rotate-90 transition-transform duration-300" />
                         <span className="font-medium text-app-text">Cuộc trò chuyện mới</span>
+                    </button>
+
+                    <button
+                        onClick={onOpenGuide}
+                        className="w-full flex items-center justify-center gap-3 mt-3 py-3 bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/20 text-blue-500 rounded-[20px] group transition-all"
+                    >
+                        <Info size={18} className="group-hover:scale-110 transition-transform" />
+                        <span className="font-medium text-sm">Hướng dẫn cho nhà nông</span>
                     </button>
                 </div>
 
