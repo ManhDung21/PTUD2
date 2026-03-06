@@ -72,7 +72,7 @@ body {
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   z-index: -1;
   background: var(--bg-app);
   overflow: hidden;
@@ -84,8 +84,8 @@ body {
 /* --- Glass Utilities --- */
 .glass-panel {
   background: var(--panel-bg);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--panel-border);
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
   transition: background 0.3s ease, border-color 0.3s ease;
@@ -94,14 +94,15 @@ body {
 .glass-panel-heavy {
   background: var(--panel-bg);
   /* Unified heavy panel too for simplicity, or define specific if needed */
-  backdrop-filter: blur(40px);
-  -webkit-backdrop-filter: blur(40px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--panel-border);
 }
 
 .glass-button {
   background: var(--panel-bg);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   border: 1px solid var(--panel-border);
   color: var(--text-app);
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -122,7 +123,8 @@ body {
 /* --- Inputs --- */
 .ios-input {
   background: var(--input-bg);
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--input-border);
   color: var(--text-app);
   transition: all 0.3s ease;
@@ -137,7 +139,8 @@ body {
 
 .glass-input {
   background: var(--input-bg);
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--input-border);
   color: var(--text-app);
   transition: all 0.3s ease;

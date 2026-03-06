@@ -621,7 +621,7 @@ export default function HomePage() {
 
   return (
     <div className={isDarkMode ? "dark" : ""}>
-      <div className="relative h-screen w-full overflow-hidden text-app-text flex bg-app transition-colors duration-300">
+      <div className="relative h-[100dvh] w-full overflow-hidden text-app-text flex bg-app transition-colors duration-300">
         {/* Aurora Background */}
         <div className="aurora-bg">
           <div className="aurora-blob blob-1"></div>
@@ -695,31 +695,30 @@ export default function HomePage() {
             showToast={showToast}
           />
 
+          <InputBar
+            input={input}
+            setInput={setInput}
+            onSend={handleSend}
+            loading={loading}
+            onImageSelect={handleImageSelect}
+            selectedImagePreview={selectedImagePreview}
+            onClearImage={handleClearImage}
+            cameraActive={cameraActive}
+            onToggleCamera={handleToggleCamera}
+            onCapture={handleCapture}
+            videoRef={videoRef}
+            isReading={isReading}
+            onToggleSpeech={() => { }}
+            isSidebarOpen={sidebarOpen}
+            selectedStyle={selectedStyle}
+            onStyleChange={(s) => setSelectedStyle(s)}
+            cameraStream={streamRef.current}
+            userPlan={user?.plan_type || 'free'}
+            onRequireUpgrade={() => showToast('error', 'Tính năng này chỉ dành cho tài khoản có phí. Vui lòng nâng cấp!')}
+            remainingFree={remainingFree}
+            onOpenPricing={() => setPricingVisible(true)}
+          />
         </main>
-
-        <InputBar
-          input={input}
-          setInput={setInput}
-          onSend={handleSend}
-          loading={loading}
-          onImageSelect={handleImageSelect}
-          selectedImagePreview={selectedImagePreview}
-          onClearImage={handleClearImage}
-          cameraActive={cameraActive}
-          onToggleCamera={handleToggleCamera}
-          onCapture={handleCapture}
-          videoRef={videoRef}
-          isReading={isReading}
-          onToggleSpeech={() => { }}
-          isSidebarOpen={sidebarOpen}
-          selectedStyle={selectedStyle}
-          onStyleChange={(s) => setSelectedStyle(s)}
-          cameraStream={streamRef.current}
-          userPlan={user?.plan_type || 'free'}
-          onRequireUpgrade={() => showToast('error', 'Tính năng này chỉ dành cho tài khoản có phí. Vui lòng nâng cấp!')}
-          remainingFree={remainingFree}
-          onOpenPricing={() => setPricingVisible(true)}
-        />
 
         <AuthModal
           isOpen={authVisible}

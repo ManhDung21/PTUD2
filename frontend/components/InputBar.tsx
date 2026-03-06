@@ -72,6 +72,15 @@ export const InputBar: React.FC<InputBarProps> = ({
         };
     }, []);
 
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    useEffect(() => {
+        if (textareaRef.current) {
+            textareaRef.current.style.height = "auto";
+            textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
+        }
+    }, [input]);
+
     const styles = ["Tiếp thị", "Sáng tạo", "Chuyên nghiệp", "Hài hước"];
 
     const handleCameraClick = () => {
@@ -119,8 +128,7 @@ export const InputBar: React.FC<InputBarProps> = ({
     return (
         <div
             className={clsx(
-                "fixed bottom-2 md:bottom-6 z-[100] flex justify-center px-2 md:px-4 pointer-events-auto transition-all duration-300 ease-in-out",
-                "left-0 right-0" // Always centered, does not shift with sidebar
+                "relative w-full pb-2 md:pb-6 z-[100] flex justify-center px-2 md:px-4 pointer-events-auto transition-all duration-300 ease-in-out shrink-0 mt-auto"
             )}
         >
             <AnimatePresence>
@@ -330,6 +338,7 @@ export const InputBar: React.FC<InputBarProps> = ({
 
                     {/* Input Field */}
                     <textarea
+                        ref={textareaRef}
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => {
@@ -347,7 +356,7 @@ export const InputBar: React.FC<InputBarProps> = ({
                             "flex-1 bg-transparent border-none outline-none text-app-text placeholder-app-muted resize-none py-3.5 px-2 max-h-[120px] custom-scrollbar text-[16px] leading-relaxed",
                             loading && "opacity-50 cursor-not-allowed"
                         )}
-                        style={{ minHeight: "24px" }}
+                        style={{ minHeight: "48px" }} // increased minHeight explicitly to match line-height + padding
                     />
 
                     {/* Send Button */}
