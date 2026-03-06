@@ -18,6 +18,7 @@ interface ChatContainerProps {
     inputContent?: { text: string; image?: string | null; style?: string };
     onRate?: (historyId: string, rating: number) => void;
     showToast?: (type: "success" | "error", message: string) => void;
+    onScroll?: (e: React.UIEvent<HTMLDivElement>) => void;
 }
 
 export const ChatContainer: React.FC<ChatContainerProps> = ({
@@ -30,7 +31,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     onShareTikTok,
     inputContent,
     onRate,
-    showToast
+    showToast,
+    onScroll
 }) => {
     // All hooks MUST be at the top, before any conditional returns
     const [viewImage, setViewImage] = React.useState<string | null>(null);
@@ -117,7 +119,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
 
     return (
         <>
-            <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 pt-20 md:pt-10 pb-48 scroll-smooth custom-scrollbar relative z-10 w-full">
+            <div ref={scrollRef} onScroll={onScroll} className="flex-1 overflow-y-auto px-4 py-8 pb-48 scroll-smooth custom-scrollbar relative z-10 w-full">
                 <div className="max-w-[800px] mx-auto flex flex-col gap-6 md:gap-10">
 
                     {/* Render History Messages */}
@@ -187,13 +189,13 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
 
                                                 {/* Copyable Content Box */}
                                                 {content && (
-                                                    <div className="bg-white/5 border border-white/10 rounded-xl p-5 backdrop-blur-md shadow-sm hover:bg-white/10 transition-colors">
+                                                    <div className="glass-panel rounded-xl p-4 md:p-5 shadow-sm transition-all">
                                                         <div className="text-[15px] md:text-base text-app-text leading-relaxed whitespace-pre-line font-sans tracking-wide">
                                                             {content}
                                                         </div>
 
                                                         {/* Actions for Content Only */}
-                                                        <div className="flex flex-wrap gap-2 pt-4 border-t border-white/10 mt-4 items-center justify-between">
+                                                        <div className="flex flex-wrap gap-2 pt-4 border-t border-panel-border mt-4 items-center justify-between">
                                                             <div className="flex gap-2">
                                                                 <button onClick={() => {
                                                                     navigator.clipboard.writeText(content);

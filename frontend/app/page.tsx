@@ -52,6 +52,20 @@ export default function HomePage() {
   // Sidebar State
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Header Scroll State
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const lastScrollY = useRef(0);
+  const handleChatScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const currentScrollY = e.currentTarget.scrollTop;
+    // Hide header if scrolling down and past threshold. Show if scrolling up.
+    if (currentScrollY > lastScrollY.current && currentScrollY > 60) {
+      if (isHeaderVisible) setIsHeaderVisible(false);
+    } else if (currentScrollY < lastScrollY.current) {
+      if (!isHeaderVisible) setIsHeaderVisible(true);
+    }
+    lastScrollY.current = currentScrollY;
+  };
+
   // ... existing code ...
 
   const [paymentMethodVisible, setPaymentMethodVisible] = useState(false);
@@ -662,22 +676,22 @@ export default function HomePage() {
         />
 
         <main className="flex-1 flex flex-col relative w-full h-full z-10 transition-all duration-300">
-          {/* Header: Mobile Floating Pill, Desktop Floating Left */}
+          {/* Header: Sticky Top Bar on Mobile, Floating Left on Desktop */}
           {!sidebarOpen && (
-            <div className="absolute top-4 left-4 z-[100] flex items-center gap-2 p-1.5 pl-2 pr-4 bg-white/70 dark:bg-black/50 backdrop-blur-xl shadow-lg border border-black/5 dark:border-white/10 rounded-full md:fixed md:top-4 md:left-4 md:bg-transparent md:border-none md:shadow-none md:p-0 transition-all duration-300">
+            <div className={`shrink-0 w-full sticky top-0 z-[100] flex items-center gap-3 px-4 py-3 glass-panel border-x-0 border-t-0 rounded-none md:fixed md:top-4 md:left-4 md:w-auto md:bg-transparent md:backdrop-filter-none md:border-none md:shadow-none md:p-0 transition-all duration-300 border-b border-panel-border shadow-sm md:translate-y-0 md:opacity-100 ${isHeaderVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none md:pointer-events-auto'}`}>
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="p-2 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full hover:bg-blue-500/20 transition-colors"
+                className="p-2 glass-button rounded-full hover:bg-panel transition-colors flex items-center justify-center w-10 h-10"
                 title="Mở menu"
               >
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
               </button>
 
-              <div className="flex items-center gap-2 pointer-events-none">
-                <div className="w-6 h-6 flex items-center justify-center">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 flex items-center justify-center">
                   <img src="/fruittext_logo.svg" alt="Logo" className="w-full h-full object-contain drop-shadow-sm" />
                 </div>
-                <span className="font-bold text-[15px] text-app-text tracking-tight md:text-lg">FruitText</span>
+                <span className="font-bold text-lg text-app-text tracking-tight">FruitText AI</span>
               </div>
             </div>
           )}
@@ -688,6 +702,7 @@ export default function HomePage() {
             user={user}
             onRead={handleRead}
             isReading={isReading}
+            onScroll={handleChatScroll}
             onShareFacebook={(content, url) => handleShare('facebook', content, url)}
             onShareTikTok={(content, url) => handleShare('tiktok', content, url)}
             inputContent={{ text: input, image: selectedImagePreview, style: selectedStyle }}
