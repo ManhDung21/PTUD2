@@ -662,22 +662,22 @@ export default function HomePage() {
         />
 
         <main className="flex-1 flex flex-col relative w-full h-full z-10 transition-all duration-300">
-          {/* Header: Menu Button & Brand (Solid sticky on Mobile, Floating on PC) */}
+          {/* Header: Mobile Floating Pill, Desktop Floating Left */}
           {!sidebarOpen && (
-            <div className="shrink-0 flex items-center gap-3 p-3 bg-panel border-b border-panel-border z-50 w-full sticky top-0 md:fixed md:top-4 md:left-4 md:bg-transparent md:border-none md:p-0 md:w-auto">
+            <div className="absolute top-4 left-4 z-[100] flex items-center gap-2 p-1.5 pl-2 pr-4 bg-white/70 dark:bg-black/50 backdrop-blur-xl shadow-lg border border-black/5 dark:border-white/10 rounded-full md:fixed md:top-4 md:left-4 md:bg-transparent md:border-none md:shadow-none md:p-0 transition-all duration-300">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="p-2 glass-button rounded-full hover:bg-panel transition-colors"
+                className="p-2 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full hover:bg-blue-500/20 transition-colors"
                 title="Mở menu"
               >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-app-text"><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
               </button>
 
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 flex items-center justify-center">
-                  <img src="/fruittext_logo.svg" alt="Logo" className="w-full h-full object-contain drop-shadow-md" />
+              <div className="flex items-center gap-2 pointer-events-none">
+                <div className="w-6 h-6 flex items-center justify-center">
+                  <img src="/fruittext_logo.svg" alt="Logo" className="w-full h-full object-contain drop-shadow-sm" />
                 </div>
-                <span className="font-bold text-lg text-app-text tracking-tight drop-shadow-md">FruitText AI</span>
+                <span className="font-bold text-[15px] text-app-text tracking-tight md:text-lg">FruitText</span>
               </div>
             </div>
           )}

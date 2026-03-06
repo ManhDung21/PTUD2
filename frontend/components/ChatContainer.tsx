@@ -117,7 +117,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
 
     return (
         <>
-            <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-8 pb-48 scroll-smooth custom-scrollbar relative z-10">
+            <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 pt-20 md:pt-10 pb-48 scroll-smooth custom-scrollbar relative z-10 w-full">
                 <div className="max-w-[800px] mx-auto flex flex-col gap-6 md:gap-10">
 
                     {/* Render History Messages */}
