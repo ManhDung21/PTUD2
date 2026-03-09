@@ -308,6 +308,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
+        "http://localhost",
+        "capacitor://localhost",
         "https://*.vercel.app",
         "https://vercel.app",
         "*"  # Allow all for development
