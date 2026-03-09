@@ -74,11 +74,15 @@ export const InputBar: React.FC<InputBarProps> = ({
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-    useEffect(() => {
+    const adjustHeight = () => {
         if (textareaRef.current) {
-            textareaRef.current.style.height = "auto";
+            textareaRef.current.style.height = "48px";
             textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
         }
+    };
+
+    useEffect(() => {
+        adjustHeight();
     }, [input]);
 
     const styles = ["Tiếp thị", "Sáng tạo", "Chuyên nghiệp", "Hài hước"];
@@ -170,7 +174,6 @@ export const InputBar: React.FC<InputBarProps> = ({
 
             <motion.div
                 ref={containerRef}
-                layout
                 initial={false}
                 animate={{
                     width: isFocused || input.length > 0 || selectedImagePreview ? "95%" : "90%",

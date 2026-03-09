@@ -643,7 +643,11 @@ def check_and_update_free_limit(request: Request, db: Database, current_user: Op
 
     if not current_user:
         # GUEST USER RATE LIMITING (IP-based)
-        client_ip = request.client.host if request.client else "unknown"
+        forwarded_for = request.headers.get("x-forwarded-for")
+        if forwarded_for:
+            client_ip = forwarded_for.split(",")[0].strip()
+        else:
+            client_ip = request.headers.get("x-real-ip", request.client.host if request.client else "unknown")
         guests_col = db.get_collection("guest_limits")
         
         guest_doc = guests_col.find_one({"ip": client_ip})

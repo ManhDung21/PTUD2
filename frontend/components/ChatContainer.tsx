@@ -398,7 +398,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                         </motion.div>
                     )
                 }
-            </AnimatePresence >
+            </AnimatePresence>
         </>
     );
 };
