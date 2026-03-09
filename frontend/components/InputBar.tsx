@@ -128,7 +128,8 @@ export const InputBar: React.FC<InputBarProps> = ({
     return (
         <div
             className={clsx(
-                "relative w-full pb-2 md:pb-6 z-[100] flex justify-center px-2 md:px-4 pointer-events-auto transition-all duration-300 ease-in-out shrink-0 mt-auto"
+                "relative w-full z-[100] flex justify-center px-2 md:px-4 pointer-events-auto transition-all duration-300 ease-in-out shrink-0 mt-auto",
+                "pb-[max(0.5rem,env(safe-area-inset-bottom))] md:pb-[max(1.5rem,env(safe-area-inset-bottom))]"
             )}
         >
             <AnimatePresence>

@@ -63,7 +63,17 @@ body {
   margin: 0;
   font-family: var(--font-family);
   overflow: hidden;
+  height: 100dvh;
+  width: 100vw;
+  overscroll-behavior-y: none;
+  /* Anti-bounce for mobile Web App */
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+html {
+  overscroll-behavior-y: none;
+  /* Anti pull-to-refresh on mobile */
+  height: 100dvh;
 }
 
 /* --- Aurora Background Animation --- */
