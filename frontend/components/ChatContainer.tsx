@@ -50,33 +50,37 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     // Only hide if we have history (session.length > 0) or if we are actively loading (sent a message)
     if (session.length === 0 && !loading) {
         return (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center relative z-10">
-                <div className="mb-12">
-                    <div className="inline-block p-6 rounded-[32px] bg-panel backdrop-blur-xl border border-panel-border mb-6 shadow-2xl">
-                        <img src="/fruittext_logo.svg" alt="App Logo" className="w-20 h-20 object-contain drop-shadow-lg" />
+            <div className="flex-1 overflow-y-auto px-4 py-8 pb-4 scroll-smooth custom-scrollbar relative z-10 w-full min-h-0">
+                <div className="flex-1 flex flex-col items-center justify-center min-h-full p-4 md:p-8 text-center">
+                    <div className="mb-8 md:mb-12">
+                        <div className="inline-block p-4 md:p-6 rounded-[32px] bg-panel backdrop-blur-xl border border-panel-border mb-4 md:mb-6 shadow-2xl">
+                            <img src="/fruittext_logo.svg" alt="App Logo" className="w-16 h-16 md:w-20 md:h-20 object-contain drop-shadow-lg" />
+                        </div>
+                        <h1 className="text-3xl md:text-6xl font-thin tracking-tighter mb-4 text-app-text drop-shadow-xl">
+                            FruitText Xin Chào !
+                        </h1>
+                        <p className="text-base md:text-xl text-app-muted font-light tracking-wide max-w-[500px] mx-auto">
+                            Bạn đã sẵn sàng tạo ra những mô tả cho sản phẩm tuyệt vời của bạn chưa?
+                        </p>
                     </div>
-                    <h1 className="text-3xl md:text-6xl font-thin tracking-tighter mb-4 text-app-text drop-shadow-xl">
-                        FruitText Xin Chào !
-                    </h1>
-                    <p className="text-xl text-app-muted font-light tracking-wide">Bạn đã sẵn sàng tạo ra những mô tả cho sản phẩm tuyệt vời của bạn chưa?</p>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-[700px]">
-                    {[
-                        { title: "Mô tả hình ảnh", desc: "Phân tích hình ảnh" },
-                        { title: "Caption mạng xã hội", desc: "Cho Facebook & TikTok" }
-                    ].map((item, i) => (
-                        <motion.div
-                            key={i}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.3 + (i * 0.1) }}
-                            className="glass-button p-4 md:p-5 rounded-[20px] md:rounded-[24px] text-left cursor-pointer group"
-                        >
-                            <span className="block text-app-text font-medium text-base md:text-lg">{item.title}</span>
-                            <span className="block text-app-muted text-xs md:text-sm mt-1">{item.desc}</span>
-                        </motion.div>
-                    ))}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-[700px] mt-4">
+                        {[
+                            { title: "Mô tả hình ảnh", desc: "Phân tích hình ảnh" },
+                            { title: "Caption mạng xã hội", desc: "Cho Facebook & TikTok" }
+                        ].map((item, i) => (
+                            <motion.div
+                                key={i}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.3 + (i * 0.1) }}
+                                className="glass-button p-4 md:p-5 rounded-[20px] md:rounded-[24px] text-left cursor-pointer group"
+                            >
+                                <span className="block text-app-text font-medium text-base md:text-lg">{item.title}</span>
+                                <span className="block text-app-muted text-xs md:text-sm mt-1">{item.desc}</span>
+                            </motion.div>
+                        ))}
+                    </div>
                 </div>
             </div>
         );

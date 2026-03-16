@@ -133,7 +133,7 @@ export const InputBar: React.FC<InputBarProps> = ({
         <div
             className={clsx(
                 "relative w-full z-[100] flex justify-center px-2 md:px-4 pointer-events-auto transition-all duration-300 ease-in-out shrink-0 mt-auto",
-                "pb-[max(0.5rem,env(safe-area-inset-bottom))] md:pb-[max(1.5rem,env(safe-area-inset-bottom))]"
+                "pb-[max(1rem,env(safe-area-inset-bottom))] md:pb-[max(1.5rem,env(safe-area-inset-bottom))]"
             )}
         >
             <AnimatePresence>
@@ -259,7 +259,7 @@ export const InputBar: React.FC<InputBarProps> = ({
                             className="relative px-2 pt-2"
                         >
                             <div className="relative inline-block">
-                                <img src={selectedImagePreview} alt="Preview" className="h-24 rounded-xl object-cover border border-panel-border" />
+                                <img src={selectedImagePreview} alt="Preview" className="h-20 md:h-24 rounded-xl object-cover border border-panel-border" />
                                 {!loading && (
                                     <button
                                         onClick={onClearImage}

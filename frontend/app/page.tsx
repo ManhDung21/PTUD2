@@ -661,7 +661,7 @@ export default function HomePage() {
           onToggleTheme={toggleTheme}
         />
 
-        <main className="flex-1 flex flex-col relative w-full h-full z-10 transition-all duration-300">
+        <main className="flex-1 flex flex-col relative w-full z-10 transition-all duration-300 min-h-0">
           {/* Header: Solid Top Bar on Mobile, Floating Left on PC */}
           {!sidebarOpen && (
             <div className="shrink-0 w-full sticky top-0 z-[100] flex items-center gap-3 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] bg-panel border-b border-panel-border shadow-sm md:fixed md:top-4 md:left-4 md:w-auto md:bg-transparent md:border-none md:shadow-none md:p-0 transition-all duration-300">
