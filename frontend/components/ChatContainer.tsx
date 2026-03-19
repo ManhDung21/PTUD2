@@ -246,7 +246,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                                                                     <Sparkles size={13} className="text-yellow-400" />
                                                                     <span className="text-[11px] font-semibold text-yellow-400 uppercase tracking-wider">Gợi ý Pro</span>
                                                                 </div>
-                                                                <p className="text-[13px] text-yellow-100/80 leading-relaxed whitespace-pre-line">{proSuggestion}</p>
+                                                                <p className="text-[13px] text-yellow-800 dark:text-yellow-100/80 leading-relaxed whitespace-pre-line">{proSuggestion}</p>
                                                             </div>
                                                         )}
 
