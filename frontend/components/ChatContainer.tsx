@@ -7,6 +7,37 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Share2, Volume2, VolumeX, Facebook, Music, Copy, Star } from "lucide-react";
 import clsx from "clsx";
 
+// Typewriter hook: animates text character by character
+function useTypewriter(text: string, speed = 12, active = false) {
+    const [displayed, setDisplayed] = React.useState(active ? "" : text);
+    React.useEffect(() => {
+        if (!active) { setDisplayed(text); return; }
+        setDisplayed("");
+        let i = 0;
+        const id = setInterval(() => {
+            i++;
+            setDisplayed(text.slice(0, i));
+            if (i >= text.length) clearInterval(id);
+        }, speed);
+        return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [text, active]);
+    return displayed;
+}
+
+// Separated component so hooks are called at component level (not inside callback)
+function IntroText({ text, animate }: { text: string; animate: boolean }) {
+    const displayed = useTypewriter(text, 8, animate);
+    return (
+        <div className="text-[13px] md:text-sm text-app-text leading-relaxed whitespace-pre-line font-light tracking-wide mb-3">
+            {displayed}
+            {animate && displayed.length < text.length && (
+                <span className="inline-block w-[2px] h-[1em] bg-current ml-[1px] align-middle animate-pulse" />
+            )}
+        </div>
+    );
+}
+
 interface ChatContainerProps {
     session: DescriptionResponse[];
     loading: boolean;
@@ -39,6 +70,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     const scrollRef = React.useRef<HTMLDivElement>(null);
     const [ratingLoading, setRatingLoading] = React.useState<string | null>(null);
     const [hoveredStar, setHoveredStar] = React.useState<{ id: string, star: number } | null>(null);
+    // Track latest item key to apply animation only once per new response
+    const latestKey = session.length > 0 ? (session[session.length - 1].history_id || String(session.length - 1)) : null;
 
     React.useEffect(() => {
         if (scrollRef.current) {
@@ -127,8 +160,11 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                 <div className="max-w-[800px] mx-auto flex flex-col gap-6 md:gap-10">
 
                     {/* Render History Messages */}
-                    {session.map((item, index) => (
-                        <div key={item.history_id || index} className="flex flex-col gap-6 md:gap-10">
+                    {session.map((item, index) => {
+                        const itemKey = item.history_id || String(index);
+                        const isNew = itemKey === latestKey && !loading;
+                        return (
+                        <div key={itemKey} className="flex flex-col gap-6 md:gap-10">
                             {/* User Message ... */}
                             {/* ... (keep existing User Message code) ... */}
                             <motion.div
@@ -165,8 +201,9 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
 
                             {/* AI Response */}
                             <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
+                                initial={isNew ? { opacity: 0, y: 18 } : false}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.45, ease: "easeOut" }}
                                 className="flex gap-4 md:gap-6 items-start"
                             >
                                 <div className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center shrink-0 mt-1">
@@ -187,20 +224,18 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
 
                                         return (
                                             <>
-                                                {/* Conversational Intro */}
-                                                <motion.div
-                                                    initial={{ opacity: 0 }}
-                                                    animate={{ opacity: 1 }}
-                                                    transition={{ duration: 0.8 }}
-                                                    className="text-[15px] md:text-base text-app-text leading-relaxed whitespace-pre-line font-light tracking-wide mb-3"
-                                                >
-                                                    {intro}
-                                                </motion.div>
+                                                {/* Conversational Intro with typewriter for new responses */}
+                                                <IntroText text={intro} animate={isNew} />
 
                                                 {/* Copyable Content Box */}
                                                 {content && (
-                                                    <div className="glass-panel rounded-xl p-4 md:p-5 shadow-sm transition-all">
-                                                        <div className="text-[15px] md:text-base text-app-text leading-relaxed whitespace-pre-line font-sans tracking-wide">
+                                                    <motion.div
+                                                        initial={isNew ? { opacity: 0, y: 10 } : false}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        transition={{ duration: 0.4, delay: isNew ? 0.2 : 0, ease: "easeOut" }}
+                                                        className="glass-panel rounded-xl p-4 md:p-5 shadow-sm transition-all"
+                                                    >
+                                                        <div className="text-[13px] md:text-sm text-app-text leading-relaxed whitespace-pre-line font-sans tracking-wide">
                                                             {content}
                                                         </div>
 
@@ -277,7 +312,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                                                                 )}
                                                             </div>
                                                         </div>
-                                                    </div>
+                                                    </motion.div>
                                                 )}
                                                 {/* Fallback actions ... */}
                                                 {!content && (
@@ -335,7 +370,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                                 </div>
                             </motion.div>
                         </div>
-                    ))}
+                        );
+                    })}
                     {/* ... (Pending Message & Loading Indicator from original) ... */}
                     {(loading && (inputContent?.text || inputContent?.image)) && (
                         <motion.div
