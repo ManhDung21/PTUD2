@@ -55,7 +55,7 @@ def _image_prompt(style: str, product_info: Optional[str] = None, user_name: Opt
         pro_instruction = f"""
 ĐẶC QUYỀN PRO: 
 1. BẠN LÀ CHUYÊN GIA COPYWRITING VÀ KINH DOANH NÔNG SẢN HÀNG ĐẦU VIỆT NAM. Hãy dùng ngôn từ mộc mạc, chân thành đi thẳng vào lòng người mua, mang đậm chất chợ quê hoặc nhà vườn truyền thống Việt Nam. 
-2. PHÂN TÍCH THỊ TRƯỜNG VÀ GỢI Ý GIÁ BÁN: Hãy nhìn hình ảnh, tự động phân tích cung cầu, thị hiếu và đưa ra [Gợi ý định giá] hợp lý cho sản phẩm này dựa trên kinh nghiệm. Đặt vào phần 'Gợi ý Giá Bán & Chiến Lược'.{market_text}
+2. PHÂN TÍCH THỊ TRƯỜNG VÀ GỢI Ý GIÁ BÁN: Sau phần nội dung bán hàng, hãy thêm dấu |||PRO||| rồi viết MỘT ĐOẠN NGẮN GỌN (tối đa 3 dòng) gồm: mức giá gợi ý và 1-2 chiến lược bán hàng hữu ích. Dùng emoji cho sinh động.{market_text}
 """
 
     return f"""Bạn là FruitText AI - một trợ lý viết nội dung (content) trái cây tận tâm, tinh tế và thuần Việt.
@@ -109,11 +109,14 @@ Liên hệ & Đặt hàng:
 [HÃY CUNG CẤP Địa chỉ khu vườn/Mua hàng. Nếu khách CÓ cung cấp địa chỉ, số điện thoại hoặc tên vườn -> HÃY MANG XUỐNG ĐÂY. Nếu KHÔNG -> ĐỂ TRỐNG (đừng bịa ra địa chỉ) HOẶC ghi là "Hãy bình luận để nhận báo giá và địa chỉ mua hàng nhé!"].
 Từ khóa:
 [Thẻ tag tiếng Việt...]
+|||PRO|||
+[💰 Gợi ý giá & chiến lược: Tối đa 3 dòng ngắn gọn về mức giá phù hợp và 1-2 chiến lược bán hàng hiệu quả]
 
 Lưu ý: 
 1. Dấu phân cách ||| là BẮT BUỘC.
-2. Nội dung phải THUẦN VIỆT, gần gũi với đời sống người Việt Nam.
-3. Nội dung bổ sung: {product_info or "Không có"}
+2. |||PRO||| CHỈ xuất hiện khi user là Pro/Plus, đặt SAU phần Từ khóa.
+3. Nội dung phải THUẦN VIỆT, gần gũi với đời sống người Việt Nam.
+4. Nội dung bổ sung: {product_info or "Không có"}
 """
 
 
@@ -124,7 +127,7 @@ def _text_prompt(product_info: str, style: str, user_name: Optional[str] = None,
         pro_instruction = f"""
 ĐẶC QUYỀN PRO: 
 1. BẠN LÀ CHUYÊN GIA COPYWRITING VÀ KINH DOANH NÔNG SẢN HÀNG ĐẦU VIỆT NAM. Hãy dùng ngôn từ mộc mạc, chân thành đi vào lòng người mang đậm chất Việt Nam. 
-2. PHÂN TÍCH THỊ TRƯỜNG VÀ GỢI Ý GIÁ BÁN: Hãy tự động phân tích cung cầu, thị hiếu và đưa ra [Gợi ý định giá] hợp lý cho sản phẩm này dựa trên kinh nghiệm. Đặt vào phần 'Gợi ý Giá Bán & Chiến Lược'.{market_text}
+2. PHÂN TÍCH THỊ TRƯỜNG VÀ GỢI Ý GIÁ BÁN: Sau phần nội dung bán hàng, hãy thêm dấu |||PRO||| rồi viết MỘT ĐOẠN NGẮN GỌN (tối đa 3 dòng) gồm: mức giá gợi ý và 1-2 chiến lược bán hàng hữu ích. Dùng emoji cho sinh động.{market_text}
 """
 
     return f"""Bạn là FruitText AI - một trợ lý viết nội dung (content) trái cây tận tâm, tinh tế và thuần Việt.
@@ -170,10 +173,13 @@ Liên hệ & Đặt hàng:
 [HÃY CUNG CẤP Địa chỉ khu vườn/Mua hàng. Nếu khách CÓ cung cấp địa chỉ, số điện thoại hoặc tên vườn -> HÃY MANG XUỐNG ĐÂY. Nếu KHÔNG -> ĐỂ TRỐNG (đừng bịa ra địa chỉ) HOẶC ghi là "Hãy bình luận để nhận báo giá và địa chỉ mua hàng nhé!"].
 Từ khóa:
 [Thẻ tag tiếng Việt...]
+|||PRO|||
+[💰 Gợi ý giá & chiến lược: Tối đa 3 dòng ngắn gọn về mức giá phù hợp và 1-2 chiến lược bán hàng hiệu quả]
 
 Lưu ý: 
 1. CHỈ dùng dấu phân cách ||| khi viết nội dung bán hàng.
-2. Nội dung phải THUẦN VIỆT, đánh đúng tâm lý khách hàng Việt Nam.
+2. |||PRO||| CHỈ xuất hiện khi user là Pro/Plus, đặt SAU phần Từ khóa.
+3. Nội dung phải THUẦN VIỆT, đánh đúng tâm lý khách hàng Việt Nam.
 """
 
 

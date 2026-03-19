@@ -175,9 +175,15 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
 
                                 <div className="flex-1 space-y-3 md:space-y-4">
                                     {(() => {
-                                        const parts = (item.description || "").split("|||");
-                                        const intro = parts[0]?.trim();
-                                        const content = parts.length > 1 ? parts.slice(1).join("|||").trim() : "";
+                                        const description = item.description || "";
+                                        // Tách phần intro (trước |||) và phần nội dung chính
+                                        const mainSep = description.indexOf("|||");
+                                        const intro = mainSep >= 0 ? description.slice(0, mainSep).trim() : description.trim();
+                                        const afterMain = mainSep >= 0 ? description.slice(mainSep + 3) : "";
+                                        // Tách phần Pro khỏi nội dung chính (nếu có |||PRO|||)
+                                        const proSep = afterMain.indexOf("|||PRO|||");
+                                        const content = proSep >= 0 ? afterMain.slice(0, proSep).trim() : afterMain.trim();
+                                        const proSuggestion = proSep >= 0 ? afterMain.slice(proSep + 9).trim() : "";
 
                                         return (
                                             <>
@@ -198,10 +204,22 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                                                             {content}
                                                         </div>
 
+                                                        {/* Pro Suggestion Box - NOT copyable */}
+                                                        {proSuggestion && (
+                                                            <div className="mt-3 rounded-lg p-3 border border-yellow-500/30 bg-yellow-500/5">
+                                                                <div className="flex items-center gap-1.5 mb-1.5">
+                                                                    <Sparkles size={13} className="text-yellow-400" />
+                                                                    <span className="text-[11px] font-semibold text-yellow-400 uppercase tracking-wider">Gợi ý Pro</span>
+                                                                </div>
+                                                                <p className="text-[13px] text-yellow-100/80 leading-relaxed whitespace-pre-line">{proSuggestion}</p>
+                                                            </div>
+                                                        )}
+
                                                         {/* Actions for Content Only */}
                                                         <div className="flex flex-wrap gap-2 pt-4 border-t border-panel-border mt-4 items-center justify-between">
                                                             <div className="flex gap-2">
                                                                 <button onClick={() => {
+                                                                    // Chi copy phan content chinh, khong copy phan Pro suggestion
                                                                     navigator.clipboard.writeText(content);
                                                                 }} className="glass-button px-3 py-1.5 md:px-4 md:py-2 rounded-full flex items-center gap-2 text-xs md:text-sm text-app-muted hover:text-green-400">
                                                                     <Copy size={14} className="md:w-4 md:h-4" />
