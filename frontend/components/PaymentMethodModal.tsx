@@ -6,7 +6,9 @@ import clsx from 'clsx';
 interface PaymentMethodModalProps {
     isOpen: boolean;
     onClose: () => void;
-    planType: 'plus' | 'pro' | 'pro_3m' | 'pro_6m' | null;
+    planType: string | null;
+    planName?: string;
+    planPrice?: string;
     onConfirm: (method: 'stripe' | 'bank' | 'momo') => void;
 }
 
@@ -14,19 +16,21 @@ export const PaymentMethodModal: React.FC<PaymentMethodModalProps> = ({
     isOpen,
     onClose,
     planType,
+    planName: propPlanName,
+    planPrice: propPlanPrice,
     onConfirm
 }) => {
     const [selectedMethod, setSelectedMethod] = useState<'stripe' | 'bank' | 'momo'>('bank');
 
     if (!isOpen || !planType) return null;
 
-    const planName = planType === 'plus' ? 'Plus' :
+    const planName = propPlanName || (planType === 'plus' ? 'Plus' :
         planType === 'pro_3m' ? 'Pro 3 Tháng' :
-            planType === 'pro_6m' ? 'Pro 6 Tháng' : 'Pro';
+            planType === 'pro_6m' ? 'Pro 6 Tháng' : 'Pro');
 
-    const planPrice = planType === 'plus' ? '199.000đ' :
-        planType === 'pro_3m' ? '499.000đ' :
-            planType === 'pro_6m' ? '899.000đ' : '199.000đ';
+    const planPrice = propPlanPrice || (planType === 'plus' ? '99.000đ' :
+        planType === 'pro_3m' ? '349.000đ' :
+            planType === 'pro_6m' ? '599.000đ' : '149.000đ');
 
     return (
         <AnimatePresence>

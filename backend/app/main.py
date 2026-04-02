@@ -114,6 +114,7 @@ def _user_out(user: UserDocument) -> UserOut:
         email=user.get("email"),
         phone_number=user.get("phone_number"),
         full_name=user.get("full_name"),
+        address=user.get("address"),
         role=user.get("role", "user"),
         avatar_url=user.get("avatar_url"),
         created_at=created_at.isoformat(),

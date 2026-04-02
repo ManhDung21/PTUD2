@@ -9,6 +9,7 @@ import { AuthModal } from "../components/AuthModal";
 import { ProfileModal } from "../components/ProfileModal";
 import { SettingsModal } from "../components/SettingsModal";
 import { PricingModal } from "../components/PricingModal";
+import { FruitPatternBg } from "../components/FruitPatternBg";
 import { AuthMode, DescriptionResponse, HistoryItem, User, ToastState, Conversation } from "../types";
 import { Camera, RefreshCw, Send, Settings, Moon, Sun, Monitor, Zap, ExternalLink, LogOut, ChevronLeft, ArrowRight, Download, Eye, Link, Mic, Crown } from "lucide-react";
 import { UserGuideModal } from "../components/UserGuideModal";
@@ -58,9 +59,11 @@ export default function HomePage() {
   const [selectedPlan, setSelectedPlan] = useState<'plus' | 'pro' | 'pro_3m' | 'pro_6m' | null>(null);
   const [qrModalVisible, setQrModalVisible] = useState(false);
   const [qrType, setQrType] = useState<'bank' | 'momo'>('bank');
+  const [selectedPlanPrice, setSelectedPlanPrice] = useState("");
+  const [selectedPlanName, setSelectedPlanName] = useState("");
 
   // Upgrade Handler (Step 1: Open Payment Method Select)
-  const handleUpgradeClick = (plan: 'plus' | 'pro' | 'pro_3m' | 'pro_6m') => {
+  const handleUpgradeClick = (planId: string, priceText: string, planName: string) => {
     setPricingVisible(false);
 
     if (!user || !token) {
@@ -70,7 +73,9 @@ export default function HomePage() {
       return;
     }
 
-    setSelectedPlan(plan);
+    setSelectedPlan(planId as any);
+    setSelectedPlanPrice(priceText);
+    setSelectedPlanName(planName);
     setPaymentMethodVisible(true);
   };
 
@@ -629,6 +634,9 @@ export default function HomePage() {
           <div className="aurora-blob blob-3"></div>
         </div>
 
+        {/* Telegram-style Fruit Pattern Overlay */}
+        <FruitPatternBg />
+
         {toast && (
           <div className={`fixed top-20 md:top-4 right-4 max-w-[calc(100vw-32px)] md:max-w-md z-[2000] px-4 py-3 rounded-xl text-white font-medium shadow-xl backdrop-blur-md break-words border ${toast.type === 'success' ? 'bg-green-600/80 border-green-500/30' : 'bg-red-600/80 border-red-500/30'}`}>
             {toast.message}
@@ -764,23 +772,17 @@ export default function HomePage() {
           isOpen={paymentMethodVisible}
           onClose={() => setPaymentMethodVisible(false)}
           planType={selectedPlan}
+          planName={selectedPlanName}
+          planPrice={selectedPlanPrice}
           onConfirm={handlePaymentConfirm}
         />
 
         <PaymentQRModal
-          // ... (existing code was correctly maintained due to StartLine/EndLine logic below)
           isOpen={qrModalVisible}
           onClose={() => setQrModalVisible(false)}
           type={qrType}
-          amount={
-            selectedPlan === 'plus' ? '199.000đ' :
-              selectedPlan === 'pro_3m' ? '499.000đ' :
-                selectedPlan === 'pro_6m' ? '899.000đ' : '199.000đ'
-          }
-          description={`Thanh toan goi ${selectedPlan === 'plus' ? 'Plus' :
-            selectedPlan === 'pro_3m' ? 'Pro 3 Thang' :
-              selectedPlan === 'pro_6m' ? 'Pro 6 Thang' : 'Pro'
-            }`}
+          amount={selectedPlanPrice || '149.000đ'}
+          description={`Thanh toan goi ${selectedPlanName || selectedPlan}`}
           user={user}
         />
 

@@ -12,6 +12,7 @@ interface Plan {
     description: string;
     features: string[];
     color: string;
+    original_price?: string;
     badge?: string;
     buttonText: string;
     amount_vnd: number;
@@ -127,7 +128,7 @@ export function AdminPlans({ isDarkMode, showToast }: AdminPlansProps) {
                                 </div>
                                 <div className="grid grid-cols-2 gap-2">
                                     <div>
-                                        <label className={clsx("block text-xs font-medium mb-1", isDarkMode ? "text-gray-400" : "text-gray-600")}>Giá hiển thị</label>
+                                        <label className={clsx("block text-xs font-medium mb-1", isDarkMode ? "text-gray-400" : "text-gray-600")}>Giá Đang Bán</label>
                                         <input 
                                             type="text" 
                                             className={clsx("w-full px-3 py-2 text-sm rounded-lg border", isDarkMode ? "bg-black/50 border-white/10 text-white" : "bg-white border-gray-300")} 
@@ -136,14 +137,23 @@ export function AdminPlans({ isDarkMode, showToast }: AdminPlansProps) {
                                         />
                                     </div>
                                     <div>
-                                        <label className={clsx("block text-xs font-medium mb-1", isDarkMode ? "text-gray-400" : "text-gray-600")}>Sợi thời gian</label>
+                                        <label className={clsx("block text-xs font-medium mb-1", isDarkMode ? "text-gray-400" : "text-gray-600")}>Giá Gốc (Gạch ngang)</label>
                                         <input 
                                             type="text" 
                                             className={clsx("w-full px-3 py-2 text-sm rounded-lg border", isDarkMode ? "bg-black/50 border-white/10 text-white" : "bg-white border-gray-300")} 
-                                            value={editForm.period || ""} 
-                                            onChange={e => setEditForm({...editForm, period: e.target.value})}
+                                            value={editForm.original_price || ""} 
+                                            onChange={e => setEditForm({...editForm, original_price: e.target.value})}
                                         />
                                     </div>
+                                </div>
+                                <div>
+                                    <label className={clsx("block text-xs font-medium mb-1", isDarkMode ? "text-gray-400" : "text-gray-600")}>Chu kỳ hiển thị</label>
+                                    <input 
+                                        type="text" 
+                                        className={clsx("w-full px-3 py-2 text-sm rounded-lg border", isDarkMode ? "bg-black/50 border-white/10 text-white" : "bg-white border-gray-300")} 
+                                        value={editForm.period || ""} 
+                                        onChange={e => setEditForm({...editForm, period: e.target.value})}
+                                    />
                                 </div>
                                 <div>
                                     <label className={clsx("block text-xs font-medium mb-1", isDarkMode ? "text-gray-400" : "text-gray-600")}>Giá thanh toán (VNĐ)</label>
@@ -196,10 +206,11 @@ export function AdminPlans({ isDarkMode, showToast }: AdminPlansProps) {
                                 )}
                                 <div className="mt-8">
                                     <h3 className={clsx("text-xl font-bold mb-2", isDarkMode ? "text-white" : "text-gray-900")}>{plan.name}</h3>
-                                    <div className="flex items-baseline gap-1 mb-2">
+                                    <div className="flex items-baseline gap-1 mb-1">
                                         <span className={clsx("text-2xl font-black", isDarkMode ? "text-gray-100" : "text-gray-800")}>{plan.price}</span>
                                         <span className={clsx("text-sm", isDarkMode ? "text-gray-500" : "text-gray-500")}>{plan.period}</span>
                                     </div>
+                                    {plan.original_price && <p className="text-xs line-through text-red-400 mb-2">{plan.original_price}</p>}
                                     <p className={clsx("text-sm font-semibold mb-4", isDarkMode ? "text-gray-400" : "text-gray-600")}>Thanh toán: {plan.amount_vnd.toLocaleString('vi-VN')}₫</p>
                                     <p className={clsx("text-sm italic", isDarkMode ? "text-gray-400" : "text-gray-500")}>{plan.description}</p>
                                 </div>

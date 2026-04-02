@@ -174,18 +174,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                 <UserIcon size={16} />
                                 Hồ sơ
                             </button>
-                            <button
-                                onClick={() => setActiveTab("appearance")}
-                                className={clsx(
-                                    "px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2",
-                                    activeTab === "appearance"
-                                        ? "border-primary-gradient-start text-app-text"
-                                        : "border-transparent text-app-muted hover:text-app-text"
-                                )}
-                            >
-                                <Monitor size={16} />
-                                Giao diện
-                            </button>
+
                         </div>
 
                         {/* Content */}

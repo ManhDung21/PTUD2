@@ -7,7 +7,7 @@ import clsx from 'clsx';
 interface PricingModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onUpgrade: (plan: 'plus' | 'pro' | 'pro_3m' | 'pro_6m') => void;
+    onUpgrade: (planId: string, priceStr: string, nameStr: string) => void;
     currentPlan: string;
     role?: string;
 }
@@ -58,8 +58,9 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onU
         },
         {
             id: 'pro',
-            name: 'Pro',
-            price: '199.000đ',
+            name: 'Pro (1 Tháng)',
+            price: '149.000đ',
+            original_price: '199.000đ',
             period: '/tháng',
             description: 'Sức mạnh không giới hạn',
             features: [
@@ -75,9 +76,10 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onU
         {
             id: 'pro_3m',
             name: 'Pro (3 Tháng)',
-            price: '649.000đ',
+            price: '349.000đ',
+            original_price: '597.000đ',
             period: '/3 tháng',
-            description: 'Tiết kiệm 15%',
+            description: 'Tiết kiệm 20% (Chỉ 116k/tháng)',
             features: [
                 'Tất cả tính năng Pro',
                 'Không giới hạn lượt tạo',
@@ -91,9 +93,10 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onU
         {
             id: 'pro_6m',
             name: 'Pro (6 Tháng)',
-            price: '1.119.000đ',
+            price: '599.000đ',
+            original_price: '1.194.000đ',
             period: '/6 tháng',
-            description: 'Tiết kiệm 25%',
+            description: 'Tiết kiệm 33% (Chỉ 99k/tháng)',
             features: [
                 'Tất cả tính năng Pro',
                 'Không giới hạn lượt tạo',
@@ -176,9 +179,17 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onU
                                     </div>
                                 </div>
 
-                                <div className="mb-6">
-                                    <span className="text-3xl font-bold text-app-text">{plan.price}</span>
-                                    <span className="text-app-muted text-sm">{plan.period}</span>
+                                <div className="mb-6 flex flex-col items-start gap-1">
+                                    {plan.original_price && (
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm opacity-50 line-through text-app-muted w-max">{plan.original_price}</span>
+                                            <span className="text-xs font-bold text-red-500 bg-red-500/10 px-2 py-0.5 rounded">Giảm giá</span>
+                                        </div>
+                                    )}
+                                    <div className="flex items-end gap-1">
+                                        <span className="text-3xl font-bold text-app-text">{plan.price}</span>
+                                        <span className="text-app-muted text-sm pb-1">{plan.period}</span>
+                                    </div>
                                 </div>
 
                                 <div className="space-y-3 mb-8 flex-1">
@@ -191,7 +202,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onU
                                 </div>
 
                                 <button
-                                    onClick={() => !plan.disabled && onUpgrade(plan.id as any)}
+                                    onClick={() => !plan.disabled && onUpgrade(plan.id, plan.price, plan.name)}
                                     disabled={plan.disabled}
                                     className={clsx(
                                         "w-full py-3 rounded-xl font-bold text-sm transition-all",

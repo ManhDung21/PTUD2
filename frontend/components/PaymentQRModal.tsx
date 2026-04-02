@@ -73,12 +73,19 @@ export const PaymentQRModal: React.FC<PaymentQRModalProps> = ({
                     initial={{ opacity: 0, scale: 0.95, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                    className="relative z-10 w-full max-w-lg bg-panel border border-panel-border rounded-[32px] overflow-hidden shadow-2xl flex flex-col md:flex-row"
+                    className="relative z-10 w-full max-w-2xl lg:max-w-3xl bg-panel border border-panel-border rounded-[32px] overflow-hidden shadow-2xl flex flex-col md:flex-row"
                 >
+                    {/* Absolute Close Button for Safety/Mobile */}
+                    <button 
+                        onClick={onClose} 
+                        className="absolute top-4 right-4 z-50 p-2 bg-black/10 hover:bg-black/20 text-app-text md:text-app-text dark:bg-white/10 dark:hover:bg-white/20 backdrop-blur-md rounded-full transition-colors"
+                    >
+                        <X size={20} />
+                    </button>
                     {/* Left: QR Code */}
                     <div className={clsx(
-                        "p-8 flex flex-col items-center justify-center text-white min-w-[250px]",
-                        type === 'bank' ? "bg-blue-600" : "bg-pink-600"
+                        "p-8 lg:p-10 flex flex-col items-center justify-center text-white min-w-[280px] md:min-w-[320px] shrink-0",
+                        type === 'bank' ? "bg-gradient-to-br from-blue-500 to-blue-700" : "bg-gradient-to-br from-pink-500 to-rose-600"
                     )}>
                         <h3 className="font-bold text-lg mb-4 text-center">
                             {type === 'bank' ? 'Quét mã VietQR' : 'Quét mã MoMo'}
@@ -87,9 +94,8 @@ export const PaymentQRModal: React.FC<PaymentQRModalProps> = ({
                             {type === 'bank' ? (
                                 <img src="/Qrthanhtoan.png" alt="QR Code Ngân Hàng" className="w-40 h-40 object-contain" />
                             ) : (
-                                // MoMo thường dùng mã QR cá nhân phát sinh từ app, 
-                                // Hệ thống sẽ tạm thời tạo 1 QR chứa form chuyển tiền tự động của MoMo
-                                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(momoQRData)}`} alt="MoMo QR Code" className="w-40 h-40" />
+                                // Sử dụng bản QR rõ nét hơn đã được tự động cắt chuẩn vuông vức
+                                <img src="/thanhtoanmomo_qr.png" alt="MoMo QR Code" className="w-56 h-56 md:w-64 md:h-64 object-contain rounded-lg shadow-sm" />
                             )}
                         </div>
                         <div className="mt-4 text-center">
@@ -104,18 +110,15 @@ export const PaymentQRModal: React.FC<PaymentQRModalProps> = ({
                     </div>
 
                     {/* Right: Info */}
-                    <div className="flex-1 p-6 bg-panel">
+                    <div className="flex-1 p-6 lg:p-10 bg-panel flex flex-col justify-center">
                         <div className="flex justify-between items-start mb-6">
                             <div>
-                                <h3 className="text-xl font-bold text-app-text">Thông tin chuyển khoản</h3>
-                                <div className="flex items-center gap-2 text-xs text-app-muted mt-1 bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded-lg w-fit">
-                                    <Info size={12} />
+                                <h3 className="text-2xl font-bold text-app-text">Thông tin thanh toán</h3>
+                                <div className="flex items-center gap-2 text-sm font-medium mt-2 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 px-3 py-1.5 rounded-lg w-fit">
+                                    <Info size={16} />
                                     <span>Vui lòng nhập đúng nội dung</span>
                                 </div>
                             </div>
-                            <button onClick={onClose} className="p-2 hover:bg-glass-highlight rounded-full transition-colors text-app-text">
-                                <X size={20} />
-                            </button>
                         </div>
 
                         <div className="space-y-4">
@@ -165,9 +168,9 @@ export const PaymentQRModal: React.FC<PaymentQRModalProps> = ({
                             </div>
                         </div>
 
-                        <div className="mt-6 text-center text-xs text-app-muted">
-                            Sau khi chuyển khoản, vui lòng chờ 5-10 phút để hệ thống xử lý hoặc liên hệ Admin
-                            mdung07102004@gmail.com.
+                        <div className="mt-8 pt-6 border-t border-panel-border text-center text-sm font-medium text-app-muted">
+                            Sau khi chuyển khoản, vui lòng đợi 5-10 phút để hệ thống xử lý.<br/>
+                            Hỗ trợ: <span className="text-blue-500">mdung07102004@gmail.com</span>
                         </div>
                     </div>
                 </motion.div>

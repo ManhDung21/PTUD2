@@ -21,6 +21,7 @@ class Plan(BaseModel):
     badge: Optional[str] = None
     buttonText: str
     amount_vnd: int  # Numeric amount for payment processing
+    original_price: Optional[str] = None
 
 class PlanUpdate(BaseModel):
     name: Optional[str] = None
@@ -32,6 +33,7 @@ class PlanUpdate(BaseModel):
     badge: Optional[str] = None
     buttonText: Optional[str] = None
     amount_vnd: Optional[int] = None
+    original_price: Optional[str] = None
 
 
 DEFAULT_PLANS = [
@@ -69,8 +71,9 @@ DEFAULT_PLANS = [
     },
     {
         "id": "pro",
-        "name": "Pro",
-        "price": "199.000đ",
+        "name": "Pro (1 Tháng)",
+        "price": "149.000đ",
+        "original_price": "199.000đ",
         "period": "/tháng",
         "description": "Sức mạnh không giới hạn",
         "features": [
@@ -87,9 +90,10 @@ DEFAULT_PLANS = [
     {
         "id": "pro_3m",
         "name": "Pro (3 Tháng)",
-        "price": "649.000đ",
+        "price": "349.000đ",
+        "original_price": "597.000đ",
         "period": "/3 tháng",
-        "description": "Tiết kiệm 15%",
+        "description": "Tiết kiệm 20% (Chỉ 116k/tháng)",
         "features": [
             "Tất cả tính năng Pro",
             "Không giới hạn lượt tạo",
@@ -104,9 +108,10 @@ DEFAULT_PLANS = [
     {
         "id": "pro_6m",
         "name": "Pro (6 Tháng)",
-        "price": "1.119.000đ",
+        "price": "599.000đ",
+        "original_price": "1.194.000đ",
         "period": "/6 tháng",
-        "description": "Tiết kiệm 25%",
+        "description": "Tiết kiệm 33% (Chỉ 99k/tháng)",
         "features": [
             "Tất cả tính năng Pro",
             "Không giới hạn lượt tạo",
