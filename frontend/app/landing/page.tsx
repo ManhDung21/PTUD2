@@ -1,26 +1,57 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import { Sparkles, Zap, Image as ImageIcon, MessageCircle, ArrowRight } from "lucide-react";
 
 export default function LandingPage() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
   // Force dark mode for landing page to match aesthetic
   useEffect(() => {
     document.documentElement.classList.add('dark');
   }, []);
 
+  // Custom infinite loop logic to prevent stutter at 8s
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    // Tua chậm tốc độ clip xuống 0.5x để background tồn tại lâu hơn
+    video.playbackRate = 0.8;
+
+    const handleTimeUpdate = () => {
+      // Khi phát tới 7.9s, sẽ quay lại mốc 2.0s để tạo vòng lặp mượt mà không khựng
+      if (video.currentTime >= 7.8) {
+        video.currentTime = 2.3;
+        video.play().catch(() => {});
+      }
+    };
+
+    video.addEventListener("timeupdate", handleTimeUpdate);
+    return () => video.removeEventListener("timeupdate", handleTimeUpdate);
+  }, []);
+
   return (
     <div className="dark h-screen bg-app text-app-text font-sans relative overflow-y-auto overflow-x-hidden scroll-smooth">
-      {/* Aurora Background */}
-      <div className="aurora-bg fixed inset-0 z-0">
-        <div className="aurora-blob blob-1"></div>
-        <div className="aurora-blob blob-2"></div>
-        <div className="aurora-blob blob-3"></div>
+      {/* Background Video */}
+      <div className="fixed inset-0 z-0 overflow-hidden bg-black">
+        <video 
+          ref={videoRef}
+          src="/planding.mp4" 
+          autoPlay 
+          loop 
+          muted 
+          playsInline 
+          className="absolute inset-0 w-full h-full object-cover opacity-100"
+        />
+        {/* Lớp phủ mờ nhẹ để chữ dễ đọc nhưng video vẫn rõ nét */}
+        <div className="absolute inset-0 bg-black/30 pointer-events-none"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-[#0a0a0a] pointer-events-none"></div>
       </div>
 
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 glass-panel border-b-0 border-white/5 bg-white/5 backdrop-blur-md">
+      <header className="fixed top-0 left-0 right-0 z-50 glass-panel border-b border-white/50">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 flex items-center justify-center">
@@ -45,7 +76,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-300 text-sm font-medium mb-8 backdrop-blur-md animate-fade-in-up">
             <Sparkles size={16} />
-            <span>AI Assistant for Social Commerce</span>
+            <span>AI Tạo Mô Tả Cho Các Loại Trái Cây</span>
           </div>
 
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-8 leading-tight drop-shadow-2xl">
@@ -54,7 +85,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-xl md:text-2xl text-app-muted max-w-3xl mx-auto mb-10 leading-relaxed">
-            Tự động tạo mô tả sản phẩm, caption TikTok/Facebook hấp dẫn chỉ từ một bức ảnh. Tăng tương tác và doanh số ngay hôm nay với FruitText AI.
+            Tự động tạo mô tả sản phẩm, caption Facebook hấp dẫn chỉ từ một bức ảnh. Tăng tương tác và doanh số ngay hôm nay với FruitText AI.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -68,20 +99,7 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Hero Image / Preview */}
-        <div className="mt-20 max-w-6xl mx-auto relative group perspective-1000">
-          <div className="absolute inset-0 bg-gradient-to-t from-app-bg to-transparent z-20 pointer-events-none"></div>
-          <div className="glass-panel-heavy p-2 rounded-[32px] border border-white/10 shadow-2xl transform rotate-x-12 group-hover:rotate-x-0 transition-transform duration-700">
-            <div className="aspect-[16/9] rounded-[24px] overflow-hidden bg-black/40 flex items-center justify-center relative">
-              {/* Mock UI Representation */}
-              <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-black"></div>
-              <div className="relative z-10 flex flex-col items-center gap-4 opacity-50">
-                <Sparkles size={48} className="text-purple-500 animate-pulse" />
-                <span className="text-lg font-mono text-purple-300">Generating Magic...</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Background video is active, so the hero container is removed to keep it clean */}
       </section>
 
       {/* Features Grid */}
