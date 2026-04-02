@@ -50,12 +50,14 @@ export const PaymentQRModal: React.FC<PaymentQRModalProps> = ({
     // Nếu bạn có ảnh QR MoMo thật tải về từ app, bạn có thể lưu nó vào thư mục public/ và thay bằng "/momo-qr.png"
     const momoQRData = `2|99|${accountInfo.number}|${accountInfo.name}|${user?.email?.split('@')[0]}|0|0|${amount.replace(/\D/g, '')}`;
 
+    const momoDeepLink = `momo://?action=p2p&amount=${amount.replace(/\D/g, '')}&receiver=${accountInfo.number}&message=${encodeURIComponent(transferContent)}`;
+
     // QR Code Placeholder URL (Using a generic QR generator API for demo)
     // In production, this would be a real VietQR or Momo QR
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
         type === 'bank'
             ? `00020101021238570010A00000072701270006970423011319036789123450208QRIBFTTA5303704540${amount.replace(/\D/g, '')}5802VN62150811${transferContent}6304`
-            : `momo://?action=p2p&amount=${amount.replace(/\D/g, '')}&receiver=${accountInfo.number}&message=${transferContent}`
+            : momoDeepLink
     )}`;
 
     return (
@@ -130,7 +132,7 @@ export const PaymentQRModal: React.FC<PaymentQRModalProps> = ({
                                 <div className="text-xs font-bold text-app-muted uppercase">Chủ tài khoản</div>
                                 <div className="text-app-text font-medium uppercase">{accountInfo.name}</div>
                             </div>
-                            <div className="space-y-1">
+                            {/* <div className="space-y-1">
                                 <div className="text-xs font-bold text-app-muted uppercase">Số tài khoản</div>
                                 <div className="flex items-center gap-2">
                                     <div className="text-app-text font-medium font-mono text-lg">{accountInfo.number}</div>
@@ -141,7 +143,7 @@ export const PaymentQRModal: React.FC<PaymentQRModalProps> = ({
                                         {copied === accountInfo.number ? <Check size={16} /> : <Copy size={16} />}
                                     </button>
                                 </div>
-                            </div>
+                            </div> */}
                             <div className="space-y-1 p-3 bg-glass-highlight rounded-xl border border-panel-border">
                                 <div className="text-xs font-bold text-app-muted uppercase">Nội dung chuyển khoản</div>
                                 <div className="flex flex-col gap-2 w-full mt-2">
@@ -167,6 +169,21 @@ export const PaymentQRModal: React.FC<PaymentQRModalProps> = ({
                                 </div>
                             </div>
                         </div>
+
+                        {type === 'momo' && (
+                            <div className="mt-6">
+                                <a 
+                                    href={momoDeepLink}
+                                    className="w-full py-4 rounded-xl font-bold text-white shadow-xl flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                    style={{ background: 'linear-gradient(to right, #A50064, #E61873)' }}
+                                >
+                                    <img src="/thanhtoanmomo_qr.png" alt="momo-icon" className="w-6 h-6 rounded brightness-200" style={{ display: 'none' }} />
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                                    Mở App MoMo Thanh Toán Ngay
+                                </a>
+                                <div className="text-center text-xs text-app-muted mt-2 opacity-80">(Chỉ dành cho thiết bị di động đã cài ví)</div>
+                            </div>
+                        )}
 
                         <div className="mt-8 pt-6 border-t border-panel-border text-center text-sm font-medium text-app-muted">
                             Sau khi chuyển khoản, vui lòng đợi 5-10 phút để hệ thống xử lý.<br/>
