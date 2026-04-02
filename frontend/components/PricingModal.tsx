@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Check, X, Star, Zap, Crown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
@@ -14,11 +15,20 @@ interface PricingModalProps {
 export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onUpgrade, currentPlan, role }) => {
     if (!isOpen) return null;
 
-    const plans = [
+    const [dbPlans, setDbPlans] = useState<any[]>([]);
+
+    useEffect(() => {
+        if (isOpen) {
+            axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/plans`)
+                .then(res => setDbPlans(res.data))
+                .catch(err => console.error("Error fetching pricing plans:", err));
+        }
+    }, [isOpen]);
+
+    const defaultPlans = [
         {
             id: 'free',
             name: 'Free',
-            icon: <Star className="text-gray-400" size={24} />,
             price: '0đ',
             period: '/tháng',
             description: 'Dành cho người mới bắt đầu',
@@ -29,13 +39,11 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onU
                 'Không hỗ trợ ưu tiên'
             ],
             color: 'gray',
-            buttonText: 'Gói hiện tại',
-            disabled: true
+            buttonText: 'Gói hiện tại'
         },
         {
             id: 'plus',
             name: 'Plus',
-            icon: <Zap className="text-blue-500" size={24} />,
             price: '99.000đ',
             period: '/tháng',
             description: 'Cho người dùng thường xuyên',
@@ -46,13 +54,11 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onU
                 'Hỗ trợ qua email'
             ],
             color: 'blue',
-            buttonText: 'Nâng cấp Plus',
-            disabled: role === 'admin' || currentPlan === 'plus' || currentPlan.startsWith('pro')
+            buttonText: 'Nâng cấp Plus'
         },
         {
             id: 'pro',
             name: 'Pro',
-            icon: <Crown className="text-yellow-500" size={24} />,
             price: '199.000đ',
             period: '/tháng',
             description: 'Sức mạnh không giới hạn',
@@ -64,14 +70,12 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onU
             ],
             color: 'purple',
             badge: 'Phổ biến nhất',
-            buttonText: 'Nâng cấp Pro',
-            disabled: role === 'admin' || currentPlan === 'pro'
+            buttonText: 'Nâng cấp Pro'
         },
         {
             id: 'pro_3m',
             name: 'Pro (3 Tháng)',
-            icon: <Crown className="text-purple-500" size={24} />,
-            price: '6.000đ',
+            price: '649.000đ',
             period: '/3 tháng',
             description: 'Tiết kiệm 15%',
             features: [
@@ -82,14 +86,12 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onU
             ],
             color: 'pink',
             badge: 'Tiết kiệm',
-            buttonText: 'Mua 3 tháng',
-            disabled: role === 'admin' || currentPlan === 'pro_3m'
+            buttonText: 'Mua 3 tháng'
         },
         {
             id: 'pro_6m',
             name: 'Pro (6 Tháng)',
-            icon: <Crown className="text-red-500" size={24} />,
-            price: '8.000đ',
+            price: '1.119.000đ',
             period: '/6 tháng',
             description: 'Tiết kiệm 25%',
             features: [
@@ -100,10 +102,23 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onU
             ],
             color: 'rose',
             badge: 'Giá tốt nhất',
-            buttonText: 'Mua 6 tháng',
-            disabled: role === 'admin' || currentPlan === 'pro_6m'
+            buttonText: 'Mua 6 tháng'
         }
     ];
+
+    const sourcePlans = dbPlans.length > 0 ? dbPlans : defaultPlans;
+
+    const plans = sourcePlans.map(p => ({
+        ...p,
+        icon: p.id === 'free' ? <Star className="text-gray-400" size={24} /> : 
+              p.id === 'plus' ? <Zap className="text-blue-500" size={24} /> : 
+              <Crown className={p.id === 'pro_3m' ? "text-purple-500" : p.id === 'pro_6m' ? "text-red-500" : "text-yellow-500"} size={24} />,
+        disabled: p.id === 'free' ? true :
+                  p.id === 'plus' ? currentPlan === 'plus' || currentPlan.startsWith('pro') :
+                  p.id === 'pro' ? currentPlan === 'pro' :
+                  p.id === 'pro_3m' ? currentPlan === 'pro_3m' :
+                  p.id === 'pro_6m' ? currentPlan === 'pro_6m' : false
+    }));
 
     return (
         <AnimatePresence>
@@ -167,7 +182,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onU
                                 </div>
 
                                 <div className="space-y-3 mb-8 flex-1">
-                                    {plan.features.map((feature, idx) => (
+                                    {plan.features.map((feature: string, idx: number) => (
                                         <div key={idx} className="flex items-center gap-2">
                                             <Check size={16} className={clsx(plan.id === 'free' ? "text-gray-400" : "text-green-500")} />
                                             <span className="text-sm text-app-text/80">{feature}</span>

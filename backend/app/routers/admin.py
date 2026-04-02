@@ -81,9 +81,18 @@ async def get_stats(
     image_descriptions = db.descriptions.count_documents({"source": "image"})
     text_descriptions = db.descriptions.count_documents({"source": "text"})
     
+    # Calculate Total Revenue
+    revenue_pipeline = [
+        {"$match": {"status": "completed"}},
+        {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+    ]
+    revenue_result = list(db.payments.aggregate(revenue_pipeline))
+    total_revenue = revenue_result[0]["total"] if revenue_result else 0
+    
     return {
         "total_users": user_count,
         "total_descriptions": description_count,
+        "total_revenue": total_revenue,
         "descriptions_by_type": {
             "image": image_descriptions,
             "text": text_descriptions

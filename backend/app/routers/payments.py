@@ -99,9 +99,18 @@ async def create_momo_payment(
     backend_url = os.environ.get("NEXT_PUBLIC_API_BASE_URL", "http://localhost:8000")
     ipnUrl = f"{backend_url.rstrip('/')}/api/payments/momo-webhook" 
 
-    orderInfo = "Mua Gói Plus" if plan_type == "plus" else "Mua Gói Pro 3 Tháng" if plan_type == "pro_3m" else "Mua Gói Pro 6 Tháng" if plan_type == "pro_6m" else "Mua Gói Pro"
+    plan_doc = db.plans.find_one({"id": plan_type})
+    if plan_doc and "amount_vnd" in plan_doc:
+        amount_val = plan_doc["amount_vnd"]
+        orderInfo = f"Mua {plan_doc.get('name', plan_type)}"
+    else:
+        # Fallback if plans not in DB
+        orderInfo = "Mua Gói Plus" if plan_type == "plus" else "Mua Gói Pro 3 Tháng" if plan_type == "pro_3m" else "Mua Gói Pro 6 Tháng" if plan_type == "pro_6m" else "Mua Gói Pro"
+        amount_mapping = {"plus": 2000, "pro": 4000, "pro_3m": 6000, "pro_6m": 8000}
+        amount_val = amount_mapping.get(plan_type, 4000)
+    
+    amount = str(amount_val)
     redirectUrl = settings.frontend_url + '/settings?success=true'
-    amount = "2000" if plan_type == "plus" else "6000" if plan_type == "pro_3m" else "8000" if plan_type == "pro_6m" else "4000"
     orderId = str(uuid.uuid4())
     requestId = str(uuid.uuid4())
     requestType = "captureWallet"
@@ -166,15 +175,17 @@ async def create_payos_payment(
         checksum_key=settings.payos_checksum_key
     )
 
-    # TEST MODE: Hao mức tiền xuống 2.000đ để test (PayOS yêu cầu tối thiểu là 2.000đ)
-    amount_mapping = {
-        "plus": 2000,
-        "pro": 4000,
-        "pro_3m": 6000,
-        "pro_6m": 8000
-    }
-    amount = amount_mapping.get(plan_type, 2000)
-    plan_name = "Gói Plus" if plan_type == "plus" else "Gói Pro 3 Tháng" if plan_type == "pro_3m" else "Gói Pro 6 Tháng" if plan_type == "pro_6m" else "Gói Pro"
+    # Lấy thông tin giá từ DB
+    plan_doc = db.plans.find_one({"id": plan_type})
+    if plan_doc and "amount_vnd" in plan_doc:
+        amount = plan_doc["amount_vnd"]
+        plan_name = plan_doc.get("name", plan_type)
+    else:
+        # TEST MODE: Hao mức tiền xuống 2.000đ để test (PayOS yêu cầu tối thiểu là 2.000đ)
+        amount_mapping = {"plus": 2000, "pro": 4000, "pro_3m": 6000, "pro_6m": 8000}
+        amount = amount_mapping.get(plan_type, 2000)
+        plan_name = "Gói Plus" if plan_type == "plus" else "Gói Pro 3 Tháng" if plan_type == "pro_3m" else "Gói Pro 6 Tháng" if plan_type == "pro_6m" else "Gói Pro"
+    
     order_code = int(time.time() * 1000) % 9007199254740991
 
     item = ItemData(name=plan_name, quantity=1, price=amount)

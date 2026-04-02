@@ -241,12 +241,12 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
 
                                                         {/* Pro Suggestion Box - NOT copyable */}
                                                         {proSuggestion && (
-                                                            <div className="mt-3 rounded-lg p-3 border border-yellow-500/30 bg-yellow-500/5">
-                                                                <div className="flex items-center gap-1.5 mb-1.5">
-                                                                    <Sparkles size={13} className="text-yellow-400" />
-                                                                    <span className="text-[11px] font-semibold text-yellow-400 uppercase tracking-wider">Gợi ý Pro</span>
+                                                            <div className="mt-3 rounded-xl p-4 border border-yellow-500/40 dark:border-yellow-500/30 bg-yellow-50 dark:bg-yellow-500/10 shadow-sm">
+                                                                <div className="flex items-center gap-1.5 mb-2">
+                                                                    <Sparkles size={14} className="text-yellow-600 dark:text-yellow-400" />
+                                                                    <span className="text-[11px] font-bold text-yellow-700 dark:text-yellow-400 uppercase tracking-wider">Gợi ý Pro</span>
                                                                 </div>
-                                                                <p className="text-[13px] text-yellow-900 dark:text-yellow-100/80 leading-relaxed whitespace-pre-line">{proSuggestion}</p>
+                                                                <p className="text-[13px] md:text-sm text-yellow-900 dark:text-yellow-100/90 leading-relaxed whitespace-pre-line">{proSuggestion}</p>
                                                             </div>
                                                         )}
 

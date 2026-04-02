@@ -46,7 +46,7 @@ from .services.auth import (
     is_phone_number,
     hash_password
 )
-from .routers import admin, conversations, payments
+from .routers import admin, conversations, payments, plans
 
 
 
@@ -81,6 +81,7 @@ app = FastAPI(title="AI Product Description Service")
 app.include_router(conversations.router, prefix="/api/conversations", tags=["Conversations"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 app.include_router(payments.router, prefix="/api/payments", tags=["Payments"])
+app.include_router(plans.router, prefix="/api/plans", tags=["Plans"])
 def root() -> JSONResponse:
     return JSONResponse({"message": "AI Product Description Service đang chạy", "endpoints": ["/health", "/auth", "/api"]})
 

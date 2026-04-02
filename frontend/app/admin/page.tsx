@@ -3,16 +3,18 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { User, ToastState, HistoryItem } from "../../types"; // Adjusted import path
 import { useRouter } from "next/navigation";
-import { Sparkles, Trash2, Users, FileText, BarChart3, LogOut, MessageSquare, Shield, ShieldAlert, Image as ImageIcon, Type, Sun, Moon, Star, Eye, X } from "lucide-react";
+import { Sparkles, Trash2, Users, FileText, BarChart3, LogOut, MessageSquare, Shield, ShieldAlert, Image as ImageIcon, Type, Sun, Moon, Star, Eye, X, DollarSign } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import clsx from "clsx";
 import { TimeSeriesChart } from "../../components/TimeSeriesChart";
 import { getAvatarUrl } from "../../utils/url";
 import { ConfirmationModal } from "../../components/ConfirmationModal";
+import { AdminPlans } from "../../components/AdminPlans";
 
 interface Stats {
     total_users: number;
     total_descriptions: number;
+    total_revenue: number;
     descriptions_by_type: {
         image: number;
         text: number;
@@ -26,7 +28,7 @@ interface AdminUser extends User {
 export default function AdminPage() {
     const router = useRouter();
     const [user, setUser] = useState<AdminUser | null>(null);
-    const [activeTab, setActiveTab] = useState<'users' | 'content'>('users');
+    const [activeTab, setActiveTab] = useState<'users' | 'content' | 'plans'>('users');
 
     // Theme State
     const [isDarkMode, setIsDarkMode] = useState(true);
@@ -478,7 +480,18 @@ export default function AdminPage() {
                     </motion.div>
 
                     {/* Stats Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className={clsx(
+                            "p-6 rounded-2xl border relative overflow-hidden group shadow-lg transition-colors",
+                            isDarkMode ? "border-white/5 bg-[#121212]" : "border-gray-200 bg-white"
+                        )}>
+                            <div className={clsx("absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500", isDarkMode ? "from-green-500/10" : "from-green-500/5")} />
+                            <div className="flex items-center gap-4 mb-3 relative z-10">
+                                <div className={clsx("p-3 rounded-xl text-green-400 group-hover:scale-110 transition-transform", isDarkMode ? "bg-green-500/10 shadow-[0_0_15px_rgba(34,197,94,0.1)]" : "bg-green-100")}><DollarSign size={24} /></div>
+                                <h3 className={clsx("text-base font-semibold", isDarkMode ? "text-gray-200" : "text-gray-700")}>Doanh Thu</h3>
+                            </div>
+                            <p className="text-3xl lg:text-4xl font-bold relative z-10 tracking-tight text-app-text">{stats?.total_revenue ? stats.total_revenue.toLocaleString('vi-VN') + 'đ' : '0đ'}</p>
+                        </motion.div>
                         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className={clsx(
                             "p-6 rounded-2xl border relative overflow-hidden group shadow-lg transition-colors",
                             isDarkMode ? "border-white/5 bg-[#121212]" : "border-gray-200 bg-white"
@@ -552,6 +565,18 @@ export default function AdminPage() {
                             >
                                 Quản Lý Nội Dung
                                 {activeTab === 'content' && <motion.div layoutId="activeTab" className={clsx("absolute bottom-[-5px] left-0 right-0 h-0.5", isDarkMode ? "bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]" : "bg-blue-500")} />}
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('plans')}
+                                className={clsx(
+                                    "px-6 py-2.5 rounded-t-lg text-sm font-medium transition-all relative",
+                                    activeTab === 'plans'
+                                        ? (isDarkMode ? "text-white" : "text-gray-900")
+                                        : (isDarkMode ? "text-white/40 hover:text-white/70" : "text-gray-500 hover:text-gray-700")
+                                )}
+                            >
+                                Gói Dịch Vụ
+                                {activeTab === 'plans' && <motion.div layoutId="activeTab" className={clsx("absolute bottom-[-5px] left-0 right-0 h-0.5", isDarkMode ? "bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]" : "bg-blue-500")} />}
                             </button>
                         </div>
 
@@ -679,7 +704,7 @@ export default function AdminPage() {
                                             </table>
                                         </div>
                                     </motion.div>
-                                ) : (
+                                ) : activeTab === 'content' ? (
                                     <motion.div
                                         key="content"
                                         initial={{ opacity: 0, x: -10 }}
@@ -790,7 +815,9 @@ export default function AdminPage() {
                                             </table>
                                         </div>
                                     </motion.div>
-                                )}
+                                ) : activeTab === 'plans' ? (
+                                    <AdminPlans isDarkMode={isDarkMode} showToast={showToast} />
+                                ) : null}
                             </AnimatePresence>
                         </div>
 
