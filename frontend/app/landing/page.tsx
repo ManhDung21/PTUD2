@@ -16,12 +16,9 @@ export default function LandingPage() {
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-
-    // Tua chậm tốc độ clip xuống 0.5x để background tồn tại lâu hơn
     video.playbackRate = 0.8;
 
     const handleTimeUpdate = () => {
-      // Khi phát tới 7.9s, sẽ quay lại mốc 2.0s để tạo vòng lặp mượt mà không khựng
       if (video.currentTime >= 7.8) {
         video.currentTime = 2.3;
         video.play().catch(() => {});
@@ -45,7 +42,6 @@ export default function LandingPage() {
           playsInline 
           className="absolute inset-0 w-full h-full object-cover opacity-100"
         />
-        {/* Lớp phủ mờ nhẹ để chữ dễ đọc nhưng video vẫn rõ nét */}
         <div className="absolute inset-0 bg-black/30 pointer-events-none"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-[#0a0a0a] pointer-events-none"></div>
       </div>

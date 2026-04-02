@@ -245,7 +245,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                         </span>
                                     )}
                                 </div>
-                                <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="flex items-center opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                                     <button
                                         onClick={(e) => startEditing(e, item)}
                                         className="p-1.5 hover:bg-glass-highlight hover:text-blue-400 rounded-full transition-all text-app-muted"
