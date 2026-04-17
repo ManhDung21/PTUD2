@@ -270,8 +270,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     )}
                 </div>
 
-                {/* Footer / User */}
-                <div className="p-4 border-t border-panel-border">
+                {/* Footer / User - Hidden on mobile because it's available in the top header */}
+                <div className="hidden md:block p-4 border-t border-panel-border">
                     {user ? (
                         <div className="flex flex-col gap-2">
                             <button

@@ -206,7 +206,7 @@ export default function HomePage() {
 
   const handleStop = () => {
     if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
+      abortControllerRef.current.abort('USER_ABORTED_DELIBERATELY');
       abortControllerRef.current = null;
     }
   };
@@ -248,7 +248,18 @@ export default function HomePage() {
       const response = await axios.post(url, payload, { 
         headers,
         signal: abortControllerRef.current.signal
+      }).catch(err => {
+        if (axios.isCancel(err)) {
+          return { data: { _is_canceled: true } };
+        }
+        throw err;
       });
+
+      if (response.data._is_canceled) {
+        showToast("success", "Đã huỷ tạo nội dung.");
+        setLoading(false);
+        return;
+      }
       const responseData = response.data;
 
       // Fix image URL mapping for static files
@@ -279,10 +290,7 @@ export default function HomePage() {
       setInput("");
       handleClearImage();
     } catch (error: any) {
-      console.error(error);
-      if (axios.isCancel(error)) {
-          showToast("success", "Đã huỷ tạo nội dung.");
-      } else if (axios.isAxiosError(error) && error.response) {
+      if (axios.isAxiosError(error) && error.response) {
         if (error.response.status === 429 || error.response.data.detail?.includes("quota") || error.response.data.detail?.includes("429")) {
           showToast("error", "Hệ thống đang bận (Quá tải). Vui lòng thử lại sau 30 giây.");
         } else {
@@ -723,8 +731,16 @@ export default function HomePage() {
                     <span className="font-semibold text-base tracking-tight text-app-text">FruitText AI</span>
                   </div>
                 </div>
-                <div className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center text-xs font-semibold text-app-muted cursor-pointer hover:bg-black/10 dark:hover:bg-white/20 transition-all" onClick={() => setProfileVisible(true)}>
-                  {user?.full_name?.charAt(0).toUpperCase() || <Settings size={18} />}
+                <div 
+                  className="w-10 h-10 rounded-full overflow-hidden bg-black/5 dark:bg-white/10 flex items-center justify-center text-xs font-semibold text-app-muted cursor-pointer hover:bg-black/10 dark:hover:bg-white/20 transition-all" 
+                  onClick={() => setSettingsVisible(true)}
+                  title="Cài đặt thông tin"
+                >
+                  {user?.avatar_url ? (
+                     <img src={`${user.avatar_url}?t=${Date.now()}`} alt="User" className="w-full h-full object-cover" />
+                  ) : (
+                     user?.full_name?.charAt(0).toUpperCase() || <Settings size={18} />
+                  )}
                 </div>
               </div>
 
@@ -788,6 +804,7 @@ export default function HomePage() {
           user={user}
           onLogout={handleLogout}
           onUpdateAvatar={handleUpdateAvatar}
+          onOpenPricing={() => setPricingVisible(true)}
         />
 
         <SettingsModal

@@ -13,6 +13,7 @@ interface ProfileModalProps {
     user: User | null;
     onLogout: () => void;
     onUpdateAvatar: (file: File) => Promise<void>;
+    onOpenPricing: () => void;
 }
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({
@@ -20,7 +21,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
     onClose,
     user,
     onLogout,
-    onUpdateAvatar
+    onUpdateAvatar,
+    onOpenPricing
 }) => {
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
@@ -98,13 +100,29 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                             </div>
 
                             <h2 className="text-2xl font-bold text-app-text tracking-tight mt-4">{user.full_name}</h2>
-                            <div className="flex items-center gap-2 mt-1">
+                            <div className="flex items-center gap-3 mt-2">
                                 <span className={clsx(
-                                    "px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider",
-                                    user.role === 'admin' ? "bg-purple-500/20 text-purple-300" : "bg-glass-highlight text-app-muted"
+                                    "px-3 py-1 rounded-full text-xs font-bold tracking-wider border",
+                                    (user.role === 'admin') ? "bg-purple-500/10 text-purple-500 border-purple-500/20" :
+                                    (user.plan_type === 'pro') ? "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" :
+                                    (user.plan_type === 'plus') ? "bg-blue-500/10 text-blue-500 border-blue-500/20" :
+                                    "bg-gray-500/10 text-gray-500 border-gray-500/20"
                                 )}>
-                                    {user.role === 'admin' ? "Administrator" : "Thành viên"}
+                                    {user.role === 'admin' ? 'ADMIN' :
+                                     (user.plan_type === 'pro') ? 'GÓI PRO' :
+                                     (user.plan_type === 'plus') ? 'GÓI PLUS' : 'GÓI MIỄN PHÍ'}
                                 </span>
+                                {user.plan_type !== 'pro' && (
+                                    <button
+                                        onClick={() => {
+                                            onClose();
+                                            onOpenPricing();
+                                        }}
+                                        className="text-xs font-bold text-purple-500 hover:text-purple-400 flex items-center gap-1 transition-colors bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20 hover:bg-purple-500/20"
+                                    >
+                                        🚀 Nâng cấp
+                                    </button>
+                                )}
                             </div>
                         </div>
 
