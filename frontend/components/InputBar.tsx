@@ -9,6 +9,7 @@ interface InputBarProps {
     input: string;
     setInput: (value: string) => void;
     onSend: () => void;
+    onStop?: () => void;
     loading: boolean;
     onImageSelect: (file: File) => void;
     selectedImagePreview: string | null;
@@ -33,6 +34,7 @@ export const InputBar: React.FC<InputBarProps> = ({
     input,
     setInput,
     onSend,
+    onStop,
     loading,
     onImageSelect,
     selectedImagePreview,
@@ -363,24 +365,30 @@ export const InputBar: React.FC<InputBarProps> = ({
                         style={{ minHeight: "48px" }} // increased minHeight explicitly to match line-height + padding
                     />
 
-                    {/* Send Button */}
+                    {/* Send / Stop Button */}
                     <div className="pb-1.5">
-                        <button
-                            onClick={onSend}
-                            disabled={loading || (!input.trim() && !selectedImagePreview)}
-                            className={clsx(
-                                "p-3 rounded-full transition-all duration-300 flex items-center justify-center",
-                                loading || (!input.trim() && !selectedImagePreview)
-                                    ? "bg-panel text-app-muted cursor-not-allowed"
-                                    : "bg-blue-600 text-white shadow-lg shadow-blue-500/30 hover:bg-blue-500 hover:scale-105"
-                            )}
-                        >
-                            {loading ? (
-                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            ) : (
-                                <Send size={20} fill="currentColor" />
-                            )}
-                        </button>
+                        {loading && onStop ? (
+                            <button
+                                onClick={onStop}
+                                className="p-3 w-[44px] h-[44px] rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/30 transition-all duration-300 flex items-center justify-center transform hover:scale-105"
+                                title="Dừng tạo"
+                            >
+                                <div className="w-3.5 h-3.5 bg-current rounded-sm shadow-sm" />
+                            </button>
+                        ) : (
+                            <button
+                                onClick={onSend}
+                                disabled={!input.trim() && !selectedImagePreview}
+                                className={clsx(
+                                    "p-3 w-[44px] h-[44px] rounded-full transition-all duration-300 flex items-center justify-center",
+                                    (!input.trim() && !selectedImagePreview)
+                                        ? "bg-panel text-app-muted cursor-not-allowed"
+                                        : "bg-blue-600 text-white shadow-lg shadow-blue-500/30 hover:bg-blue-500 hover:scale-105"
+                                )}
+                            >
+                                <Send size={20} fill="currentColor" className="ml-0.5" />
+                            </button>
+                        )}
                     </div>
                 </div>
             </motion.div>

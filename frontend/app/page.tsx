@@ -11,7 +11,7 @@ import { SettingsModal } from "../components/SettingsModal";
 import { PricingModal } from "../components/PricingModal";
 import { FruitPatternBg } from "../components/FruitPatternBg";
 import { AuthMode, DescriptionResponse, HistoryItem, User, ToastState, Conversation } from "../types";
-import { Camera, RefreshCw, Send, Settings, Moon, Sun, Monitor, Zap, ExternalLink, LogOut, ChevronLeft, ArrowRight, Download, Eye, Link, Mic, Crown } from "lucide-react";
+import { Camera, RefreshCw, Send, Settings, Moon, Sun, Monitor, Zap, ExternalLink, LogOut, ChevronLeft, ArrowRight, Download, Eye, Link, Mic, Crown, Square } from "lucide-react";
 import { UserGuideModal } from "../components/UserGuideModal";
 import { PaymentMethodModal } from "../components/PaymentMethodModal";
 import { PaymentQRModal } from "../components/PaymentQRModal";
@@ -202,9 +202,19 @@ export default function HomePage() {
 
   // --- Handlers ---
 
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const handleStop = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+  };
+
   const handleSend = async () => {
     if (!input.trim() && !selectedImageFile) return;
     setLoading(true);
+    abortControllerRef.current = new AbortController();
 
     // Note: session is NOT cleared here to allow continuous chat
 
@@ -235,7 +245,10 @@ export default function HomePage() {
         };
       }
 
-      const response = await axios.post(url, payload, { headers });
+      const response = await axios.post(url, payload, { 
+        headers,
+        signal: abortControllerRef.current.signal
+      });
       const responseData = response.data;
 
       // Fix image URL mapping for static files
@@ -243,6 +256,7 @@ export default function HomePage() {
         responseData.image_url = `${API_BASE_URL}${responseData.image_url}`;
       }
 
+      responseData.is_new_generation = true;
       setSession(prev => [...prev, responseData]);
 
       if (responseData.remaining_free_generations !== undefined && responseData.remaining_free_generations !== null) {
@@ -266,7 +280,9 @@ export default function HomePage() {
       handleClearImage();
     } catch (error: any) {
       console.error(error);
-      if (axios.isAxiosError(error) && error.response) {
+      if (axios.isCancel(error)) {
+          showToast("success", "Đã huỷ tạo nội dung.");
+      } else if (axios.isAxiosError(error) && error.response) {
         if (error.response.status === 429 || error.response.data.detail?.includes("quota") || error.response.data.detail?.includes("429")) {
           showToast("error", "Hệ thống đang bận (Quá tải). Vui lòng thử lại sau 30 giây.");
         } else {
@@ -479,7 +495,8 @@ export default function HomePage() {
         image_url: item.image_url,
         prompt: item.prompt,
         conversation_id: conv.id,
-        rating: item.rating
+        rating: item.rating,
+        is_new_generation: false
       }));
       setSession(messages);
     } catch (err) {
@@ -672,21 +689,45 @@ export default function HomePage() {
         <main className="flex-1 flex flex-col relative w-full z-10 transition-all duration-300 min-h-0">
           {/* Header: Solid Top Bar on Mobile, Floating Left on PC */}
           {!sidebarOpen && (
-            <div className="shrink-0 w-full sticky top-0 z-[100] flex items-center gap-3 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] bg-panel border-b border-panel-border shadow-sm md:fixed md:top-4 md:left-4 md:w-auto md:bg-transparent md:border-none md:shadow-none md:p-0 transition-all duration-300">
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="p-2 glass-button rounded-full hover:bg-glass-highlight transition-colors flex items-center justify-center w-10 h-10"
-                title="Mở menu"
-              >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-              </button>
-
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 flex items-center justify-center">
-                  <img src="/fruittext_logo.svg" alt="Logo" className="w-full h-full object-contain drop-shadow-sm" />
+            <div className="shrink-0 w-full sticky top-0 z-[100] flex items-center justify-center md:justify-start gap-3 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2 md:pb-0 pointer-events-none md:pointer-events-auto md:fixed md:top-4 md:left-4 md:w-auto md:bg-transparent md:border-none md:shadow-none transition-all duration-300">
+              
+              {/* Desktop Header Content (Classic) */}
+              <div className="hidden md:flex items-center gap-3">
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="p-2 glass-button rounded-full hover:bg-glass-highlight transition-colors flex items-center justify-center w-10 h-10"
+                  title="Mở menu"
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 flex items-center justify-center">
+                    <img src="/fruittext_logo.svg" alt="Logo" className="w-full h-full object-contain drop-shadow-sm" />
+                  </div>
+                  <span className="font-bold text-lg text-app-text tracking-tight">FruitText</span>
                 </div>
-                <span className="font-bold text-[17px] text-app-text tracking-tight uppercase md:normal-case md:text-lg">FruitText</span>
               </div>
+
+              {/* Mobile Header Content (iOS 16 Dynamic Island) */}
+              <div className="w-full flex md:hidden items-center justify-between gap-4 px-3 py-2 bg-white/80 dark:bg-[#1c1c1e]/80 backdrop-blur-2xl border border-white/20 dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.1)] rounded-full pointer-events-auto">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setSidebarOpen(true)}
+                    className="p-2 bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 rounded-full transition-all flex items-center justify-center w-10 h-10 shrink-0"
+                    title="Mở menu"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                  </button>
+                  <div className="flex items-center gap-2">
+                    <img src="/fruittext_logo.svg" alt="Logo" className="w-7 h-7 object-contain drop-shadow-sm" />
+                    <span className="font-semibold text-base tracking-tight text-app-text">FruitText AI</span>
+                  </div>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center text-xs font-semibold text-app-muted cursor-pointer hover:bg-black/10 dark:hover:bg-white/20 transition-all" onClick={() => setProfileVisible(true)}>
+                  {user?.full_name?.charAt(0).toUpperCase() || <Settings size={18} />}
+                </div>
+              </div>
+
             </div>
           )}
 
@@ -707,6 +748,7 @@ export default function HomePage() {
             input={input}
             setInput={setInput}
             onSend={handleSend}
+            onStop={handleStop}
             loading={loading}
             onImageSelect={handleImageSelect}
             selectedImagePreview={selectedImagePreview}

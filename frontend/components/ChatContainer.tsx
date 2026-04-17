@@ -8,32 +8,101 @@ import { Sparkles, Share2, Volume2, VolumeX, Facebook, Music, Copy, Star } from 
 import clsx from "clsx";
 
 // Typewriter hook: animates text character by character
-function useTypewriter(text: string, speed = 12, active = false) {
-    const [displayed, setDisplayed] = React.useState(active ? "" : text);
+function useTypewriter(text: string, speed = 12, active = false, delayMs = 0) {
+    const [currentIndex, setCurrentIndex] = React.useState(active ? 0 : text.length);
+    const [isTyping, setIsTyping] = React.useState(false);
+
     React.useEffect(() => {
-        if (!active) { setDisplayed(text); return; }
-        setDisplayed("");
+        if (!active) { 
+            setCurrentIndex(text.length); 
+            setIsTyping(false); 
+            return; 
+        }
+        setCurrentIndex(0);
+        setIsTyping(false);
         let i = 0;
-        const id = setInterval(() => {
-            i++;
-            setDisplayed(text.slice(0, i));
-            if (i >= text.length) clearInterval(id);
-        }, speed);
-        return () => clearInterval(id);
+        let id: string | number | NodeJS.Timeout;
+        
+        // Capping FPS to ~30 to prevent React from choking
+        const targetFpsInterval = 30;
+        const actualInterval = Math.max(speed, targetFpsInterval);
+        const charsPerTick = Math.max(1, Math.round(actualInterval / speed));
+
+        const startTimeout = setTimeout(() => {
+            if (text.length === 0) return;
+            setIsTyping(true);
+            id = setInterval(() => {
+                i += charsPerTick;
+                if (i >= text.length) {
+                    setCurrentIndex(text.length);
+                    setIsTyping(false);
+                    clearInterval(id as any);
+                } else {
+                    setCurrentIndex(i);
+                }
+            }, actualInterval);
+        }, delayMs);
+        
+        return () => {
+            clearTimeout(startTimeout);
+            if (id) clearInterval(id as any);
+        };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [text, active]);
-    return displayed;
+    }, [text, active, delayMs, speed]);
+    return { currentIndex, isTyping };
 }
 
 // Separated component so hooks are called at component level (not inside callback)
-function IntroText({ text, animate }: { text: string; animate: boolean }) {
-    const displayed = useTypewriter(text, 8, animate);
+function IntroText({ text, animate, delayMs = 0 }: { text: string; animate: boolean; delayMs?: number }) {
+    const { currentIndex, isTyping } = useTypewriter(text, 8, animate, delayMs);
+    
+    if (!animate) {
+        return (
+             <div className="text-[13px] md:text-sm text-app-text leading-relaxed whitespace-pre-line font-light tracking-wide mb-3">
+                {text}
+            </div>
+        );
+    }
+    
+    const typedText = text.slice(0, currentIndex);
+    const untypedText = text.slice(currentIndex);
+    
     return (
-        <div className="text-[13px] md:text-sm text-app-text leading-relaxed whitespace-pre-line font-light tracking-wide mb-3">
-            {displayed}
-            {animate && displayed.length < text.length && (
-                <span className="inline-block w-[2px] h-[1em] bg-current ml-[1px] align-middle animate-pulse" />
+        <div className="text-[13px] md:text-sm text-app-text leading-relaxed whitespace-pre-line font-light tracking-wide mb-3 break-words">
+            <span>{typedText}</span>
+            {isTyping && (
+                <span className="relative inline-block w-0 h-[1em] align-middle">
+                    <span className="absolute bottom-0 left-[1px] w-[2px] h-[1em] bg-current animate-pulse" />
+                </span>
             )}
+            <span className="opacity-0 pointer-events-none select-none">{untypedText}</span>
+        </div>
+    );
+}
+
+function MainContentText({ text, animate, delayMs = 0, className = "" }: { text: string; animate: boolean; delayMs?: number; className?: string }) {
+    const { currentIndex, isTyping } = useTypewriter(text, 5, animate, delayMs);
+    
+    if (!animate) {
+        return (
+             <div className={className}>
+                {text}
+            </div>
+        );
+    }
+    
+    const typedText = text.slice(0, currentIndex);
+    const untypedText = text.slice(currentIndex);
+    
+    return (
+        <div className={`${className} break-words`}>
+            <span>{typedText}</span>
+            {isTyping && (
+                <span className="relative inline-block w-0 h-[1em] align-middle">
+                    <span className="absolute bottom-0 left-[1px] w-[2px] h-[1em] bg-current animate-pulse" />
+                </span>
+            )}
+            <span className="opacity-0 pointer-events-none select-none">{untypedText}</span>
         </div>
     );
 }
@@ -70,9 +139,6 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     const scrollRef = React.useRef<HTMLDivElement>(null);
     const [ratingLoading, setRatingLoading] = React.useState<string | null>(null);
     const [hoveredStar, setHoveredStar] = React.useState<{ id: string, star: number } | null>(null);
-    // Track latest item key to apply animation only once per new response
-    const latestKey = session.length > 0 ? (session[session.length - 1].history_id || String(session.length - 1)) : null;
-
     React.useEffect(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -83,21 +149,71 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     // Only hide if we have history (session.length > 0) or if we are actively loading (sent a message)
     if (session.length === 0 && !loading) {
         return (
-            <div className="flex-1 overflow-y-auto px-4 py-8 pb-4 scroll-smooth custom-scrollbar relative z-10 w-full min-h-0">
-                <div className="flex-1 flex flex-col items-center justify-center min-h-full p-4 md:p-8 text-center">
-                    <div className="mb-8 md:mb-12">
-                        <div className="inline-block p-4 md:p-6 rounded-[32px] bg-panel backdrop-blur-xl border border-panel-border mb-4 md:mb-6 shadow-2xl">
-                            <img src="/fruittext_logo.svg" alt="App Logo" className="w-16 h-16 md:w-20 md:h-20 object-contain drop-shadow-lg" />
+            <div className="flex-1 overflow-y-auto px-4 py-8 pb-4 scroll-smooth custom-scrollbar relative z-10 w-full min-h-0 flex flex-col pt-24 md:pt-8">
+                
+                {/* ----------------- MOBILE VIEW (iOS 16 Style) ----------------- */}
+                <div className="flex-1 flex md:hidden flex-col items-center justify-start min-h-full p-4 text-center max-w-[800px] mx-auto w-full">
+                    {/* iOS 16 Style Hero Header */}
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mb-10 flex flex-col items-center"
+                    >
+                        <div className="relative mb-6">
+                            <div className="absolute inset-0 bg-blue-500/20 dark:bg-blue-400/10 blur-[40px] rounded-full scale-150 rotate-12" />
+                            <div className="relative p-5 inline-block rounded-[32px] bg-white/60 dark:bg-[#2c2c2e]/60 backdrop-blur-2xl border border-white/40 dark:border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.08)] transition-transform hover:scale-105 duration-500">
+                                <img src="/fruittext_logo.svg" alt="App Logo" className="w-20 h-20 object-contain drop-shadow-xl" />
+                            </div>
                         </div>
-                        <h1 className="text-3xl md:text-6xl font-thin tracking-tighter mb-4 text-app-text drop-shadow-xl">
+                        <h1 className="text-4xl font-[800] tracking-tighter mb-4 text-transparent bg-clip-text bg-gradient-to-br from-black to-black/60 dark:from-white dark:to-white/60">
+                            FruitText
+                        </h1>
+                        <p className="text-lg text-black/50 dark:text-white/50 font-medium tracking-tight max-w-[500px]">
+                            Viết content chỉ trong một chạm.
+                        </p>
+                    </motion.div>
+
+                    {/* iOS 16 Style Control Center / Focus Widgets */}
+                    <div className="grid grid-cols-1 gap-4 w-full mt-4">
+                        {[
+                            { title: "Phân tích ảnh", desc: "Tự động nhận diện trái cây", icon: "📸" },
+                            { title: "Bài đăng MXH", desc: "Tối ưu cho Facebook & TikTok", icon: "✨" }
+                        ].map((item, i) => (
+                            <motion.div
+                                key={i}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1 + (i * 0.1), type: "spring", damping: 20 }}
+                                className="relative overflow-hidden p-6 rounded-[32px] bg-white/40 dark:bg-[#1c1c1e]/40 backdrop-blur-3xl border border-white/50 dark:border-white/5 shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.08)] cursor-pointer group transition-all duration-300 hover:-translate-y-1"
+                            >
+                                <div className="absolute top-0 right-0 p-6 opacity-20 text-4xl group-hover:scale-125 transition-transform duration-500 group-hover:rotate-12">
+                                    {item.icon}
+                                </div>
+                                <div className="relative z-10 text-left flex flex-col h-full justify-end pt-12">
+                                    <span className="block text-2xl mb-2">{item.icon}</span>
+                                    <span className="block text-black/90 dark:text-white/90 font-bold tracking-tight text-xl mb-1">{item.title}</span>
+                                    <span className="block text-black/50 dark:text-white/50 font-medium tracking-tight text-sm">{item.desc}</span>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* ----------------- DESKTOP VIEW (Classic Style) ----------------- */}
+                <div className="flex-1 hidden md:flex flex-col items-center justify-center min-h-full p-8 text-center max-w-[800px] mx-auto w-full">
+                    <div className="mb-12">
+                        <div className="inline-block p-6 rounded-[32px] bg-panel backdrop-blur-xl border border-panel-border mb-6 shadow-2xl">
+                            <img src="/fruittext_logo.svg" alt="App Logo" className="w-20 h-20 object-contain drop-shadow-lg" />
+                        </div>
+                        <h1 className="text-6xl font-thin tracking-tighter mb-4 text-app-text drop-shadow-xl">
                             FruitText Xin Chào !
                         </h1>
-                        <p className="text-base md:text-xl text-app-muted font-light tracking-wide max-w-[500px] mx-auto">
+                        <p className="text-xl text-app-muted font-light tracking-wide max-w-[500px] mx-auto">
                             Bạn đã sẵn sàng tạo ra những mô tả cho sản phẩm tuyệt vời của bạn chưa?
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-[700px] mt-4">
+                    <div className="grid grid-cols-2 gap-4 w-full max-w-[700px] mt-4">
                         {[
                             { title: "Mô tả hình ảnh", desc: "Phân tích hình ảnh" },
                             { title: "Caption mạng xã hội", desc: "Cho Facebook & TikTok" }
@@ -107,14 +223,15 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: 0.3 + (i * 0.1) }}
-                                className="glass-button p-4 md:p-5 rounded-[20px] md:rounded-[24px] text-left cursor-pointer group"
+                                className="glass-button p-5 rounded-[24px] text-left cursor-pointer group"
                             >
-                                <span className="block text-app-text font-medium text-base md:text-lg">{item.title}</span>
-                                <span className="block text-app-muted text-xs md:text-sm mt-1">{item.desc}</span>
+                                <span className="block text-app-text font-medium text-lg">{item.title}</span>
+                                <span className="block text-app-muted text-sm mt-1">{item.desc}</span>
                             </motion.div>
                         ))}
                     </div>
                 </div>
+
             </div>
         );
     }
@@ -162,7 +279,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                     {/* Render History Messages */}
                     {session.map((item, index) => {
                         const itemKey = item.history_id || String(index);
-                        const isNew = itemKey === latestKey && !loading;
+                        const isNew = item.is_new_generation === true && !loading;
                         return (
                         <div key={itemKey} className="flex flex-col gap-6 md:gap-10">
                             {/* User Message ... */}
@@ -206,7 +323,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                                 transition={{ duration: 0.45, ease: "easeOut" }}
                                 className="flex gap-4 md:gap-6 items-start"
                             >
-                                <div className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center shrink-0 mt-1">
+                                <div className="hidden md:flex w-8 h-8 md:w-10 md:h-10 items-center justify-center shrink-0 mt-1">
                                     <img src="/fruittext_logo.svg" alt="AI" className="w-full h-full object-contain drop-shadow-md" />
                                 </div>
 
@@ -222,6 +339,9 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                                         const content = proSep >= 0 ? afterMain.slice(0, proSep).trim() : afterMain.trim();
                                         const proSuggestion = proSep >= 0 ? afterMain.slice(proSep + 9).trim() : "";
 
+                                        const contentDelay = isNew ? intro.length * 8 : 0;
+                                        const proDelay = isNew ? contentDelay + (content.length * 5) : 0;
+
                                         return (
                                             <>
                                                 {/* Conversational Intro with typewriter for new responses */}
@@ -232,22 +352,35 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                                                     <motion.div
                                                         initial={isNew ? { opacity: 0, y: 10 } : false}
                                                         animate={{ opacity: 1, y: 0 }}
-                                                        transition={{ duration: 0.4, delay: isNew ? 0.2 : 0, ease: "easeOut" }}
+                                                        transition={{ duration: 0.4, delay: isNew ? Math.min(contentDelay / 1000, 2) : 0, ease: "easeOut" }}
                                                         className="glass-panel rounded-xl p-4 md:p-5 shadow-sm transition-all"
                                                     >
-                                                        <div className="text-[13px] md:text-sm text-app-text leading-relaxed whitespace-pre-line font-sans tracking-wide">
-                                                            {content}
-                                                        </div>
+                                                        <MainContentText 
+                                                            text={content} 
+                                                            animate={isNew} 
+                                                            delayMs={contentDelay}
+                                                            className="text-[13px] md:text-sm text-app-text leading-relaxed whitespace-pre-line font-sans tracking-wide" 
+                                                        />
 
                                                         {/* Pro Suggestion Box - NOT copyable */}
                                                         {proSuggestion && (
-                                                            <div className="mt-3 rounded-xl p-4 border border-yellow-500/40 dark:border-yellow-500/30 bg-yellow-50 dark:bg-yellow-500/10 shadow-sm">
+                                                            <motion.div 
+                                                                initial={isNew ? { opacity: 0 } : false}
+                                                                animate={{ opacity: 1 }}
+                                                                transition={{ delay: isNew ? Math.min(proDelay / 1000, 3) : 0 }}
+                                                                className="mt-3 rounded-xl p-4 border border-yellow-500/40 dark:border-yellow-500/30 bg-yellow-50 dark:bg-yellow-500/10 shadow-sm"
+                                                            >
                                                                 <div className="flex items-center gap-1.5 mb-2">
                                                                     <Sparkles size={14} className="text-yellow-600 dark:text-yellow-400" />
                                                                     <span className="text-[11px] font-bold text-yellow-700 dark:text-yellow-400 uppercase tracking-wider">Gợi ý Pro</span>
                                                                 </div>
-                                                                <p className="text-[13px] md:text-sm text-yellow-900 dark:text-yellow-100/90 leading-relaxed whitespace-pre-line">{proSuggestion}</p>
-                                                            </div>
+                                                                <MainContentText 
+                                                                    text={proSuggestion} 
+                                                                    animate={isNew} 
+                                                                    delayMs={proDelay}
+                                                                    className="text-[13px] md:text-sm text-yellow-900 dark:text-yellow-100/90 leading-relaxed whitespace-pre-line" 
+                                                                />
+                                                            </motion.div>
                                                         )}
 
                                                         {/* Actions for Content Only */}
@@ -405,13 +538,17 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="flex gap-6 items-start"
+                            className="flex gap-4 md:gap-6 items-start"
                         >
-                            <div className="w-10 h-10 flex items-center justify-center shrink-0 mt-1">
-                                <img src="/fruittext_logo.svg" alt="AI" className="w-full h-full object-contain drop-shadow-md" />
+                            <div className="hidden md:flex w-8 h-8 md:w-10 md:h-10 items-center justify-center shrink-0 mt-1">
+                                <motion.div
+                                    animate={{ opacity: [0.3, 0.7, 0.3] }}
+                                    transition={{ repeat: Infinity, duration: 1.5 }}
+                                    className="w-full h-full bg-glass-highlight rounded-full"
+                                />
                             </div>
 
-                            <div className="flex-1 space-y-3">
+                            <div className="flex-1 space-y-3 mt-2">
                                 <motion.div
                                     animate={{ opacity: [0.3, 0.7, 0.3] }}
                                     transition={{ repeat: Infinity, duration: 1.5 }}

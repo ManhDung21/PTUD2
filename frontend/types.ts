@@ -8,6 +8,7 @@ export interface DescriptionResponse {
     prompt?: string | null;
     conversation_id?: string | null;
     rating?: number | null;
+    is_new_generation?: boolean;
 }
 
 export interface HistoryItem {
