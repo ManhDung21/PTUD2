@@ -11,7 +11,7 @@ import { SettingsModal } from "../components/SettingsModal";
 import { PricingModal } from "../components/PricingModal";
 import { FruitPatternBg } from "../components/FruitPatternBg";
 import { AuthMode, DescriptionResponse, HistoryItem, User, ToastState, Conversation } from "../types";
-import { Camera, RefreshCw, Send, Settings, Moon, Sun, Monitor, Zap, ExternalLink, LogOut, ChevronLeft, ArrowRight, Download, Eye, Link, Mic, Crown, Square } from "lucide-react";
+import { Camera, RefreshCw, Send, Settings, Moon, Sun, Monitor, Zap, ExternalLink, LogOut, ChevronLeft, ArrowRight, Download, Eye, Link, Mic, Crown, Square, LogIn } from "lucide-react";
 import { UserGuideModal } from "../components/UserGuideModal";
 import { PaymentMethodModal } from "../components/PaymentMethodModal";
 import { PaymentQRModal } from "../components/PaymentQRModal";
@@ -733,13 +733,13 @@ export default function HomePage() {
                 </div>
                 <div 
                   className="w-10 h-10 rounded-full overflow-hidden bg-black/5 dark:bg-white/10 flex items-center justify-center text-xs font-semibold text-app-muted cursor-pointer hover:bg-black/10 dark:hover:bg-white/20 transition-all" 
-                  onClick={() => setSettingsVisible(true)}
-                  title="Cài đặt thông tin"
+                  onClick={() => user ? setSettingsVisible(true) : setAuthVisible(true)}
+                  title={user ? "Cài đặt thông tin" : "Đăng nhập"}
                 >
                   {user?.avatar_url ? (
                      <img src={`${user.avatar_url}?t=${Date.now()}`} alt="User" className="w-full h-full object-cover" />
                   ) : (
-                     user?.full_name?.charAt(0).toUpperCase() || <Settings size={18} />
+                     user?.full_name?.charAt(0).toUpperCase() || (user ? <Settings size={18} /> : <LogIn size={18} />)
                   )}
                 </div>
               </div>
