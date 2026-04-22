@@ -301,7 +301,7 @@ export default function AdminPage() {
         }
     };
 
-    const handleUpdatePlan = async (userId: string, newPlan: 'free' | 'plus' | 'pro') => {
+    const handleUpdatePlan = async (userId: string, newPlan: 'free' | 'plus' | 'pro' | 'pro_3m' | 'pro_6m') => {
         try {
             const token = localStorage.getItem("token");
             await axios.put(

@@ -204,7 +204,7 @@ async def update_user_plan(
     if not ObjectId.is_valid(user_id):
         raise HTTPException(status_code=400, detail="Invalid ID")
     
-    if plan_update.plan_type not in ["free", "plus", "pro"]:
+    if plan_update.plan_type not in ["free", "plus", "pro", "pro_3m", "pro_6m"]:
         raise HTTPException(status_code=400, detail="Invalid plan type")
 
     update_data = {"plan_type": plan_update.plan_type}
@@ -212,7 +212,12 @@ async def update_user_plan(
     
     if plan_update.plan_type != "free":
         update_data["subscription_status"] = "active"
-        update_data["subscription_end_date"] = datetime.utcnow() + timedelta(days=30)
+        days = 30
+        if plan_update.plan_type == "pro_3m":
+            days = 90
+        elif plan_update.plan_type == "pro_6m":
+            days = 180
+        update_data["subscription_end_date"] = datetime.utcnow() + timedelta(days=days)
     else:
         update_data["subscription_status"] = "none"
         update_data["subscription_end_date"] = None
