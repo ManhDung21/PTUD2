@@ -283,18 +283,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                                 </div>
                                             )}
                                         </div>
-                                        {!(user.role === 'admin' || user.plan_type?.startsWith('pro')) && (
-                                            <button
-                                                onClick={() => {
-                                                    onClose();
-                                                    onOpenPricing();
-                                                }}
-                                                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-purple-500/20 hover:scale-105 transition-transform flex items-center gap-2"
-                                            >
-                                                <Sparkles size={16} />
-                                                Nâng cấp
-                                            </button>
-                                        )}
+                                        <button
+                                            onClick={() => {
+                                                onClose();
+                                                onOpenPricing();
+                                            }}
+                                            className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-purple-500/20 hover:scale-105 transition-transform flex items-center gap-2"
+                                        >
+                                            <Sparkles size={16} />
+                                            {user.plan_type?.startsWith('pro') ? "Gia hạn" : "Nâng cấp"}
+                                        </button>
                                     </div>
 
                                     {user.role === 'admin' && (
