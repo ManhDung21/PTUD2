@@ -164,11 +164,31 @@ export default function HomePage() {
       const urlParams = new URLSearchParams(window.location.search);
       const success = urlParams.get('success');
       const canceled = urlParams.get('canceled');
+      const orderCode = urlParams.get('orderCode');
 
       if (success === 'true') {
-        showToast("success", "Thanh toán giao dịch thành công! Tài khoản của bạn đang được nâng cấp.");
-        // Gỡ query parameter ra khỏi url để không bị hiển thị lại
-        window.history.replaceState({}, '', window.location.pathname);
+        const verifyPayment = async () => {
+          if (orderCode) {
+            try {
+              // Automatically trigger manual verification to handle cases where webhook fails or is delayed
+              await axios.get(`${API_BASE_URL}/api/payments/verify-payos/${orderCode}`);
+            } catch (err) {
+              console.error("Verification error:", err);
+            }
+          }
+          
+          showToast("success", "Thanh toán giao dịch thành công! Tài khoản của bạn đang được nâng cấp.");
+          
+          // Refetch user data immediately to update UI
+          const storedToken = localStorage.getItem("token");
+          if (storedToken) {
+            fetchProtectedData(storedToken);
+          }
+          
+          // Clear query parameters
+          window.history.replaceState({}, '', window.location.pathname);
+        };
+        verifyPayment();
       } else if (canceled === 'true') {
         showToast("error", "Giao dịch thanh toán đã bị hủy bỏ.");
         window.history.replaceState({}, '', window.location.pathname);

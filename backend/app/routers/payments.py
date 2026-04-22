@@ -307,6 +307,35 @@ async def momo_webhook_received(request: Request, db: Database = Depends(get_dat
         raise HTTPException(status_code=400, detail="Invalid request")
 
 
+@router.get("/verify-payos/{order_code}")
+async def verify_payos_payment(order_code: int, db: Database = Depends(get_database), settings = Depends(get_settings)):
+    try:
+        payos = PayOS(
+            client_id=settings.payos_client_id,
+            api_key=settings.payos_api_key,
+            checksum_key=settings.payos_checksum_key
+        )
+        payment_info = payos.getPaymentLinkInformation(order_code)
+        
+        if payment_info.status == "PAID":
+            # Find the pending payment
+            payment = db["payments"].find_one({"payos_order_code": order_code, "status": "pending"})
+            if payment:
+                await handle_successful_payment(
+                    user_id=payment["user_id"],
+                    plan_type=payment["plan_type"],
+                    db=db,
+                    payment_id=payment["_id"],
+                    is_stripe=False
+                )
+                return {"success": True, "message": "Payment verified and updated"}
+            return {"success": True, "message": "Payment already processed or not found"}
+        
+        return {"success": False, "message": f"Payment status: {payment_info.status}"}
+    except Exception as e:
+        print("Verify PayOS Exception:", str(e))
+        return {"success": False, "message": str(e)}
+
 async def handle_stripe_checkout(session, db: Database):
     user_id_str = session.get('metadata', {}).get('user_id')
     plan_type = session.get('metadata', {}).get('plan_type')
