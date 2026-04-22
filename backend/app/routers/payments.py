@@ -193,7 +193,7 @@ async def create_payos_payment(
     payment_data = PaymentData(
         orderCode=order_code,
         amount=amount,
-        description=f"{current_user.get('email', 'User')} mua {plan_name}"[:25],
+        description=f"Thanh toan {plan_name}".replace(" ", "")[:25], # Ensure safe string
         items=[item],
         cancelUrl=settings.frontend_url + '/?canceled=true',
         returnUrl=settings.frontend_url + '/?success=true'
