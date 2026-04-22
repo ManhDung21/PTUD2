@@ -43,6 +43,7 @@ export default function AdminPage() {
     // Filter State
     const [filters, setFilters] = useState({
         role: "all",
+        plan: "all",
         source: "all"
     });
 
@@ -183,6 +184,7 @@ export default function AdminPage() {
                 skip,
                 limit: queryParams.limit,
                 role: filters.role !== 'all' ? filters.role : undefined,
+                plan: filters.plan !== 'all' ? filters.plan : undefined,
                 source: filters.source !== 'all' ? filters.source : undefined
             };
 
@@ -613,18 +615,32 @@ export default function AdminPage() {
                                         <div className="p-6 border-b border-panel-border flex justify-between items-center bg-panel">
                                             <div className="flex items-center gap-4">
                                                 <h2 className="text-lg font-bold flex items-center gap-2 text-app-text"><Users size={18} className="text-blue-400" /> Registered Users</h2>
-                                                <select
-                                                    value={filters.role}
-                                                    onChange={(e) => setFilters(prev => ({ ...prev, role: e.target.value }))}
-                                                    className={clsx(
-                                                        "text-xs font-medium px-2 py-1 rounded border outline-none cursor-pointer transition-colors",
-                                                        isDarkMode ? "bg-[#1a1a1a] border-white/10 text-gray-300 focus:border-blue-500" : "bg-white border-gray-200 text-gray-700 focus:border-blue-500"
-                                                    )}
-                                                >
-                                                    <option value="all" className={isDarkMode ? "bg-[#1a1a1a]" : "bg-white"}>Tất cả vai trò</option>
-                                                    <option value="admin" className={isDarkMode ? "bg-[#1a1a1a]" : "bg-white"}>Admin</option>
-                                                    <option value="user" className={isDarkMode ? "bg-[#1a1a1a]" : "bg-white"}>User</option>
-                                                </select>
+                                                <div className="flex items-center gap-2">
+                                                    <select
+                                                        value={filters.plan}
+                                                        onChange={(e) => setFilters(prev => ({ ...prev, plan: e.target.value }))}
+                                                        className={clsx(
+                                                            "text-xs font-medium px-2 py-1 rounded border outline-none cursor-pointer transition-colors",
+                                                            isDarkMode ? "bg-[#1a1a1a] border-white/10 text-gray-300 focus:border-blue-500" : "bg-white border-gray-200 text-gray-700 focus:border-blue-500"
+                                                        )}
+                                                    >
+                                                        <option value="all" className={isDarkMode ? "bg-[#1a1a1a]" : "bg-white"}>Tất cả gói</option>
+                                                        <option value="free" className={isDarkMode ? "bg-[#1a1a1a]" : "bg-white"}>Free</option>
+                                                        <option value="pro_all" className={isDarkMode ? "bg-[#1a1a1a]" : "bg-white"}>Pro (Tất cả)</option>
+                                                    </select>
+                                                    <select
+                                                        value={filters.role}
+                                                        onChange={(e) => setFilters(prev => ({ ...prev, role: e.target.value }))}
+                                                        className={clsx(
+                                                            "text-xs font-medium px-2 py-1 rounded border outline-none cursor-pointer transition-colors",
+                                                            isDarkMode ? "bg-[#1a1a1a] border-white/10 text-gray-300 focus:border-blue-500" : "bg-white border-gray-200 text-gray-700 focus:border-blue-500"
+                                                        )}
+                                                    >
+                                                        <option value="all" className={isDarkMode ? "bg-[#1a1a1a]" : "bg-white"}>Tất cả vai trò</option>
+                                                        <option value="admin" className={isDarkMode ? "bg-[#1a1a1a]" : "bg-white"}>Admin</option>
+                                                        <option value="user" className={isDarkMode ? "bg-[#1a1a1a]" : "bg-white"}>User</option>
+                                                    </select>
+                                                </div>
                                             </div>
                                             <span className={clsx("text-xs uppercase tracking-wider font-bold", isDarkMode ? "text-gray-500" : "text-gray-600")}>{users.length} Records</span>
                                         </div>

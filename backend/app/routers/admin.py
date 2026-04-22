@@ -20,6 +20,7 @@ def get_admin_user(current_user: UserDocument = Depends(get_current_user)) -> Us
 async def get_all_users(
     search: str = None,
     role: str = None,
+    plan: str = None,
     skip: int = 0,
     limit: int = 50,
     db: Database = Depends(get_database),
@@ -35,6 +36,13 @@ async def get_all_users(
     
     if role and role != "all":
         query["role"] = role
+        
+    if plan and plan != "all":
+        # If the plan is 'pro_all', match any pro plan
+        if plan == "pro_all":
+            query["plan_type"] = {"$regex": "^pro"}
+        else:
+            query["plan_type"] = plan
     
     users_cursor = db.users.find(query).sort("created_at", -1).skip(skip).limit(limit)
     users = []
