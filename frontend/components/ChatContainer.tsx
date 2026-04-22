@@ -240,7 +240,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
         setRatingLoading(historyId);
         try {
             // Check if user is logged in
-            const token = sessionStorage.getItem("token");
+            const token = localStorage.getItem("token");
             if (!token) {
                 if (showToast) {
                     showToast("error", "Vui lòng đăng nhập để đánh giá");

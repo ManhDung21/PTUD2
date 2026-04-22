@@ -62,7 +62,7 @@ export function AdminPlans({ isDarkMode, showToast }: AdminPlansProps) {
 
     const handleSave = async (id: string) => {
         try {
-            const token = sessionStorage.getItem("token");
+            const token = localStorage.getItem("token");
             await axios.put(
                 `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/plans/${id}`,
                 editForm,

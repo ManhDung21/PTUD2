@@ -61,9 +61,10 @@ export default function HomePage() {
   const [qrType, setQrType] = useState<'bank' | 'momo'>('bank');
   const [selectedPlanPrice, setSelectedPlanPrice] = useState("");
   const [selectedPlanName, setSelectedPlanName] = useState("");
+  const [selectedPlanAmountVnd, setSelectedPlanAmountVnd] = useState<number | null>(null);
 
   // Upgrade Handler (Step 1: Open Payment Method Select)
-  const handleUpgradeClick = (planId: string, priceText: string, planName: string) => {
+  const handleUpgradeClick = (planId: string, priceText: string, planName: string, amountVnd?: number) => {
     setPricingVisible(false);
 
     if (!user || !token) {
@@ -76,6 +77,7 @@ export default function HomePage() {
     setSelectedPlan(planId as any);
     setSelectedPlanPrice(priceText);
     setSelectedPlanName(planName);
+    setSelectedPlanAmountVnd(amountVnd || null);
     setPaymentMethodVisible(true);
   };
 
@@ -176,7 +178,7 @@ export default function HomePage() {
 
   // --- Initial Data Loading ---
   useEffect(() => {
-    const storedToken = typeof window !== "undefined" ? sessionStorage.getItem("token") : null;
+    const storedToken = typeof window !== "undefined" ? localStorage.getItem("token") : null;
     if (storedToken) {
       setToken(storedToken);
       fetchProtectedData(storedToken);
@@ -195,7 +197,7 @@ export default function HomePage() {
     } catch (err: any) {
       if (err?.response?.status === 401) {
         setToken(null);
-        sessionStorage.removeItem("token");
+        localStorage.removeItem("token");
       }
     }
   };
@@ -326,7 +328,7 @@ export default function HomePage() {
       });
       const accessToken = res.data.access_token;
       setToken(accessToken);
-      sessionStorage.setItem("token", accessToken);
+      localStorage.setItem("token", accessToken);
       await fetchProtectedData(accessToken);
       setAuthVisible(false);
       showToast("success", "Đăng nhập thành công");
@@ -407,16 +409,16 @@ export default function HomePage() {
     setUser(null);
     setConversations([]);
     setSession([]);
-    sessionStorage.removeItem("token");
+    localStorage.removeItem("token");
     setProfileVisible(false);
     showToast("success", "Đã đăng xuất");
   };
 
-  const handleUpdateProfile = async (data: { full_name?: string; phone_number?: string; address?: string; plan_type?: 'free' | 'plus' | 'pro' }) => {
+  const handleUpdateProfile = async (data: { full_name?: string; phone_number?: string; address?: string; plan_type?: 'free' | 'plus' | 'pro' | 'pro_3m' | 'pro_6m' }) => {
     try {
       if (!token) return;
 
-      const res = await axios.put<{ full_name: string; phone_number: string; email: string; address?: string; plan_type?: 'free' | 'plus' | 'pro' }>(`${API_BASE_URL}/auth/profile`, data, {
+      const res = await axios.put<{ full_name: string; phone_number: string; email: string; address?: string; plan_type?: 'free' | 'plus' | 'pro' | 'pro_3m' | 'pro_6m' }>(`${API_BASE_URL}/auth/profile`, data, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -841,6 +843,7 @@ export default function HomePage() {
           onClose={() => setQrModalVisible(false)}
           type={qrType}
           amount={selectedPlanPrice || '149.000đ'}
+          amountVnd={selectedPlanAmountVnd}
           description={`Thanh toan goi ${selectedPlanName || selectedPlan}`}
           user={user}
         />

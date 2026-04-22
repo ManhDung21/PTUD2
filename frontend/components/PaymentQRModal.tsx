@@ -9,6 +9,7 @@ interface PaymentQRModalProps {
     onClose: () => void;
     type: 'bank' | 'momo';
     amount: string;
+    amountVnd?: number | null;
     description: string;
     user: User | null;
 }
@@ -18,6 +19,7 @@ export const PaymentQRModal: React.FC<PaymentQRModalProps> = ({
     onClose,
     type,
     amount,
+    amountVnd,
     description,
     user
 }) => {
@@ -46,9 +48,12 @@ export const PaymentQRModal: React.FC<PaymentQRModalProps> = ({
         setTimeout(() => setCopied(null), 2000);
     };
 
+    // Use amountVnd if available, otherwise fallback to parsing string amount
+    const numericAmount = amountVnd ? amountVnd.toString() : amount.replace(/\D/g, '');
+
     // Chuỗi dữ liệu QR cơ bản theo định dạng Momo Cá Nhân (hoặc chuyển khoản text)
     // Nếu bạn có ảnh QR MoMo thật tải về từ app, bạn có thể lưu nó vào thư mục public/ và thay bằng "/momo-qr.png"
-    const momoQRData = `2|99|${accountInfo.number}|${accountInfo.name}|${transferContent}|0|0|${amount.replace(/\D/g, '')}`;
+    const momoQRData = `2|99|${accountInfo.number}|${accountInfo.name}|${transferContent}|0|0|${numericAmount}`;
 
     // MoMo gần đây chặn các tham số action=p2p truyền nội dung. Cách an toàn nhất là truyền chuỗi mã hóa QR nội bộ trực tiếp
     const momoDeepLink = `momo://?action=payWithApp&isScanQR=true&qrcode=${encodeURIComponent(momoQRData)}`;
@@ -57,7 +62,7 @@ export const PaymentQRModal: React.FC<PaymentQRModalProps> = ({
     // In production, this would be a real VietQR or Momo QR
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
         type === 'bank'
-            ? `00020101021238570010A00000072701270006970423011319036789123450208QRIBFTTA5303704540${amount.replace(/\D/g, '')}5802VN62150811${transferContent}6304`
+            ? `00020101021238570010A00000072701270006970423011319036789123450208QRIBFTTA5303704540${numericAmount}5802VN62150811${transferContent}6304`
             : momoDeepLink
     )}`;
 

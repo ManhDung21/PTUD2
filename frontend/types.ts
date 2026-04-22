@@ -48,7 +48,7 @@ export interface User {
     avatar_url: string | null;
     created_at: string;
     role?: string;
-    plan_type?: 'free' | 'plus' | 'pro';
+    plan_type?: 'free' | 'plus' | 'pro' | 'pro_3m' | 'pro_6m';
     subscription_status?: string;
     subscription_end_date?: string | null;
     stripe_customer_id?: string | null;

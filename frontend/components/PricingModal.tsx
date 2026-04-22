@@ -7,7 +7,7 @@ import clsx from 'clsx';
 interface PricingModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onUpgrade: (planId: string, priceStr: string, nameStr: string) => void;
+    onUpgrade: (planId: string, priceStr: string, nameStr: string, amountVnd?: number) => void;
     currentPlan: string;
     role?: string;
 }
@@ -213,7 +213,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onU
                                 </div>
 
                                 <button
-                                    onClick={() => !plan.disabled && onUpgrade(plan.id, plan.price, plan.name)}
+                                    onClick={() => !plan.disabled && onUpgrade(plan.id, plan.price, plan.name, plan.amount_vnd)}
                                     disabled={plan.disabled}
                                     className={clsx(
                                         "w-full py-3 rounded-xl font-bold text-sm transition-all",

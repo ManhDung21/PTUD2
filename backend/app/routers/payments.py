@@ -341,13 +341,11 @@ async def handle_successful_payment(user_id, plan_type: str, db: Database, payme
         days = 180
     end_date = now + timedelta(days=days)
     
-    display_plan = "pro" if plan_type in ["pro_3m", "pro_6m"] else plan_type
-    
     db["users"].update_one(
         {"_id": user_id},
         {"$set": {
             "role": "user",
-            "plan_type": display_plan,      # Gói hiển thị
+            "plan_type": plan_type,      # Lưu chính xác gói (pro, pro_3m, pro_6m)
             "subscription_status": "active",
             "subscription_end_date": end_date
         }}

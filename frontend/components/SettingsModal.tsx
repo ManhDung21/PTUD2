@@ -10,7 +10,7 @@ interface SettingsModalProps {
     isOpen: boolean;
     onClose: () => void;
     user: User | null;
-    onUpdateProfile: (data: { full_name?: string; phone_number?: string; address?: string; plan_type?: 'free' | 'plus' | 'pro' }) => Promise<void>;
+    onUpdateProfile: (data: { full_name?: string; phone_number?: string; address?: string; plan_type?: 'free' | 'plus' | 'pro' | 'pro_3m' | 'pro_6m' }) => Promise<void>;
     isDarkMode: boolean;
     onToggleTheme: () => void;
     onUpdateAvatar: (file: File) => Promise<void>;
@@ -227,10 +227,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                                             onClick={() => setIsPlanDropdownOpen(!isPlanDropdownOpen)}
                                                             className={clsx(
                                                                 "flex items-center gap-1 font-bold text-lg cursor-pointer hover:opacity-80 transition-opacity",
-                                                                (user.plan_type === 'pro' || !user.plan_type) ? "text-purple-600" :
+                                                                (user.plan_type === 'pro' || user.plan_type === 'pro_3m' || user.plan_type === 'pro_6m' || !user.plan_type) ? "text-purple-600" :
                                                                     user.plan_type === 'plus' ? "text-blue-500" : "text-gray-500"
                                                             )}>
-                                                            {user.plan_type ? user.plan_type.toUpperCase() : 'PRO'}
+                                                            {user.plan_type ? user.plan_type.toUpperCase().replace('_', ' ') : 'PRO'}
                                                             <ChevronDown size={14} />
                                                         </button>
 
@@ -239,7 +239,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                                             <>
                                                                 <div className="fixed inset-0 z-40" onClick={() => setIsPlanDropdownOpen(false)} />
                                                                 <div className="absolute top-full left-0 mt-2 w-32 bg-white dark:bg-gray-800 border border-black/10 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
-                                                                    {(['free', 'plus', 'pro'] as const).map((plan) => (
+                                                                    {(['free', 'plus', 'pro', 'pro_3m', 'pro_6m'] as const).map((plan) => (
                                                                         <button
                                                                             key={plan}
                                                                             onClick={() => {
@@ -248,12 +248,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                                                             }}
                                                                             className={clsx(
                                                                                 "w-full text-left px-4 py-2.5 text-sm font-bold hover:bg-black/5 dark:hover:bg-white/5 transition-colors flex items-center justify-between",
-                                                                                plan === 'pro' ? "text-purple-500 dark:text-purple-400" :
+                                                                                plan.startsWith('pro') ? "text-purple-500 dark:text-purple-400" :
                                                                                     plan === 'plus' ? "text-blue-500 dark:text-blue-400" : "text-gray-600 dark:text-gray-300",
                                                                                 user.plan_type === plan && "bg-black/5 dark:bg-white/10"
                                                                             )}
                                                                         >
-                                                                            {plan.toUpperCase()}
+                                                                            {plan.toUpperCase().replace('_', ' ')}
                                                                             {user.plan_type === plan && <div className="w-1.5 h-1.5 rounded-full bg-current" />}
                                                                         </button>
                                                                     ))}
@@ -263,17 +263,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                                     </div>
                                                 ) : (
                                                     <span className={clsx(
-                                                        "font-bold text-lg",
-                                                        (user.plan_type === 'pro') ? "text-yellow-500" :
+                                                        "font-bold text-lg uppercase",
+                                                        (user.plan_type?.startsWith('pro')) ? "text-yellow-500" :
                                                             (user.plan_type === 'plus') ? "text-blue-500" :
                                                                 "text-gray-500"
                                                     )}>
-                                                        {(user.plan_type === 'pro') ? 'PRO' :
-                                                            (user.plan_type === 'plus') ? 'PLUS' : 'FREE'}
+                                                        {user.plan_type ? user.plan_type.replace('_', ' ') : 'FREE'}
                                                     </span>
                                                 )}
 
-                                                {(user.role === 'admin' || user.plan_type === 'pro') && (
+                                                {(user.role === 'admin' || user.plan_type?.startsWith('pro')) && (
                                                     <Crown size={16} className={user.role === 'admin' ? "text-purple-600" : "text-yellow-500"} />
                                                 )}
                                             </div>
@@ -284,7 +283,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                                 </div>
                                             )}
                                         </div>
-                                        {!(user.role === 'admin' || user.plan_type === 'pro') && (
+                                        {!(user.role === 'admin' || user.plan_type?.startsWith('pro')) && (
                                             <button
                                                 onClick={() => {
                                                     onClose();

@@ -43,7 +43,7 @@ export default function AdminLoginPage() {
             });
 
             const { access_token } = res.data;
-            sessionStorage.setItem("token", access_token);
+            localStorage.setItem("token", access_token);
 
             // Verify admin role
             axios.defaults.headers.common.Authorization = `Bearer ${access_token}`;
@@ -54,7 +54,7 @@ export default function AdminLoginPage() {
             } else {
                 console.log("Login failed. Role:", meRes.data.role);
                 setError(`Authorized, but not an Admin. (Current role: ${meRes.data.role})`);
-                sessionStorage.removeItem("token");
+                localStorage.removeItem("token");
             }
         } catch (err: any) {
             setError(err.response?.data?.detail || "Login failed");

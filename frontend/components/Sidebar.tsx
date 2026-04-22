@@ -292,7 +292,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                 <div className="flex-1 min-w-0">
                                     <div className="font-bold text-sm text-app-text truncate flex items-center gap-2">
                                         {user.full_name}
-                                        {user.plan_type === 'pro' && <Crown size={12} className="text-purple-500" />}
+                                        {user.plan_type?.startsWith('pro') && <Crown size={12} className="text-purple-500" />}
                                     </div>
                                     <div className="text-xs text-app-muted truncate">{user.email}</div>
                                 </div>
@@ -302,18 +302,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             {/* Plan Status & Upgrade */}
                             <div className="flex items-center justify-between px-2">
                                 <span className={clsx(
-                                    "text-[10px] font-bold px-2 py-0.5 rounded-full border",
+                                    "text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase",
                                     (user.role === 'admin') ? "bg-purple-500/10 text-purple-500 border-purple-500/20" :
-                                        (user.plan_type === 'pro') ? "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" :
+                                        (user.plan_type?.startsWith('pro')) ? "bg-yellow-500/10 text-yellow-500 border-yellow-500/20" :
                                             (user.plan_type === 'plus') ? "bg-blue-500/10 text-blue-500 border-blue-500/20" :
                                                 "bg-gray-500/10 text-gray-500 border-gray-500/20"
                                 )}>
                                     {user.role === 'admin' ? 'ADMIN' :
-                                        (user.plan_type === 'pro') ? 'PRO' :
-                                            (user.plan_type === 'plus') ? 'PLUS' : 'FREE'}
+                                        user.plan_type ? user.plan_type.replace('_', ' ') : 'FREE'}
                                 </span>
 
-                                {user.plan_type !== 'pro' && (
+                                {(!user.plan_type?.startsWith('pro')) && (
                                     <button
                                         onClick={onOpenPricing}
                                         className="text-[10px] font-bold text-purple-500 hover:text-purple-400 flex items-center gap-1 transition-colors"

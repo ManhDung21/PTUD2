@@ -143,7 +143,7 @@ export default function AdminPage() {
 
     const fetchInitialData = async () => {
         try {
-            const token = sessionStorage.getItem("token");
+            const token = localStorage.getItem("token");
             if (!token) {
                 router.push("/admin/login");
                 return;
@@ -194,7 +194,7 @@ export default function AdminPage() {
             // Let's optimize to fetch based on active tab or just fetch both. 
             // The original code fetched both. Let's stick to that but applying filters where relevant.
 
-            const token = sessionStorage.getItem("token");
+            const token = localStorage.getItem("token");
             if (!token) {
                 setTableLoading(false);
                 return;
@@ -218,7 +218,7 @@ export default function AdminPage() {
     const fetchAnalytics = async () => {
         try {
             setAnalyticsLoading(true);
-            const token = sessionStorage.getItem("token");
+            const token = localStorage.getItem("token");
             if (!token) {
                 setAnalyticsLoading(false);
                 return;
@@ -280,7 +280,7 @@ export default function AdminPage() {
 
     const handleUpdateRole = async (userId: string, newRole: string) => {
         try {
-            const token = sessionStorage.getItem("token");
+            const token = localStorage.getItem("token");
             await axios.put(
                 `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/users/${userId}/role`,
                 { role: newRole },
@@ -300,7 +300,7 @@ export default function AdminPage() {
 
     const handleUpdatePlan = async (userId: string, newPlan: 'free' | 'plus' | 'pro') => {
         try {
-            const token = sessionStorage.getItem("token");
+            const token = localStorage.getItem("token");
             await axios.put(
                 `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/users/${userId}/plan`,
                 { plan_type: newPlan },
@@ -657,11 +657,11 @@ export default function AdminPage() {
                                                             <td className="p-4">
                                                                 <select
                                                                     value={u.plan_type || 'free'}
-                                                                    onChange={(e) => handleUpdatePlan(u.id, e.target.value as 'free' | 'plus' | 'pro')}
+                                                                    onChange={(e) => handleUpdatePlan(u.id, e.target.value as any)}
                                                                     className={clsx(
                                                                         "border rounded px-2 py-1 text-[11px] font-bold uppercase cursor-pointer outline-none focus:border-blue-500 transition-colors",
                                                                         isDarkMode ? "bg-[#1a1a1a] border-white/10" : "bg-white border-gray-200",
-                                                                        u.plan_type === 'pro' ? "text-purple-500 border-purple-500/30" :
+                                                                        u.plan_type?.startsWith('pro') ? "text-purple-500 border-purple-500/30" :
                                                                             u.plan_type === 'plus' ? "text-blue-500 border-blue-500/30" :
                                                                                 (isDarkMode ? "text-gray-400" : "text-gray-600")
                                                                     )}
@@ -669,6 +669,8 @@ export default function AdminPage() {
                                                                     <option value="free" className={isDarkMode ? "bg-[#1a1a1a]" : "bg-white"}>FREE</option>
                                                                     <option value="plus" className={isDarkMode ? "bg-[#1a1a1a]" : "bg-white"}>PLUS</option>
                                                                     <option value="pro" className={isDarkMode ? "bg-[#1a1a1a]" : "bg-white"}>PRO</option>
+                                                                    <option value="pro_3m" className={isDarkMode ? "bg-[#1a1a1a]" : "bg-white"}>PRO 3 THÁNG</option>
+                                                                    <option value="pro_6m" className={isDarkMode ? "bg-[#1a1a1a]" : "bg-white"}>PRO 6 THÁNG</option>
                                                                 </select>
                                                                 {u.subscription_end_date && u.plan_type !== 'free' && (
                                                                     <div className={clsx("text-[10px] mt-1.5 font-medium flex items-center gap-1", isDarkMode ? "text-gray-500" : "text-gray-500")}>
