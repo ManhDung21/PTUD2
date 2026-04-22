@@ -60,6 +60,9 @@ def generate_reset_token(length: int = 6) -> tuple[str, str]:
     token_hash = hashlib.sha256(token.encode()).hexdigest()
     return token, token_hash
 
+def match_reset_token(token: str, token_hash: str) -> bool:
+    return hashlib.sha256(token.encode()).hexdigest() == token_hash
+
 
 
 # --- Helpers moved from main.py ---
