@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Check, X, Star, Zap, Crown } from 'lucide-react';
+import { Check, X, Star, Zap, Crown, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 
@@ -15,13 +15,17 @@ interface PricingModalProps {
 export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onUpgrade, currentPlan, role }) => {
     if (!isOpen) return null;
 
-    const [dbPlans, setDbPlans] = useState<any[]>([]);
+    const [dbPlans, setDbPlans] = useState<any[] | null>(null);
 
     useEffect(() => {
         if (isOpen) {
+            setDbPlans(null);
             axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/plans`)
                 .then(res => setDbPlans(res.data))
-                .catch(err => console.error("Error fetching pricing plans:", err));
+                .catch(err => {
+                    console.error("Error fetching pricing plans:", err);
+                    setDbPlans([]); // Empty array to trigger default plans
+                });
         }
     }, [isOpen]);
 
@@ -109,7 +113,8 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onU
         }
     ];
 
-    const sourcePlans = dbPlans.length > 0 ? dbPlans : defaultPlans;
+    const sourcePlans = (dbPlans !== null && dbPlans.length > 0) ? dbPlans : defaultPlans;
+    const isLoading = dbPlans === null;
 
     const plans = sourcePlans.map(p => ({
         ...p,
@@ -153,7 +158,13 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onU
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full mx-auto">
-                        {plans.filter(plan => plan.id !== 'plus').map((plan) => (
+                        {isLoading ? (
+                            <div className="col-span-full flex flex-col items-center justify-center py-20 gap-4">
+                                <Loader2 className="w-10 h-10 animate-spin text-purple-500" />
+                                <p className="text-app-muted font-medium">Đang tải các gói cước...</p>
+                            </div>
+                        ) : (
+                            plans.filter(plan => plan.id !== 'plus').map((plan) => (
                             <div
                                 key={plan.id}
                                 className={clsx(
@@ -218,7 +229,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose, onU
                                     ) ? (role === 'admin' ? "Đang sử dụng (Admin)" : "Đang sử dụng") : plan.disabled ? "Đang sử dụng" : plan.buttonText}
                                 </button>
                             </div>
-                        ))}
+                        )))}
                     </div>
                 </motion.div>
             </div>
