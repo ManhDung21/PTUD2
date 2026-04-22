@@ -64,3 +64,15 @@ export interface ToastState {
     message: string;
 }
 
+export interface PaymentItem {
+  id: string;
+  user_email?: string;
+  user_full_name?: string;
+  payos_order_code?: number;
+  plan_type: string;
+  amount: number;
+  status: string;
+  created_at: string;
+}
+
+

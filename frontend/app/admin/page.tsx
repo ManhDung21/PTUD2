@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { User, ToastState, HistoryItem } from "../../types"; // Adjusted import path
+import { User, ToastState, HistoryItem, PaymentItem } from "../../types"; // Adjusted import path
 import { useRouter } from "next/navigation";
 import { Sparkles, Trash2, Users, FileText, BarChart3, LogOut, MessageSquare, Shield, ShieldAlert, Image as ImageIcon, Type, Sun, Moon, Star, Eye, X, DollarSign } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,7 +28,7 @@ interface AdminUser extends User {
 export default function AdminPage() {
     const router = useRouter();
     const [user, setUser] = useState<AdminUser | null>(null);
-    const [activeTab, setActiveTab] = useState<'users' | 'content' | 'plans'>('users');
+    const [activeTab, setActiveTab] = useState<'users' | 'content' | 'plans' | 'payments'>('users');
 
     // Theme State
     const [isDarkMode, setIsDarkMode] = useState(true);
@@ -49,6 +49,7 @@ export default function AdminPage() {
     // Data states
     const [users, setUsers] = useState<AdminUser[]>([]);
     const [descriptions, setDescriptions] = useState<HistoryItem[]>([]);
+    const [payments, setPayments] = useState<PaymentItem[]>([]);
     const [viewDescription, setViewDescription] = useState<HistoryItem | null>(null);
     const [stats, setStats] = useState<Stats | null>(null);
 
@@ -200,13 +201,15 @@ export default function AdminPage() {
                 return;
             }
 
-            const [usersRes, descRes] = await Promise.all([
+            const [usersRes, descRes, paymentsRes] = await Promise.all([
                 axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/users`, { params, headers: { Authorization: `Bearer ${token}` } }),
-                axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/descriptions`, { params, headers: { Authorization: `Bearer ${token}` } })
+                axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/descriptions`, { params, headers: { Authorization: `Bearer ${token}` } }),
+                axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/payments`, { params, headers: { Authorization: `Bearer ${token}` } })
             ]);
 
             setUsers(usersRes.data);
             setDescriptions(descRes.data);
+            setPayments(paymentsRes.data);
         } catch (error) {
             console.error(error);
             showToast("error", "Failed to refresh table data");
@@ -578,6 +581,18 @@ export default function AdminPage() {
                                 Gói Dịch Vụ
                                 {activeTab === 'plans' && <motion.div layoutId="activeTab" className={clsx("absolute bottom-[-5px] left-0 right-0 h-0.5", isDarkMode ? "bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]" : "bg-blue-500")} />}
                             </button>
+                            <button
+                                onClick={() => setActiveTab('payments')}
+                                className={clsx(
+                                    "px-6 py-2.5 rounded-t-lg text-sm font-medium transition-all relative",
+                                    activeTab === 'payments'
+                                        ? (isDarkMode ? "text-white" : "text-gray-900")
+                                        : (isDarkMode ? "text-white/40 hover:text-white/70" : "text-gray-500 hover:text-gray-700")
+                                )}
+                            >
+                                Doanh Thu & Thanh Toán
+                                {activeTab === 'payments' && <motion.div layoutId="activeTab" className={clsx("absolute bottom-[-5px] left-0 right-0 h-0.5", isDarkMode ? "bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]" : "bg-blue-500")} />}
+                            </button>
                         </div>
 
                         {/* Tab Content */}
@@ -819,6 +834,64 @@ export default function AdminPage() {
                                     </motion.div>
                                 ) : activeTab === 'plans' ? (
                                     <AdminPlans isDarkMode={isDarkMode} showToast={showToast} />
+                                ) : activeTab === 'payments' ? (
+                                    <motion.div
+                                        key="payments"
+                                        initial={{ opacity: 0, x: -10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: 10 }}
+                                        transition={{ duration: 0.2 }}
+                                    >
+                                        <div className="p-6 border-b border-panel-border flex justify-between items-center bg-panel">
+                                            <div className="flex items-center gap-4">
+                                                <h2 className="text-lg font-bold flex items-center gap-2 text-app-text"><DollarSign size={18} className="text-green-500" /> Doanh Thu & Lịch Sử Thanh Toán</h2>
+                                            </div>
+                                        </div>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left border-collapse">
+                                                <thead>
+                                                    <tr className={clsx("border-b text-xs uppercase tracking-wider", isDarkMode ? "border-white/10 text-gray-500" : "border-gray-200 text-gray-500")}>
+                                                        <th className="p-4 font-semibold">Mã Đơn</th>
+                                                        <th className="p-4 font-semibold">Người Dùng</th>
+                                                        <th className="p-4 font-semibold">Gói Dịch Vụ</th>
+                                                        <th className="p-4 font-semibold">Số Tiền</th>
+                                                        <th className="p-4 font-semibold">Trạng Thái</th>
+                                                        <th className="p-4 font-semibold">Ngày Tạo</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {payments.map(payment => (
+                                                        <tr key={payment.id} className={clsx("border-b transition-colors hover:bg-black/5 group", isDarkMode ? "border-white/5 hover:bg-white/5" : "border-gray-100 hover:bg-gray-50")}>
+                                                            <td className={clsx("p-4 text-sm font-mono", isDarkMode ? "text-gray-300" : "text-gray-700")}>{payment.payos_order_code || '-'}</td>
+                                                            <td className="p-4">
+                                                                <div className={clsx("text-sm font-medium", isDarkMode ? "text-gray-200" : "text-gray-900")}>{payment.user_full_name || 'Unknown'}</div>
+                                                                <div className={clsx("text-xs", isDarkMode ? "text-gray-500" : "text-gray-500")}>{payment.user_email}</div>
+                                                            </td>
+                                                            <td className="p-4">
+                                                                <span className={clsx("px-2.5 py-1 rounded-md text-xs font-bold uppercase", payment.plan_type?.includes('pro') ? "bg-purple-500/20 text-purple-500" : "bg-blue-500/20 text-blue-500")}>
+                                                                    {payment.plan_type}
+                                                                </span>
+                                                            </td>
+                                                            <td className={clsx("p-4 text-sm font-bold", isDarkMode ? "text-gray-200" : "text-gray-900")}>{payment.amount.toLocaleString('vi-VN')}đ</td>
+                                                            <td className="p-4">
+                                                                <span className={clsx("px-2.5 py-1 rounded-md text-xs font-bold uppercase", payment.status === 'completed' ? "bg-green-500/20 text-green-500" : "bg-yellow-500/20 text-yellow-500")}>
+                                                                    {payment.status}
+                                                                </span>
+                                                            </td>
+                                                            <td className={clsx("p-4 text-sm", isDarkMode ? "text-gray-400" : "text-gray-500")}>{new Date(payment.created_at).toLocaleString()}</td>
+                                                        </tr>
+                                                    ))}
+                                                    {payments.length === 0 && (
+                                                        <tr>
+                                                            <td colSpan={6} className={clsx("p-12 text-center", isDarkMode ? "text-gray-500" : "text-gray-400")}>
+                                                                Chưa có dữ liệu thanh toán.
+                                                            </td>
+                                                        </tr>
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </motion.div>
                                 ) : null}
                             </AnimatePresence>
                         </div>
@@ -840,7 +913,7 @@ export default function AdminPage() {
                             <span className={clsx("text-xs font-mono", isDarkMode ? "text-white/50" : "text-gray-600")}>Page {queryParams.page}</span>
                             <button
                                 onClick={() => handlePageChange(queryParams.page + 1)}
-                                disabled={(activeTab === 'users' ? users.length : descriptions.length) < queryParams.limit}
+                                disabled={(activeTab === 'users' ? users.length : activeTab === 'content' ? descriptions.length : activeTab === 'payments' ? payments.length : 0) < queryParams.limit}
                                 className={clsx(
                                     "px-4 py-2 rounded-lg text-sm disabled:opacity-30 disabled:cursor-not-allowed transition-colors",
                                     isDarkMode

@@ -140,3 +140,14 @@ class TimeSeriesDataPoint(BaseModel):
 class TimeSeriesResponse(BaseModel):
     data: List[TimeSeriesDataPoint]
     granularity: str
+
+class PaymentItem(BaseModel):
+    id: str
+    user_email: Optional[str] = None
+    user_full_name: Optional[str] = None
+    payos_order_code: Optional[int] = None
+    plan_type: str
+    amount: float
+    status: str
+    created_at: str
+

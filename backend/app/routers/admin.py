@@ -408,3 +408,47 @@ async def get_timeseries_analytics(
         data=result_data,
         granularity=granularity
     )
+
+from ..schemas import PaymentItem
+
+@router.get("/payments", response_model=List[PaymentItem])
+async def get_all_payments(
+    skip: int = 0,
+    limit: int = 50,
+    db: Database = Depends(get_database),
+    admin: UserDocument = Depends(get_admin_user)
+):
+    cursor = db.payments.find({}).sort("created_at", -1).skip(skip).limit(limit)
+    payments_list = list(cursor)
+    
+    # Collect user IDs
+    user_ids = {doc.get("user_id") for doc in payments_list if doc.get("user_id")}
+    
+    # Fetch users
+    users_cursor = db.users.find({"_id": {"$in": list(user_ids)}}, {"email": 1, "full_name": 1})
+    users_map = {doc["_id"]: doc for doc in users_cursor}
+    
+    results = []
+    for doc in payments_list:
+        user_info = users_map.get(doc.get("user_id"))
+        
+        # Format created_at safely
+        created_at_str = ""
+        if doc.get("created_at"):
+            if isinstance(doc["created_at"], (int, float)):
+                from datetime import datetime
+                created_at_str = datetime.fromtimestamp(doc["created_at"]).isoformat()
+            else:
+                created_at_str = str(doc["created_at"])
+                
+        results.append(PaymentItem(
+            id=str(doc["_id"]),
+            user_email=user_info.get("email") if user_info else None,
+            user_full_name=user_info.get("full_name") if user_info else None,
+            payos_order_code=doc.get("payos_order_code"),
+            plan_type=doc.get("plan_type", "unknown"),
+            amount=doc.get("amount", 0),
+            status=doc.get("status", "unknown"),
+            created_at=created_at_str
+        ))
+    return results
